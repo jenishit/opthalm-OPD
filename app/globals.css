@@ -1,12 +1,180 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@plugin "tailwindcss-animate";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --color-status-scheduled: var(--status-scheduled);
+  --color-status-scheduled-foreground: var(--status-scheduled-foreground);
+  --color-status-scheduled-bg: var(--status-scheduled-bg);
+  --color-status-waiting: var(--status-waiting);
+  --color-status-waiting-foreground: var(--status-waiting-foreground);
+  --color-status-waiting-bg: var(--status-waiting-bg);
+  --color-status-examining: var(--status-examining);
+  --color-status-examining-foreground: var(--status-examining-foreground);
+  --color-status-examining-bg: var(--status-examining-bg);
+  --color-status-completed: var(--status-completed);
+  --color-status-completed-foreground: var(--status-completed-foreground);
+  --color-status-completed-bg: var(--status-completed-bg);
+  --color-status-cancelled: var(--status-cancelled);
+  --color-status-cancelled-foreground: var(--status-cancelled-foreground);
+  --color-status-cancelled-bg: var(--status-cancelled-bg);
+
+  --font-sans: var(--font-inter);
+  --font-display: var(--font-fraunces);
+
+  --radius-sm: calc(var(--radius) - 10px);
+  --radius-md: calc(var(--radius) - 6px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 8px);
+  --radius-2xl: calc(var(--radius) + 16px);
+
+  --shadow-organic-sm: 0 2px 10px -4px var(--shadow-tint-soft);
+  --shadow-organic: 0 12px 28px -10px var(--shadow-tint-soft), 0 2px 8px -2px var(--shadow-tint-soft);
+  --shadow-organic-lg: 0 24px 56px -16px var(--shadow-tint-strong), 0 8px 20px -8px var(--shadow-tint-soft);
 }
 
-html,
+:root {
+  --radius: 1.125rem;
+
+  --background: oklch(98.2% 0.009 96);
+  --foreground: oklch(27% 0.021 95);
+
+  --card: oklch(99.3% 0.006 96);
+  --card-foreground: var(--foreground);
+  --popover: oklch(99.3% 0.006 96);
+  --popover-foreground: var(--foreground);
+
+  --primary: oklch(45% 0.085 152);
+  --primary-foreground: oklch(98.5% 0.008 96);
+
+  --secondary: oklch(94.5% 0.019 83);
+  --secondary-foreground: oklch(32% 0.03 83);
+
+  --muted: oklch(95.5% 0.012 88);
+  --muted-foreground: oklch(49% 0.022 90);
+
+  --accent: oklch(63% 0.135 45);
+  --accent-foreground: oklch(98.5% 0.008 96);
+
+  --destructive: oklch(56% 0.19 24);
+  --destructive-foreground: oklch(98.5% 0.008 96);
+
+  --border: oklch(90.5% 0.016 86);
+  --input: oklch(90.5% 0.016 86);
+  --ring: oklch(45% 0.085 152);
+
+  --shadow-tint-soft: oklch(45% 0.085 152 / 0.12);
+  --shadow-tint-strong: oklch(45% 0.085 152 / 0.22);
+
+  --status-scheduled: oklch(46% 0.02 90);
+  --status-scheduled-foreground: oklch(97% 0.008 90);
+  --status-scheduled-bg: oklch(94% 0.012 88);
+
+  --status-waiting: oklch(58% 0.14 50);
+  --status-waiting-foreground: oklch(98% 0.01 90);
+  --status-waiting-bg: oklch(95% 0.035 62);
+
+  --status-examining: oklch(52% 0.1 229);
+  --status-examining-foreground: oklch(98% 0.008 229);
+  --status-examining-bg: oklch(94.5% 0.025 229);
+
+  --status-completed: oklch(47% 0.1 150);
+  --status-completed-foreground: oklch(98% 0.008 150);
+  --status-completed-bg: oklch(94.5% 0.03 150);
+
+  --status-cancelled: oklch(56% 0.18 24);
+  --status-cancelled-foreground: oklch(98% 0.008 24);
+  --status-cancelled-bg: oklch(95% 0.03 24);
+}
+
+.dark {
+  --background: oklch(19% 0.014 95);
+  --foreground: oklch(93% 0.012 90);
+
+  --card: oklch(22.5% 0.015 95);
+  --card-foreground: var(--foreground);
+  --popover: oklch(22.5% 0.015 95);
+  --popover-foreground: var(--foreground);
+
+  --primary: oklch(72% 0.11 152);
+  --primary-foreground: oklch(16% 0.02 152);
+
+  --secondary: oklch(29% 0.022 85);
+  --secondary-foreground: oklch(92% 0.012 85);
+
+  --muted: oklch(27% 0.016 90);
+  --muted-foreground: oklch(67% 0.018 88);
+
+  --accent: oklch(69% 0.13 45);
+  --accent-foreground: oklch(16% 0.02 45);
+
+  --destructive: oklch(66% 0.18 24);
+  --destructive-foreground: oklch(16% 0.02 24);
+
+  --border: oklch(33% 0.018 90);
+  --input: oklch(33% 0.018 90);
+  --ring: oklch(72% 0.11 152);
+
+  --shadow-tint-soft: oklch(0% 0 0 / 0.3);
+  --shadow-tint-strong: oklch(0% 0 0 / 0.45);
+
+  --status-scheduled: oklch(70% 0.015 90);
+  --status-scheduled-foreground: oklch(18% 0.01 90);
+  --status-scheduled-bg: oklch(29% 0.016 90);
+
+  --status-waiting: oklch(72% 0.12 55);
+  --status-waiting-foreground: oklch(18% 0.02 55);
+  --status-waiting-bg: oklch(30% 0.045 55);
+
+  --status-examining: oklch(70% 0.1 229);
+  --status-examining-foreground: oklch(18% 0.02 229);
+  --status-examining-bg: oklch(28% 0.04 229);
+
+  --status-completed: oklch(72% 0.1 150);
+  --status-completed-foreground: oklch(18% 0.02 150);
+  --status-completed-bg: oklch(28% 0.04 150);
+
+  --status-cancelled: oklch(70% 0.16 24);
+  --status-cancelled-foreground: oklch(18% 0.02 24);
+  --status-cancelled-bg: oklch(30% 0.05 24);
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
+}
+
+.organic-blob {
+  position: absolute;
+  border-radius: 42% 58% 63% 37% / 41% 44% 56% 59%;
+  filter: blur(2px);
+  pointer-events: none;
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
 }
