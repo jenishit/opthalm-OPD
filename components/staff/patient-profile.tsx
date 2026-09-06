@@ -49,7 +49,7 @@ export function PatientProfile({ patientId }: { patientId: string }) {
       <div className="lg:col-span-1 flex flex-col gap-6">
 
         {/* Demographics Card */}
-        <div className="bg-card rounded-2xl border border-border/60 shadow-organic-sm overflow-hidden">
+        <div className="bg-card rounded-2xl border border-border/60 overflow-hidden">
           <div className="p-6">
             <div className="flex items-center gap-4 mb-6">
               <div className="h-16 w-16 flex items-center justify-center rounded-full bg-primary/10 text-primary text-2xl font-semibold">
