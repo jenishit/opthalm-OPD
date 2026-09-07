@@ -9,7 +9,7 @@ import { toast } from "sonner";
 
 import { staffLoginSchema, type StaffLoginValues } from "@/schemas/auth";
 import { login, getMyProfile } from "@/services/auth";
-import { ApiError } from "@/services/http";
+import { ApiError, SubscriptionInactiveError } from "@/services/http";
 import { useAuthStore } from "@/lib/store/auth-store";
 import type { Staff } from "@/lib/schemas/shared.schema";
 import { Button } from "@/components/ui/button";
@@ -27,7 +27,7 @@ function toStaffRole(roleName: string): Staff["role"] {
 export default function StaffLoginPage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
-  const setAccessToken = useAuthStore((state) => state.setAccessToken);
+  const setAuthTokens = useAuthStore((state) => state.setAuthTokens);
   const loginStaff = useAuthStore((state) => state.loginStaff);
 
   const {
