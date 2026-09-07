@@ -1,10 +1,27 @@
+import { useAuthStore } from "@/lib/store/auth-store";
 import type { Visit, VisitStatus, VisitSymptoms, VisitDiagnosis } from "@/lib/schemas/visit.schema";
 import type { RefractionReading } from "@/lib/schemas/refraction.schema";
 import type { ExaminationFindings } from "@/lib/schemas/examination.schema";
 import type { Treatment, FollowUp } from "@/lib/schemas/treatment.schema";
 import type { Investigation, IntakeExamFormData } from "@/lib/schemas/shared.schema";
 import { ApiError, NotImplementedError } from "@/services/http";
-import { getPatientVisitDtos, getVisitDto, toUiVisit, updateVisitDto } from "@/services/visits";
+import {
+  createVisitDto,
+  getPatientVisitDtos,
+  getVisitDto,
+  toUiVisit,
+  updateVisitDto,
+} from "@/services/visits";
+import {
+  getVisitSymptoms as mockGetVisitSymptoms,
+  getVisitRefractions as mockGetVisitRefractions,
+  getVisitExamination as mockGetVisitExamination,
+  getVisitDiagnoses as mockGetVisitDiagnoses,
+  getVisitTreatments as mockGetVisitTreatments,
+  getVisitInvestigations as mockGetVisitInvestigations,
+  getVisitFollowUp as mockGetVisitFollowUp,
+  stashClinicalVisit,
+} from "./visits.mock";
 
 export async function getVisits(filters?: {
   date?: string;
