@@ -15,7 +15,7 @@ export function PortalHeader() {
   };
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-border/60 bg-card/80 px-4 backdrop-blur-sm">
+    <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-line bg-card px-4 md:px-6">
       <Link href="/portal" className="font-display flex items-center gap-2 text-lg font-medium text-foreground">
         <Eye className="h-6 w-6 text-primary" />
         <span>EyeClinic Portal</span>
