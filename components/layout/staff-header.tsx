@@ -1,46 +1,63 @@
 ﻿"use client";
 
 import { usePathname, useRouter } from "next/navigation";
-import { Menu, LogOut } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Menu, LogOut, Moon, Sun, Stethoscope, Receipt } from "lucide-react";
+import { useTheme } from "next-themes";
+import { logoutStaffSession } from "@/services/auth";
 import { useUiStore } from "@/lib/store/ui-store";
 import { useAuthStore } from "@/lib/store/auth-store";
 
-const ID_PARENTS = ["patients", "visits"];
-const NON_ID_SEGMENTS = ["new", "edit"];
+const TITLES: [RegExp, string][] = [
+  [/^\/staff\/queue$/, "Queue board"],
+  [/^\/staff\/patients$/, "Patients"],
+  [/^\/staff\/patients\/register$/, "Patient registration"],
+  [/^\/staff\/patients\/new$/, "New patient"],
+  [/^\/staff\/patients\/[^/]+\/consult$/, "Consultation"],
+  [/^\/staff\/patients\/[^/]+\/visits\/new$/, "New visit"],
+  [/^\/staff\/patients\/[^/]+\/visits\/[^/]+$/, "Visit detail"],
+  [/^\/staff\/patients\/[^/]+$/, "Patient record"],
+  [/^\/staff\/consult$/, "Consultation"],
+];
 
 export function StaffHeader() {
   const pathname = usePathname();
   const router = useRouter();
   const { setSidebarCollapsed } = useUiStore();
-  const { staffUser, logoutStaff } = useAuthStore();
+  const { staffUser } = useAuthStore();
+  const { setTheme, resolvedTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
 
-  const segments = pathname.split("/").filter(Boolean);
-  const breadcrumbs = segments.map((segment, index) => {
-    const parent = segments[index - 1];
-    const isId = ID_PARENTS.includes(parent ?? "") && !NON_ID_SEGMENTS.includes(segment);
-    const label = segment === "staff"
-      ? "Home"
-      : isId
-        ? `ID: ${segment.substring(0, 6)}`
-        : segment.charAt(0).toUpperCase() + segment.slice(1);
+  useEffect(() => setMounted(true), []);
 
-    return {
-      label,
-      isLast: index === segments.length - 1,
-    };
-  });
+  const title =
+    TITLES.find(([re]) => re.test(pathname))?.[1] ??
+    (pathname.split("/").filter(Boolean).pop()?.replace(/-/g, " ") ?? "Home")
+      .charAt(0)
+      .toUpperCase() +
+      (pathname.split("/").filter(Boolean).pop()?.replace(/-/g, " ") ?? "")
+        .slice(1);
 
-  const handleLogout = () => {
-    logoutStaff();
+  const dateLabel = new Intl.DateTimeFormat("en-GB", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  }).format(new Date());
+
+  const handleLogout = async () => {
+    await logoutStaffSession();
     router.push("/staff/login");
   };
 
+  const isDoctor = staffUser?.role === "doctor";
+
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-border/60 bg-card/80 px-4 backdrop-blur-sm md:px-6">
-      <div className="flex items-center gap-4">
+    <header className="flex items-center justify-between gap-3 border-b border-line bg-card px-4 py-3 md:px-6">
+      <div className="flex min-w-0 items-center gap-3">
         <button
           onClick={() => setSidebarCollapsed(false)}
-          className="-ml-2 rounded-full p-2 text-muted-foreground hover:bg-muted md:hidden"
+          className="grid size-11 shrink-0 place-items-center rounded-md border border-line bg-card text-ink hover:border-sage md:hidden"
         >
           <Menu className="h-5 w-5" />
           <span className="sr-only">Open sidebar</span>
