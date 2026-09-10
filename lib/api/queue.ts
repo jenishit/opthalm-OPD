@@ -1,7 +1,7 @@
-import { getVisits } from "./visits";
-import { getPatient } from "./patients";
 import type { Visit, VisitStatus } from "@/lib/schemas/visit.schema";
 import type { Patient } from "@/lib/schemas/patient.schema";
+import { listPatientDtos, toUiPatient } from "@/services/patients";
+import { getPatientVisitDtos, toUiVisit } from "@/services/visits";
 
 export interface QueueItem {
   visit: Visit;
