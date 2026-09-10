@@ -51,7 +51,7 @@ export function QueueBoard() {
           <button
             onClick={fetchQueue}
             disabled={loading}
-            className="flex items-center gap-2 rounded-full border border-border bg-card px-3.5 py-1.5 text-sm font-medium text-foreground shadow-organic-sm transition-colors hover:bg-muted disabled:opacity-50"
+            className="flex items-center gap-2 rounded-md border border-line bg-card px-3.5 py-1.5 text-sm font-semibold text-ink hover:border-sage transition-colors hover:bg-muted disabled:opacity-50"
           >
             <RefreshCcw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
             Refresh
