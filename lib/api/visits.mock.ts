@@ -91,28 +91,12 @@ export async function getVisitFollowUp(visitId: string): Promise<FollowUp | null
 
 // ── Create Full Visit (intake/exam form submission) ─────────────────────────
 
-export async function createFullVisit(
-  patientId: string,
-  data: IntakeExamFormData
-): Promise<Visit> {
-  await delay(500);
-
-  const visitId = `v${Date.now()}`;
-  const today = new Date().toISOString().split("T")[0];
-
-  const newVisit: Visit = {
-    id: visitId,
-    patient_id: patientId,
-    examined_by: data.examined_by,
-    status: "completed",
-    visit_date: today,
-    chief_complaint: data.chief_complaint,
-    complaint_duration: data.complaint_duration,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  };
-
-  visits = [newVisit, ...visits];
+/**
+ * Stores the clinical payload (symptoms/refraction/exam/diagnoses/treatments)
+ * locally. The backend's POST /visit only persists core visit fields; these
+ * clinical documents have no endpoints yet.
+ */
+export function stashClinicalVisit(visitId: string, data: IntakeExamFormData): void {
   symptoms[visitId] = { ...data.symptoms, id: `vs${Date.now()}`, visit_id: visitId };
   readings[visitId] = data.readings.map((r, i) => ({
     ...r,
