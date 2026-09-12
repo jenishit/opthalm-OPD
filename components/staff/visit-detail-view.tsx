@@ -24,7 +24,7 @@ export function VisitDetailView({ visitData }: { visitData: FullVisitData }) {
   return (
     <div className="space-y-6">
       {/* Overview Card */}
-      <div className="bg-card rounded-2xl border border-border/60 shadow-organic-sm overflow-hidden">
+      <div className="bg-card rounded-2xl border border-border/60 overflow-hidden">
         <div className="px-6 py-4 border-b border-border/60 bg-muted/40 flex justify-between items-center">
           <h3 className="font-medium text-foreground">Visit Overview</h3>
           <span className="text-sm font-medium bg-muted text-muted-foreground py-1 px-3 rounded-full">
@@ -48,7 +48,7 @@ export function VisitDetailView({ visitData }: { visitData: FullVisitData }) {
 
         {/* Symptoms */}
         {symptoms && (
-          <div className="bg-card rounded-2xl border border-border/60 shadow-organic-sm overflow-hidden">
+          <div className="bg-card rounded-2xl border border-border/60 overflow-hidden">
             <div className="px-4 py-3 border-b border-border/60 bg-muted/40">
               <h3 className="font-medium text-foreground text-sm">Reported Symptoms</h3>
             </div>
@@ -77,7 +77,7 @@ export function VisitDetailView({ visitData }: { visitData: FullVisitData }) {
 
         {/* Examination */}
         {examination && (
-          <div className="bg-card rounded-2xl border border-border/60 shadow-organic-sm overflow-hidden">
+          <div className="bg-card rounded-2xl border border-border/60 overflow-hidden">
             <div className="px-4 py-3 border-b border-border/60 bg-muted/40">
               <h3 className="font-medium text-foreground text-sm">Examination Findings</h3>
             </div>
