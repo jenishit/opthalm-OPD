@@ -1,26 +1,50 @@
 "use client";
 
 import React, { useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, type FieldPath } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
+import {
+  Cake,
+  Check,
+  ChevronLeft,
+  ChevronRight,
+  CircleHelp,
+  ClipboardList,
+  Mars,
+  Phone,
+  UserRound,
+  Venus,
+  type LucideIcon,
+} from "lucide-react";
 import { patientFormSchema, type PatientFormData, sexOptions } from "@/lib/schemas/patient.schema";
 import { createPatient, checkPhoneUnique } from "@/lib/api/patients";
+import { SessionExpiredError } from "@/services/http";
+import { Chip, Segmented, StepRail, chartField, chartLabel, chartShell } from "./chart-ui";
 
-const inputCls =
-  "mt-1.5 block w-full rounded-xl border border-input bg-card px-3 py-2 text-sm text-foreground shadow-organic-sm outline-none transition-colors placeholder:text-muted-foreground focus:border-ring focus:ring-3 focus:ring-ring/50";
 const labelCls = "block text-sm font-medium text-foreground";
-const subLabelCls = "block text-xs font-medium text-muted-foreground";
 const errorCls = "mt-1.5 text-sm text-destructive";
+
+const steps: { label: string; icon: LucideIcon }[] = [
+  { label: "Patient", icon: UserRound },
+  { label: "Age", icon: Cake },
+  { label: "Contact", icon: Phone },
+  { label: "Review", icon: ClipboardList },
+];
+
+const sexTiles: { value: (typeof sexOptions)[number]; label: string; icon: LucideIcon }[] = [
+  { value: "Female", label: "Female", icon: Venus },
+  { value: "Male", label: "Male", icon: Mars },
+  { value: "Other", label: "Other", icon: CircleHelp },
+];
 
 export function PatientRegistrationForm() {
   const router = useRouter();
+  const [step, setStep] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [useAge, setUseAge] = useState(false); // Toggle between DOB and Age
+  const [useAge, setUseAge] = useState(false);
 
-  // Using raw react-hook-form without shadcn primitives to avoid dependency issues if shadcn failed
-  // but structuring it cleanly
   const {
     register,
     handleSubmit,
@@ -28,9 +52,10 @@ export function PatientRegistrationForm() {
     setValue,
     setError,
     clearErrors,
+    trigger,
     formState: { errors },
   } = useForm<PatientFormData>({
-    resolver: zodResolver(patientFormSchema) as any,
+    resolver: zodResolver(patientFormSchema) as never,
     defaultValues: {
       first_name: "",
       last_name: "",
