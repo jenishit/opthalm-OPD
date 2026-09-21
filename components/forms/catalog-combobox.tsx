@@ -74,7 +74,7 @@ export function CatalogCombobox({ catalogType, placeholder, onSelect }: CatalogC
   return (
     <div className="relative">
       <div
-        className="flex items-center w-full rounded-xl border border-input bg-card px-3 py-2 text-sm shadow-organic-sm cursor-text transition-colors focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/50"
+        className="flex items-center w-full rounded-xl border border-input bg-card px-3 py-2 text-sm cursor-text transition-colors focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/50"
         onClick={() => setIsOpen(true)}
       >
         <Search className="h-4 w-4 text-muted-foreground mr-2 shrink-0" />
@@ -93,7 +93,7 @@ export function CatalogCombobox({ catalogType, placeholder, onSelect }: CatalogC
       </div>
 
       {isOpen && (
-        <div className="absolute z-50 mt-2 w-full rounded-2xl border border-border/60 bg-card shadow-organic max-h-60 flex flex-col overflow-hidden">
+        <div className="absolute z-50 mt-2 w-full rounded-2xl border border-border/60 bg-card max-h-60 flex flex-col overflow-hidden">
           {/* Backdrop to close */}
           <div className="fixed inset-0 z-[-1]" onClick={() => setIsOpen(false)} />
 
