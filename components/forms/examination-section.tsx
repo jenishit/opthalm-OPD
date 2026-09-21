@@ -1,106 +1,156 @@
 "use client";
 
 import React from "react";
-import { useFormContext } from "react-hook-form";
+import { Controller, useFormContext } from "react-hook-form";
 import type { IntakeExamFormData } from "@/lib/schemas/shared.schema";
-import { Eye, Focus, Activity } from "lucide-react";
+import { Activity, Eye, Focus } from "lucide-react";
+import { NumericCell, chartLabel, chartShell } from "./chart-ui";
 
-const fieldClass =
-  "w-full rounded-xl border border-input bg-card px-3.5 py-2 text-sm text-foreground placeholder:text-muted-foreground shadow-organic-sm outline-none transition-colors focus:border-ring focus:ring-3 focus:ring-ring/50";
-const labelClass = "block text-sm font-medium text-foreground mb-1.5";
+const dashedField =
+  "w-full rounded-xl border-[1.5px] border-dashed border-border/80 bg-card px-3 py-2 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground/50 hover:border-primary/50 focus:border-solid focus:border-primary focus:ring-3 focus:ring-ring/30";
+
 const sectionIcon = "flex size-8 items-center justify-center rounded-full";
-const sectionHeader = "flex items-center gap-2.5 border-b border-border/60 pb-3 mb-5";
 const sectionTitle = "font-display text-lg font-medium text-foreground";
 
 export function ExaminationSection() {
-  const { register } = useFormContext<IntakeExamFormData>();
+  const { register, control } = useFormContext<IntakeExamFormData>();
 
   return (
     <div className="space-y-6">
-
-      {/* Basic Metrics (IOP etc.) */}
-      <div className="bg-card p-6 rounded-2xl border border-border/60 shadow-organic-sm">
-        <div className={sectionHeader}>
+      {/* IOP chart — OD / OS columns like the reference exam chart */}
+      <div className={chartShell}>
+        <div className="flex items-center gap-2.5 border-b border-border/60 bg-muted/40 px-4 py-3">
           <span className={`${sectionIcon} bg-status-examining-bg text-status-examining`}>
-            <Activity className="h-4 w-4" />
+            <Activity className="size-4" />
           </span>
-          <h3 className={sectionTitle}>General &amp; IOP</h3>
+          <div>
+            <h3 className={sectionTitle}>General &amp; IOP</h3>
+            <p className={chartLabel}>Tap a dashed cell to enter a reading</p>
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-5">
-          <div>
-            <label className={labelClass}>IOP OD (mmHg)</label>
-            <input
-              type="text"
-              {...register("examination.iop_od")}
-              className={fieldClass}
-              placeholder="e.g. 15"
+        <div className="grid grid-cols-[minmax(110px,150px)_1fr_1fr] border-b border-border/60">
+          <div className="p-2" />
+          <div className={`border-l border-border/60 p-2 text-center ${chartLabel}`}>
+            Right eye · OD
+          </div>
+          <div className={`border-l border-border/60 p-2 text-center ${chartLabel}`}>
+            Left eye · OS
+          </div>
+        </div>
+
+        <div className="grid grid-cols-[minmax(110px,150px)_1fr_1fr] items-center border-b border-border/60">
+          <div className="p-3 sm:p-4">
+            <p className="font-display text-base font-medium text-foreground">IOP</p>
+            <p className={chartLabel}>mmHg</p>
+          </div>
+          <div className="border-l border-border/60 p-2.5">
+            <Controller
+              control={control}
+              name="examination.iop_od"
+              render={({ field }) => (
+                <NumericCell
+                  label="Intraocular pressure, right eye"
+                  value={field.value ?? undefined}
+                  onChange={field.onChange}
+                  step={1}
+                  min={1}
+                  max={70}
+                  decimals={0}
+                  signed={false}
+                />
+              )}
             />
           </div>
-          <div>
-            <label className={labelClass}>IOP OS (mmHg)</label>
-            <input
-              type="text"
-              {...register("examination.iop_os")}
-              className={fieldClass}
-              placeholder="e.g. 16"
+          <div className="border-l border-border/60 p-2.5">
+            <Controller
+              control={control}
+              name="examination.iop_os"
+              render={({ field }) => (
+                <NumericCell
+                  label="Intraocular pressure, left eye"
+                  value={field.value ?? undefined}
+                  onChange={field.onChange}
+                  step={1}
+                  min={1}
+                  max={70}
+                  decimals={0}
+                  signed={false}
+                />
+              )}
             />
           </div>
+        </div>
+
+        <div className="grid gap-4 p-3 sm:grid-cols-2 sm:p-4">
           <div>
-            <label className={labelClass}>Time of IOP</label>
-            <input
-              type="time"
-              {...register("examination.iop_time")}
-              className={fieldClass}
-            />
+            <label htmlFor="iop_time" className={chartLabel}>
+              Time of IOP
+            </label>
+            <input {...register("examination.iop_time")} id="iop_time" type="time" className={`${dashedField} mt-1.5`} />
           </div>
           <div>
-            <label className={labelClass}>Blood Pressure</label>
+            <label htmlFor="bp" className={chartLabel}>
+              Blood pressure
+            </label>
             <input
-              type="text"
               {...register("examination.bp")}
-              className={fieldClass}
+              id="bp"
+              type="text"
               placeholder="e.g. 120/80"
+              className={`${dashedField} mt-1.5`}
             />
           </div>
         </div>
       </div>
 
       {/* Orthoptics */}
-      <div className="bg-card p-6 rounded-2xl border border-border/60 shadow-organic-sm">
-        <div className={sectionHeader}>
-          <span className={`${sectionIcon} bg-accent/10 text-accent`}>
-            <Focus className="h-4 w-4" />
+      <div className={chartShell}>
+        <div className="flex items-center gap-2.5 border-b border-border/60 bg-muted/40 px-4 py-3">
+          <span className={`${sectionIcon} bg-clay-soft text-clay`}>
+            <Focus className="size-4" />
           </span>
-          <h3 className={sectionTitle}>Orthoptics</h3>
+          <div>
+            <h3 className={sectionTitle}>Orthoptics</h3>
+            <p className={chartLabel}>motility · alignment</p>
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+        <div className="grid gap-4 p-4 md:grid-cols-3">
           <div>
-            <label className={labelClass}>Convergence</label>
+            <label htmlFor="convergence" className={chartLabel}>
+              Convergence
+            </label>
             <textarea
               {...register("examination.convergence")}
-              rows={2}
-              className={fieldClass}
+              id="convergence"
+              rows={3}
               placeholder="NPC..."
+              className={`${dashedField} mt-1.5`}
             />
           </div>
           <div>
-            <label className={labelClass}>Cover Test</label>
+            <label htmlFor="cover_test" className={chartLabel}>
+              Cover test
+            </label>
             <textarea
               {...register("examination.cover_test")}
-              rows={2}
-              className={fieldClass}
+              id="cover_test"
+              rows={3}
               placeholder="Ortho, XT, ET..."
+              className={`${dashedField} mt-1.5`}
             />
           </div>
           <div>
-            <label className={labelClass}>Extraocular Movements (EOM)</label>
+            <label htmlFor="eom" className={chartLabel}>
+              Extraocular movements
+            </label>
             <textarea
               {...register("examination.eom")}
-              rows={2}
-              className={fieldClass}
-              placeholder="Full, Restricted in..."
+              id="eom"
+              rows={3}
+              placeholder="Full, restricted in..."
+              className={`${dashedField} mt-1.5`}
             />
           </div>
         </div>
