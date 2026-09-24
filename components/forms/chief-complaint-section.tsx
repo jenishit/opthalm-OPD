@@ -6,7 +6,7 @@ import type { IntakeExamFormData } from "@/lib/schemas/shared.schema";
 import { CatalogCombobox } from "./catalog-combobox";
 
 const fieldClass =
-  "w-full rounded-xl border border-input bg-card px-3.5 py-2 text-sm text-foreground placeholder:text-muted-foreground shadow-organic-sm outline-none transition-colors focus:border-ring focus:ring-3 focus:ring-ring/50";
+  "w-full rounded-xl border border-input bg-card px-3.5 py-2 text-sm text-foreground placeholder:text-muted-foreground outline-none transition-colors focus:border-ring focus-visible:ring-2 focus-visible:ring-ring/40";
 const labelClass = "block text-sm font-medium text-foreground mb-1.5";
 
 export function ChiefComplaintSection() {
@@ -18,7 +18,7 @@ export function ChiefComplaintSection() {
   return (
     <div className="space-y-8">
       {/* Chief Complaint */}
-      <div className="bg-card p-6 rounded-2xl border border-border/60 shadow-organic-sm">
+      <div className="bg-card p-6 rounded-2xl border border-border/60 ">
         <h3 className="font-display text-lg font-medium text-foreground border-b border-border/60 pb-3 mb-5">Current Visit</h3>
 
         <div className="grid gap-5">
