@@ -7,7 +7,7 @@ import { Stethoscope, Trash2 } from "lucide-react";
 import { CatalogCombobox } from "./catalog-combobox";
 
 const selectClass =
-  "w-full rounded-xl border border-input bg-card px-3 py-2 text-sm text-foreground shadow-organic-sm outline-none transition-colors focus:border-ring focus:ring-3 focus:ring-ring/50";
+  "w-full rounded-xl border border-input bg-card px-3 py-2 text-sm text-foreground outline-none transition-colors focus:border-ring focus-visible:ring-2 focus-visible:ring-ring/40";
 const microLabel = "block text-xs font-medium text-muted-foreground mb-1.5";
 
 export function DiagnosisSection() {
