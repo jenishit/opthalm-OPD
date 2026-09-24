@@ -1,9 +1,23 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { useForm, FormProvider } from "react-hook-form";
+import { useForm, FormProvider, type SubmitErrorHandler } from "react-hook-form";
+import {
+  Check,
+  ChevronLeft,
+  ChevronRight,
+  ClipboardList,
+  FileText,
+  FlaskConical,
+  Glasses,
+  MessageSquare,
+  Pill,
+  Stethoscope,
+  type LucideIcon,
+} from "lucide-react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
+import { z } from "zod";
 import { intakeExamFormSchema, type IntakeExamFormData } from "@/lib/schemas/shared.schema";
 import { createFullVisit } from "@/lib/api/visits";
 import { getLatestPatientHistory } from "@/lib/api/history";
@@ -19,14 +33,14 @@ import { InvestigationsSection } from "./investigations-section";
 import { DiagnosisSection } from "./diagnosis-section";
 import { TreatmentSection } from "./treatment-section";
 
-const tabs: { id: IntakeTab; label: string }[] = [
-  { id: "chief-complaint", label: "History & C/C" },
-  { id: "symptoms", label: "Symptoms" },
-  { id: "refraction", label: "Vision/Rx" },
-  { id: "examination", label: "Examination" },
-  { id: "investigations", label: "Investigations" },
-  { id: "diagnosis", label: "Diagnosis" },
-  { id: "treatment", label: "Treatment" },
+const tabs: { id: IntakeTab; label: string; icon: LucideIcon }[] = [
+  { id: "chief-complaint", label: "History & C/C", icon: MessageSquare },
+  { id: "symptoms", label: "Symptoms", icon: ClipboardList },
+  { id: "refraction", label: "Vision/Rx", icon: Glasses },
+  { id: "examination", label: "Examination", icon: Stethoscope },
+  { id: "investigations", label: "Investigations", icon: FlaskConical },
+  { id: "diagnosis", label: "Diagnosis", icon: FileText },
+  { id: "treatment", label: "Treatment", icon: Pill },
 ];
 
 export function IntakeExamForm({ patientId }: { patientId: string }) {
@@ -37,8 +51,14 @@ export function IntakeExamForm({ patientId }: { patientId: string }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [loadingInitial, setLoadingInitial] = useState(true);
+  const [visited, setVisited] = useState<IntakeTab[]>(["chief-complaint"]);
 
-  const methods = useForm<IntakeExamFormData>({
+  const goToTab = (tab: IntakeTab) => {
+    setActiveIntakeTab(tab);
+    setVisited((current) => (current.includes(tab) ? current : [...current, tab]));
+  };
+
+  const methods = useForm<z.input<typeof intakeExamFormSchema>, unknown, IntakeExamFormData>({
     resolver: zodResolver(intakeExamFormSchema),
     defaultValues: {
       chief_complaint: "",
@@ -92,18 +112,18 @@ export function IntakeExamForm({ patientId }: { patientId: string }) {
     try {
       const newVisit = await createFullVisit(patientId, data);
       router.push(`/staff/patients/${patientId}/visits/${newVisit.id}`);
-    } catch (error: any) {
-      setSubmitError(error.message || "Failed to save visit data");
+    } catch (error: unknown) {
+      setSubmitError(error instanceof Error ? error.message : "Failed to save visit data");
 
       // Look for first error to switch tab if validation failed (though resolver handles most of it before onSubmit)
       const errors = methods.formState.errors;
       if (Object.keys(errors).length > 0) {
-        if (errors.chief_complaint || errors.history) setActiveIntakeTab("chief-complaint");
-        else if (errors.symptoms) setActiveIntakeTab("symptoms");
-        else if (errors.readings) setActiveIntakeTab("refraction");
-        else if (errors.examination) setActiveIntakeTab("examination");
-        else if (errors.diagnoses) setActiveIntakeTab("diagnosis");
-        else if (errors.treatments || errors.follow_up) setActiveIntakeTab("treatment");
+        if (errors.chief_complaint || errors.history) goToTab("chief-complaint");
+        else if (errors.symptoms) goToTab("symptoms");
+        else if (errors.readings) goToTab("refraction");
+        else if (errors.examination) goToTab("examination");
+        else if (errors.diagnoses) goToTab("diagnosis");
+        else if (errors.treatments || errors.follow_up) goToTab("treatment");
       }
     } finally {
       setIsSubmitting(false);
