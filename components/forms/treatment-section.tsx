@@ -7,10 +7,10 @@ import { Pill, Trash2, Calendar } from "lucide-react";
 import { CatalogCombobox } from "./catalog-combobox";
 
 const fieldCls =
-  "w-full rounded-xl border border-input bg-card px-3 py-2 text-sm text-foreground shadow-organic-sm outline-none transition-colors placeholder:text-muted-foreground focus:border-ring focus:ring-3 focus:ring-ring/50";
+  "w-full rounded-xl border border-input bg-card px-3 py-2 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-ring focus-visible:ring-2 focus-visible:ring-ring/40";
 const smallLabelCls = "block text-xs font-medium text-muted-foreground mb-1";
 const chipBtnCls =
-  "rounded-full border border-border bg-card px-4 py-2 text-sm font-medium text-foreground shadow-organic-sm transition-colors hover:bg-muted";
+  "rounded-full border border-border bg-card px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted";
 
 export function TreatmentSection() {
   const { register, control, watch } = useFormContext<IntakeExamFormData>();
@@ -22,7 +22,7 @@ export function TreatmentSection() {
   return (
     <div className="space-y-6">
       {/* Treatments List */}
-      <div className="bg-card p-6 rounded-2xl border border-border/60 shadow-organic-sm">
+      <div className="bg-card p-6 rounded-2xl border border-border/60 ">
         <div className="flex items-center gap-2 border-b border-border/60 pb-3 mb-5">
           <Pill className="h-5 w-5 text-primary" />
           <h3 className="font-display text-lg font-medium text-foreground">Treatment Plan</h3>
