@@ -1,12 +1,25 @@
 "use client";
 
 import React from "react";
-import { useFormContext, useFieldArray } from "react-hook-form";
+import { Controller, useFormContext, useFieldArray } from "react-hook-form";
 import type { IntakeExamFormData } from "@/lib/schemas/shared.schema";
 import { Plus, Trash2, Eye } from "lucide-react";
+import { NumericCell, chartLabel, chartShell } from "./chart-ui";
 
-const cellCls =
-  "block w-full rounded-lg border border-input bg-card px-2 py-1.5 text-sm text-foreground shadow-organic-sm outline-none transition-colors focus:border-ring focus:ring-3 focus:ring-ring/50";
+const acuityOptions = ["6/6", "6/9", "6/12", "6/18", "6/24", "6/36", "6/60", "CF", "HM", "PL"];
+
+const stages = [
+  { id: "unaided", label: "Unaided Vision", hint: "uncorrected acuity" },
+  { id: "old_rx", label: "Present Glasses (PGP)", hint: "existing prescription" },
+  { id: "retinoscopy", label: "Auto Refraction (AR)", hint: "objective" },
+  { id: "subjective_acceptance", label: "Subjective Refraction", hint: "accepted lenses" },
+  { id: "final_rx", label: "Final Prescription (Rx)", hint: "dispense" },
+] as const;
+
+type StageId = (typeof stages)[number]["id"];
+
+const cellBorder =
+  "w-full rounded-xl border-[1.5px] border-dashed border-border/80 bg-card px-2 py-2.5 text-center text-sm font-medium tabular-nums text-foreground outline-none transition-colors hover:border-primary/50 focus:border-solid focus:border-primary";
 
 export function RefractionSection() {
   const { register, control, watch } = useFormContext<IntakeExamFormData>();
