@@ -6,7 +6,7 @@ import type { IntakeExamFormData } from "@/lib/schemas/shared.schema";
 import { FileSearch, Plus, Trash2 } from "lucide-react";
 
 const fieldCls =
-  "w-full rounded-xl border border-input bg-card px-3 py-2 text-sm text-foreground shadow-organic-sm outline-none transition-colors placeholder:text-muted-foreground focus:border-ring focus:ring-3 focus:ring-ring/50";
+  "w-full rounded-xl border border-input bg-card px-3 py-2 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-ring focus-visible:ring-2 focus-visible:ring-ring/40";
 
 export function InvestigationsSection() {
   const { register, control } = useFormContext<IntakeExamFormData>();
@@ -17,7 +17,7 @@ export function InvestigationsSection() {
 
   return (
     <div className="space-y-6">
-      <div className="bg-card p-6 rounded-2xl border border-border/60 shadow-organic-sm">
+      <div className="bg-card p-6 rounded-2xl border border-border/60 ">
         <div className="flex items-center justify-between border-b border-border/60 pb-3 mb-5">
           <div className="flex items-center gap-2">
             <FileSearch className="h-5 w-5 text-status-examining" />
