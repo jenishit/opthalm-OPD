@@ -1,12 +1,55 @@
-node_modules
-.next
-out
-build
+# dependencies
+/node_modules
+/.pnp
+.pnp.*
+
+# next.js
+/.next/
+/out/
+
+# production
+/dist
+/build
+
+# misc
 .DS_Store
+*.pem
 
-# env
-.env
-.env.local
-
-# logs
+# debug
 npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# env files
+.env
+.env*.local
+
+# vercel
+.vercel
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
+# editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# os
+Thumbs.db
+Desktop.ini
+
+# backup files
+*.bak
+
+# testing
+/coverage
+
+# cache
+.cache
+.eslintcache
+*.turbo
+.turbo
