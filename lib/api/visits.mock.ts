@@ -124,6 +124,31 @@ export function stashClinicalVisit(visitId: string, data: IntakeExamFormData): v
   if (data.follow_up) {
     followUps[visitId] = { ...data.follow_up, id: `fu${Date.now()}`, visit_id: visitId };
   }
+}
+
+export async function createFullVisit(
+  patientId: string,
+  data: IntakeExamFormData
+): Promise<Visit> {
+  await delay(500);
+
+  const visitId = `v${Date.now()}`;
+  const today = new Date().toISOString().split("T")[0];
+
+  const newVisit: Visit = {
+    id: visitId,
+    patient_id: patientId,
+    examined_by: data.examined_by,
+    status: "completed",
+    visit_date: today,
+    chief_complaint: data.chief_complaint,
+    complaint_duration: data.complaint_duration,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  };
+
+  visits = [newVisit, ...visits];
+  stashClinicalVisit(visitId, data);
 
   return newVisit;
 }
