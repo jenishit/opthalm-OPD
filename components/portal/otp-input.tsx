@@ -76,7 +76,7 @@ export function OtpInput({ length = 6, value, onChange, className }: OtpInputPro
           onKeyDown={(e) => handleKeyDown(e, i)}
           onFocus={() => setActiveInput(i)}
           className={cn(
-            "h-12 w-10 sm:h-14 sm:w-12 rounded-2xl border border-input bg-card text-center text-xl font-semibold text-foreground shadow-organic-sm transition-all focus:border-ring focus:outline-none focus:ring-3 focus:ring-ring/50",
+            "h-12 w-10 sm:h-14 sm:w-12 rounded-2xl border border-input bg-card text-center text-xl font-semibold text-foreground transition-all focus:border-ring focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40",
             activeInput === i && "border-primary ring-3 ring-ring/50"
           )}
         />
