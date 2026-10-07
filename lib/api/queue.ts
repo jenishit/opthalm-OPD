@@ -8,19 +8,33 @@ export interface QueueItem {
   patient: Patient;
 }
 
+/**
+ * Today's queue.
+ *
+ * The backend has no dedicated queue endpoint — it is assembled from the
+ * patients list plus each patient's visits (GET /visit/patient/:id),
+ * filtered to visit_date = today.
+ */
 export async function getTodayQueue(status?: VisitStatus): Promise<QueueItem[]> {
   const today = new Date().toISOString().split("T")[0];
-  const visits = await getVisits({ date: today, status });
-  
+
+  const patients = await listPatientDtos();
+  const visitLists = await Promise.all(
+    patients.map((patient) => getPatientVisitDtos(patient.patient_id))
+  );
+
   const queueItems: QueueItem[] = [];
-  
-  for (const visit of visits) {
-    const patient = await getPatient(visit.patient_id);
-    if (patient) {
-      queueItems.push({ visit, patient });
+  patients.forEach((patientDto, index) => {
+    for (const dto of visitLists[index]?.visits ?? []) {
+      if (dto.visit_date !== today) continue;
+      if (status && dto.status !== status) continue;
+      queueItems.push({
+        visit: toUiVisit(dto, patientDto.patient_id),
+        patient: toUiPatient(patientDto),
+      });
     }
-  }
-  
+  });
+
   // Sort by created_at ascending (oldest first in queue)
   return queueItems.sort((a, b) => {
     const dateA = a.visit.created_at ? new Date(a.visit.created_at).getTime() : 0;
