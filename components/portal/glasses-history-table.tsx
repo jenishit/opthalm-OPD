@@ -68,7 +68,7 @@ export function GlassesHistoryTable() {
   }
 
   return (
-    <div className="rounded-2xl border border-border/60 bg-card shadow-organic-sm overflow-x-auto">
+    <div className="rounded-2xl border border-border/60 bg-card overflow-x-auto">
       <Table>
         <TableHeader>
           <TableRow className="bg-muted/40 hover:bg-muted/40">
