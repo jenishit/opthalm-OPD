@@ -114,7 +114,6 @@ export async function createDiagnosis(
   icd10_code: string,
   description?: string
 ): Promise<DiagnosisCatalog> {
-  await delay();
   const newDiagnosis: DiagnosisCatalog = {
     id: `d${Date.now()}`,
     name,
@@ -122,25 +121,25 @@ export async function createDiagnosis(
     description,
     created_at: new Date().toISOString(),
   };
-  diagnoses = [...diagnoses, newDiagnosis];
+  localDiagnoses.push(newDiagnosis);
   return newDiagnosis;
 }
 
 // ── Medicines ───────────────────────────────────────────────────────────────
 
 export async function getMedicines(search?: string): Promise<Medicine[]> {
-  await delay(100);
-  if (!search) return medicines;
-  const q = search.toLowerCase();
-  return medicines.filter(
-    (m) =>
-      m.generic_name.toLowerCase().includes(q) ||
-      m.brand.toLowerCase().includes(q)
-  );
+  const remote = search ? await searchMedicines(search) : await listMedicines();
+  const q = search ? search.toLowerCase() : null;
+  const local = q
+    ? localMedicines.filter(
+        (m) =>
+          m.generic_name.toLowerCase().includes(q) || m.brand.toLowerCase().includes(q)
+      )
+    : localMedicines;
+  return [...local, ...remote.map(toUiMedicine)];
 }
 
-export async function createMedicine(data: Omit<Medicine, "id" | "created_at">): Promise<Medicine> {
-  await delay();
+export async function createMedicine(data: MedicineFormData): Promise<Medicine> {
   const newMedicine: Medicine = {
     ...data,
     id: `m${Date.now()}`,
