@@ -55,8 +55,6 @@ export default function PortalVerifyPage() {
 
   return (
     <div className="relative flex min-h-[80vh] items-center justify-center p-4">
-      <div className="organic-blob absolute top-10 left-0 h-64 w-64 bg-accent/10" aria-hidden />
-      <div className="organic-blob absolute bottom-10 right-0 h-56 w-56 bg-primary/10" aria-hidden />
 
       <Card className="relative z-10 w-full max-w-md">
         <CardHeader className="space-y-1 text-center">
