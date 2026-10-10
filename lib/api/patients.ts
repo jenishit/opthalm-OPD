@@ -39,7 +39,10 @@ export async function updatePatient(
   id: string,
   data: Partial<PatientFormData>
 ): Promise<Patient> {
-  return toUiPatient(await updatePatientDto(id, toUpdateRequest(data)));
+  // The endpoint requires the full body; the service merges this partial
+  // over the stored patient before PATCHing, then we refetch.
+  await updatePatientDto(id, toUpdateRequest(data));
+  return toUiPatient(await getPatientDto(id));
 }
 
 export async function checkPhoneUnique(phone: string, excludeId?: string): Promise<boolean> {
