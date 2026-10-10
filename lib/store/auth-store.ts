@@ -23,6 +23,7 @@ export const useAuthStore = create<AuthState>()(
     (set) => ({
       staffUser: null,
       accessToken: null,
+      refreshToken: null,
       portalPatient: null,
       authMethod: null,
       sessionToken: null,
