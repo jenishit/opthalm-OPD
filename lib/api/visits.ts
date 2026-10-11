@@ -60,40 +60,72 @@ export async function updateVisitStatus(id: string, status: VisitStatus): Promis
   return toUiVisit({ ...current, status }, current.patient.id);
 }
 
-// Per-visit clinical detail has no backend endpoint yet; these return empty values.
-export async function getVisitSymptoms(_visitId: string): Promise<VisitSymptoms | null> {
-  return null;
+// Per-visit clinical content (symptoms, refraction, exam findings, …) has no
+// backend endpoints yet. Visits created in this session keep their clinical
+// payload in a local store (lib/api/visits.mock), so these delegate.
+export function getVisitSymptoms(visitId: string): Promise<VisitSymptoms | null> {
+  return mockGetVisitSymptoms(visitId);
 }
 
-export async function getVisitRefractions(_visitId: string): Promise<RefractionReading[]> {
-  return [];
+export function getVisitRefractions(visitId: string): Promise<RefractionReading[]> {
+  return mockGetVisitRefractions(visitId);
 }
 
-export async function getVisitExamination(_visitId: string): Promise<ExaminationFindings | null> {
-  return null;
+export function getVisitExamination(visitId: string): Promise<ExaminationFindings | null> {
+  return mockGetVisitExamination(visitId);
 }
 
-export async function getVisitDiagnoses(_visitId: string): Promise<VisitDiagnosis[]> {
-  return [];
+export function getVisitDiagnoses(visitId: string): Promise<VisitDiagnosis[]> {
+  return mockGetVisitDiagnoses(visitId);
 }
 
-export async function getVisitTreatments(_visitId: string): Promise<Treatment[]> {
-  return [];
+export function getVisitTreatments(visitId: string): Promise<Treatment[]> {
+  return mockGetVisitTreatments(visitId);
 }
 
-export async function getVisitInvestigations(_visitId: string): Promise<Investigation[]> {
-  return [];
+export function getVisitInvestigations(visitId: string): Promise<Investigation[]> {
+  return mockGetVisitInvestigations(visitId);
 }
 
-export async function getVisitFollowUp(_visitId: string): Promise<FollowUp | null> {
-  return null;
+export function getVisitFollowUp(visitId: string): Promise<FollowUp | null> {
+  return mockGetVisitFollowUp(visitId);
 }
 
+/**
+ * Persists the visit via POST /visit (patient, examiner, status, date, chief
+ * complaint) and keeps the clinical payload locally until the backend grows
+ * clinical-document endpoints.
+ */
 export async function createFullVisit(
-  _patientId: string,
-  _data: IntakeExamFormData
+  patientId: string,
+  data: IntakeExamFormData
 ): Promise<Visit> {
-  throw new NotImplementedError("Saving a full clinical visit");
+  const staffUser = useAuthStore.getState().staffUser;
+  const today = new Date().toISOString().split("T")[0];
+
+  const dto = await createVisitDto({
+    patient_id: patientId,
+    // POST /visit expects the examiner's profile id; it resolves it to a
+    // display ref internally.
+    examine_by: staffUser?.id || data.examined_by || "",
+    status: "completed",
+    visit_date: today,
+    chief_complaint: data.chief_complaint,
+  });
+
+  stashClinicalVisit(dto.id, data);
+
+  return {
+    id: dto.id,
+    patient_id: dto.patient_id,
+    // Keep the display name for the UI, not the raw id the API echoes back.
+    examined_by: staffUser?.name || data.examined_by || dto.examine_by,
+    status: dto.status as VisitStatus,
+    visit_date: dto.visit_date,
+    chief_complaint: dto.chief_complaint,
+    created_at: dto.created_at,
+    updated_at: dto.updated_at,
+  };
 }
 
 export interface FullVisitData {
@@ -111,14 +143,25 @@ export async function getFullVisitData(visitId: string): Promise<FullVisitData |
   const visit = await getVisit(visitId);
   if (!visit) return null;
 
+  const [symptoms, readings, examination, diagnoses, treatments, investigations, followUp] =
+    await Promise.all([
+      mockGetVisitSymptoms(visitId),
+      mockGetVisitRefractions(visitId),
+      mockGetVisitExamination(visitId),
+      mockGetVisitDiagnoses(visitId),
+      mockGetVisitTreatments(visitId),
+      mockGetVisitInvestigations(visitId),
+      mockGetVisitFollowUp(visitId),
+    ]);
+
   return {
     visit,
-    symptoms: null,
-    readings: [],
-    examination: null,
-    diagnoses: [],
-    treatments: [],
-    investigations: [],
-    followUp: null,
+    symptoms,
+    readings,
+    examination,
+    diagnoses,
+    treatments,
+    investigations,
+    followUp,
   };
 }
