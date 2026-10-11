@@ -107,7 +107,7 @@ export function PatientProfile({ patientId }: { patientId: string }) {
         </div>
 
         {/* Visits Card */}
-        <div className="bg-card rounded-2xl border border-border/60 shadow-organic-sm flex-1 flex flex-col min-h-0">
+        <div className="bg-card rounded-2xl border border-border/60 flex-1 flex flex-col min-h-0">
           <div className="p-4 border-b border-border/60 flex justify-between items-center bg-muted/40 rounded-t-2xl">
             <h3 className="font-medium text-foreground flex items-center gap-2">
               <Calendar className="h-4 w-4 text-muted-foreground" />
