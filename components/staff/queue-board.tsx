@@ -113,7 +113,7 @@ function QueueCard({ item }: { item: QueueItem }) {
   return (
     <Link
       href={`/staff/patients/${patient.id}/visits/${visit.id}`}
-      className="block rounded-2xl border border-border/60 bg-card p-3.5 shadow-organic-sm outline-none transition-all hover:-translate-y-0.5 hover:shadow-organic hover:border-primary/30 focus-visible:ring-3 focus-visible:ring-ring/50"
+      className="block rounded-2xl border border-border/60 bg-card p-3.5 outline-none transition-all hover:border-primary/30 focus-visible:ring-3 focus-visible:ring-ring/50"
     >
       <div className="mb-2 flex items-start justify-between">
         <div>
