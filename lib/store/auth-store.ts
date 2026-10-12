@@ -29,8 +29,12 @@ export const useAuthStore = create<AuthState>()(
       sessionToken: null,
 
       setAccessToken: (token) => set({ accessToken: token }),
+      setAuthTokens: (accessToken, refreshToken) =>
+        set({ accessToken, refreshToken }),
+
       loginStaff: (staff) => set({ staffUser: staff }),
-      logoutStaff: () => set({ staffUser: null, accessToken: null }),
+      logoutStaff: () =>
+        set({ staffUser: null, accessToken: null, refreshToken: null }),
 
       loginPortalPatient: (patient, method, token) =>
         set({
