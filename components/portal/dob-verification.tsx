@@ -68,7 +68,7 @@ export function DobVerification({ token }: DobVerificationProps) {
               <PopoverTrigger>
                 <div
                   className={cn(
-                    "flex w-full items-center justify-between rounded-xl border border-input bg-card px-3.5 py-2 text-sm shadow-organic-sm hover:bg-muted",
+                    "flex w-full items-center justify-between rounded-xl border border-input bg-card px-3.5 py-2 text-sm hover:bg-muted",
                     !field.value && "text-muted-foreground"
                   )}
                 >
