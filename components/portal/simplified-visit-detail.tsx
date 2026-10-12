@@ -124,7 +124,7 @@ export function SimplifiedVisitDetail({ visitId }: SimplifiedVisitDetailProps) {
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-lg flex items-center gap-2">
-            <Glasses className="h-5 w-5 text-accent" />
+            <Glasses className="h-5 w-5 text-clay" />
             Glasses Prescription
           </CardTitle>
         </CardHeader>
