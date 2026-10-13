@@ -26,7 +26,7 @@ export function VisitHistoryList({ visits }: { visits: Visit[] }) {
     <div className="space-y-4">
       {visits.map((visit) => (
         <Link key={visit.id} href={`/portal/visits/${visit.id}`}>
-          <Card className="mb-4 cursor-pointer transition-all hover:-translate-y-0.5 hover:shadow-organic hover:border-primary/30">
+          <Card className="mb-4 cursor-pointer transition-all hover:border-primary/30">
             <CardContent className="p-0">
               <div className="flex items-center p-4 sm:p-6">
                 <div className="hidden sm:flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
