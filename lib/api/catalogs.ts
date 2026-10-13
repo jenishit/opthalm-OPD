@@ -145,6 +145,6 @@ export async function createMedicine(data: MedicineFormData): Promise<Medicine> 
     id: `m${Date.now()}`,
     created_at: new Date().toISOString(),
   };
-  medicines = [...medicines, newMedicine];
+  localMedicines.push(newMedicine);
   return newMedicine;
 }
