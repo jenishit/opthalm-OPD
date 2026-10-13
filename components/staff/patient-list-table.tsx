@@ -42,7 +42,7 @@ export function PatientListTable() {
           </div>
           <input
             type="text"
-            className="block w-full rounded-full border border-input bg-background py-2 pl-10 pr-4 text-foreground placeholder:text-muted-foreground outline-none focus:border-ring focus:ring-3 focus:ring-ring/50 sm:text-sm"
+            className="block w-full rounded-full border border-input bg-background py-2 pl-10 pr-4 text-foreground placeholder:text-muted-foreground outline-none focus:border-ring focus-visible:ring-2 focus-visible:ring-ring/40 sm:text-sm"
             placeholder="Search by name or phone number..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
