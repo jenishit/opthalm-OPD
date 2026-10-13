@@ -5,6 +5,8 @@ export const examinationFindingsSchema = z.object({
   visit_id: z.string().optional(),
   iop_od: z.coerce.number().optional(),
   iop_os: z.coerce.number().optional(),
+  iop_time: z.string().optional(),
+  bp: z.string().optional(),
   convergence: z.string().optional(),
   cover_test: z.string().optional(),
   eom: z.string().optional(),
