@@ -151,7 +151,7 @@ export function CatalogCombobox({ catalogType, placeholder, onSelect }: CatalogC
                 placeholder="Name"
                 value={createName}
                 onChange={(e) => setCreateName(e.target.value)}
-                className="w-full rounded-xl border border-input bg-card px-3 py-1.5 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-ring focus:ring-3 focus:ring-ring/50"
+                className="w-full rounded-xl border border-input bg-card px-3 py-1.5 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-ring focus-visible:ring-2 focus-visible:ring-ring/40"
               />
               {catalogType === "diagnoses" && (
                 <input
@@ -159,7 +159,7 @@ export function CatalogCombobox({ catalogType, placeholder, onSelect }: CatalogC
                   placeholder="ICD-10 Code"
                   value={createCode}
                   onChange={(e) => setCreateCode(e.target.value)}
-                  className="w-full rounded-xl border border-input bg-card px-3 py-1.5 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-ring focus:ring-3 focus:ring-ring/50"
+                  className="w-full rounded-xl border border-input bg-card px-3 py-1.5 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-ring focus-visible:ring-2 focus-visible:ring-ring/40"
                 />
               )}
               <div className="flex gap-2 justify-end mt-1">
