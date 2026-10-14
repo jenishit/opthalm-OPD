@@ -108,7 +108,7 @@ export default function VisitPage({
             <button
               onClick={handlePrint}
               disabled={isPrinting}
-              className="flex items-center gap-2 rounded-full bg-card border border-border px-4 py-2 text-sm font-medium text-foreground shadow-organic-sm hover:bg-muted focus:outline-none transition-colors"
+              className="flex items-center gap-2 rounded-md border border-line bg-card px-4 py-2 text-sm font-semibold text-foreground hover:border-sage focus:outline-none transition-colors"
             >
               <Printer className="h-4 w-4" />
               {isPrinting ? "Generating..." : "Print Rx"}
