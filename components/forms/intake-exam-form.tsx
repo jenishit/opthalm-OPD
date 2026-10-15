@@ -131,13 +131,13 @@ export function IntakeExamForm({ patientId }: { patientId: string }) {
   };
 
   // Handle errors that prevent onSubmit from being called
-  const onError = (errors: any) => {
-    if (errors.chief_complaint || errors.history) setActiveIntakeTab("chief-complaint");
-    else if (errors.symptoms) setActiveIntakeTab("symptoms");
-    else if (errors.readings) setActiveIntakeTab("refraction");
-    else if (errors.examination) setActiveIntakeTab("examination");
-    else if (errors.diagnoses) setActiveIntakeTab("diagnosis");
-    else if (errors.treatments || errors.follow_up) setActiveIntakeTab("treatment");
+  const onError: SubmitErrorHandler<z.input<typeof intakeExamFormSchema>> = (errors) => {
+    if (errors.chief_complaint || errors.history) goToTab("chief-complaint");
+    else if (errors.symptoms) goToTab("symptoms");
+    else if (errors.readings) goToTab("refraction");
+    else if (errors.examination) goToTab("examination");
+    else if (errors.diagnoses) goToTab("diagnosis");
+    else if (errors.treatments || errors.follow_up) goToTab("treatment");
   };
 
   if (loadingInitial) {
@@ -148,35 +148,50 @@ export function IntakeExamForm({ patientId }: { patientId: string }) {
     <FormProvider {...methods}>
       <form onSubmit={methods.handleSubmit(onSubmit, onError)} className="flex flex-col h-full overflow-hidden">
 
-        {/* Top Tab Navigation */}
-        <div className="bg-muted/40 border-b border-border/60 px-4 overflow-x-auto shrink-0 flex">
-          <nav className="-mb-px flex gap-1" aria-label="Tabs">
-            {tabs.map((tab) => {
+        {/* Step rail — reference consult tabs, in our type and colour system */}
+        <div className="shrink-0 border-b border-border/60 bg-muted/40 px-4 py-3">
+          <nav className="flex flex-wrap items-center gap-2" aria-label="Visit sections">
+            {tabs.map((tab, index) => {
               const isActive = activeIntakeTab === tab.id;
+              const isDone = visited.includes(tab.id) && !isActive;
+              const Icon = isDone ? Check : tab.icon;
 
-              // Simple heuristic to check if a tab has errors to show red dot
               let hasError = false;
               const errors = methods.formState.errors;
               if (tab.id === "chief-complaint" && (errors.chief_complaint || errors.history)) hasError = true;
               if (tab.id === "symptoms" && errors.symptoms) hasError = true;
               if (tab.id === "refraction" && errors.readings) hasError = true;
+              if (tab.id === "examination" && errors.examination) hasError = true;
+              if (tab.id === "diagnosis" && errors.diagnoses) hasError = true;
+              if (tab.id === "treatment" && (errors.treatments || errors.follow_up)) hasError = true;
 
               return (
-                <button
-                  key={tab.id}
-                  type="button"
-                  onClick={() => setActiveIntakeTab(tab.id)}
-                  className={`
-                    relative whitespace-nowrap my-2 px-4 py-2 rounded-full font-medium text-sm transition-colors
-                    ${isActive
-                      ? "bg-primary text-primary-foreground shadow-organic-sm"
-                      : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                    }
-                  `}
-                >
-                  {tab.label}
-                  {hasError && <span className="absolute top-1.5 right-1 h-2 w-2 rounded-full bg-destructive ring-2 ring-muted/40" />}
-                </button>
+                <React.Fragment key={tab.id}>
+                  <button
+                    type="button"
+                    onClick={() => goToTab(tab.id)}
+                    aria-current={isActive ? "step" : undefined}
+                    className={`relative inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border px-3.5 py-2 text-sm font-semibold transition-colors ${
+                      isActive
+                        ? "border-primary bg-primary text-primary-foreground "
+                        : isDone
+                          ? "border-primary/20 bg-primary/10 text-primary"
+                          : "border-border/60 bg-card text-muted-foreground hover:border-primary/40 hover:text-foreground"
+                    }`}
+                  >
+                    <Icon className="size-3.5" />
+                    {tab.label}
+                    {hasError ? (
+                      <span className="absolute -right-0.5 -top-0.5 size-2 rounded-full bg-destructive ring-2 ring-background" />
+                    ) : null}
+                  </button>
+                  {index < tabs.length - 1 ? (
+                    <span
+                      aria-hidden
+                      className={`h-px w-3 border-t-2 ${isDone ? "border-primary/40" : "border-border"}`}
+                    />
+                  ) : null}
+                </React.Fragment>
               );
             })}
           </nav>
@@ -190,7 +205,7 @@ export function IntakeExamForm({ patientId }: { patientId: string }) {
         )}
 
         {Object.keys(methods.formState.errors).length > 0 && !submitError && (
-          <div className="bg-accent/10 text-accent border-b border-accent/20 px-4 py-2 text-xs shrink-0 font-medium">
+          <div className="bg-clay-soft text-clay border-b border-clay/20 px-4 py-2 text-xs shrink-0 font-medium">
             Please correct the errors in the form before submitting.
           </div>
         )}
