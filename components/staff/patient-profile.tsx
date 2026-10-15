@@ -149,7 +149,7 @@ export function PatientProfile({ patientId }: { patientId: string }) {
       </div>
 
       {/* Right Column: History Timeline */}
-      <div className="lg:col-span-2 bg-card rounded-2xl border border-border/60 shadow-organic-sm flex flex-col overflow-hidden">
+      <div className="lg:col-span-2 bg-card rounded-2xl border border-border/60 flex flex-col overflow-hidden">
         <div className="p-4 border-b border-border/60 bg-muted/40 flex items-center gap-2">
           <Activity className="h-5 w-5 text-primary" />
           <h3 className="font-medium text-foreground">Clinical History Timeline</h3>
