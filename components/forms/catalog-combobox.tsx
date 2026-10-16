@@ -168,7 +168,7 @@ export function CatalogCombobox({ catalogType, placeholder, onSelect }: CatalogC
                   type="button"
                   onClick={handleCreate}
                   disabled={loading || !createName}
-                  className="text-xs px-3.5 py-1.5 bg-primary text-primary-foreground rounded-full font-medium shadow-organic-sm hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center gap-1"
+                  className="text-xs px-3.5 py-1.5 bg-primary text-primary-foreground rounded-full font-medium hover:bg-primary-hover transition-colors disabled:opacity-50 flex items-center gap-1"
                 >
                   {loading ? <Loader2 className="h-3 w-3 animate-spin" /> : <Check className="h-3 w-3" />} Save & Add
                 </button>
