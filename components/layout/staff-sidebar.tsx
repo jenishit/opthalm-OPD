@@ -76,21 +76,25 @@ export function StaffSidebar() {
           </button>
         </div>
 
-        <nav className="flex-1 space-y-1.5 px-3 py-2">
+        <nav
+          aria-label="Staff navigation"
+          className="flex flex-1 flex-col gap-1 px-3 py-2 md:px-0 md:pt-0"
+        >
           {links.map((link) => {
             const Icon = link.icon;
-            const isActive = pathname.startsWith(link.href);
+            const isActive = link.active;
 
             return (
               <Link
                 key={link.href}
                 href={link.href}
+                aria-current={isActive ? "page" : undefined}
                 className={`
-                  flex items-center gap-3 rounded-2xl px-3.5 py-2.5 text-sm font-medium outline-none transition-colors focus-visible:ring-3 focus-visible:ring-primary-foreground/50
+                  flex items-center gap-3 rounded-md px-3.5 py-2.5 text-sm font-semibold outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring/50 md:mx-auto md:min-w-[66px] md:flex-col md:gap-0.5 md:px-3 md:py-2 md:text-[11px] md:leading-tight
                   ${
                     isActive
-                      ? "bg-primary-foreground/15 text-primary-foreground"
-                      : "text-primary-foreground/75 hover:bg-primary-foreground/10 hover:text-primary-foreground"
+                      ? "bg-primary text-primary-foreground"
+                      : "text-mute hover:bg-sage-soft hover:text-ink"
                   }
                 `}
                 onClick={() => {
@@ -99,8 +103,10 @@ export function StaffSidebar() {
                   }
                 }}
               >
-                <Icon className="h-5 w-5 shrink-0" />
-                {link.label}
+                <Icon className="size-6 shrink-0 md:size-[23px]" />
+                <span className="md:max-w-full md:truncate">
+                  {link.label}
+                </span>
               </Link>
             );
           })}
