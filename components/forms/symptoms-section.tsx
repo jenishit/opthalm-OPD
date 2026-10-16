@@ -34,9 +34,9 @@ export function SymptomsSection() {
 
   return (
     <div className="space-y-6">
-      <div className="bg-card p-6 rounded-2xl border border-border/60 shadow-organic-sm">
+      <div className="bg-card p-6 rounded-2xl border border-border/60 ">
         <div className="flex items-center gap-2 border-b border-border/60 pb-3 mb-5">
-          <AlertCircle className="h-5 w-5 text-accent" />
+          <AlertCircle className="h-5 w-5 text-clay" />
           <h3 className="font-display text-lg font-medium text-foreground">Review of Symptoms</h3>
         </div>
 
