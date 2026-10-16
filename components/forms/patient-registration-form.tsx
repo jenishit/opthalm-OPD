@@ -64,17 +64,54 @@ export function PatientRegistrationForm() {
     },
   });
 
-  const phoneValue = watch("phone");
+  const values = watch();
+  const sex = values.sex;
 
-  // Custom blur handler for phone uniqueness check
-  const handlePhoneBlur = async () => {
-    if (!phoneValue || phoneValue.length < 10) return;
+  const goNext = async () => {
+    const fieldsByStep: FieldPath<PatientFormData>[][] = [
+      ["first_name", "last_name", "sex"],
+      ["date_of_birth", "age"],
+      ["phone", "occupation", "address_street", "address_city", "address_state"],
+      [],
+    ];
+    const valid = await trigger(fieldsByStep[step], { shouldFocus: true });
+    if (valid) setStep((current) => Math.min(current + 1, steps.length - 1));
+  };
 
-    const isUnique = await checkPhoneUnique(phoneValue);
-    if (!isUnique) {
-      setError("phone", { type: "manual", message: "This phone number is already registered" });
+  const goTo = async (target: number) => {
+    if (target <= step) setStep(target);
+    else await goNext();
+  };
+
+  const toggleAgeMode = () => {
+    const next = !useAge;
+    setUseAge(next);
+    if (next) {
+      setValue("date_of_birth", undefined);
+      if (values.age == null) setValue("age", 40);
     } else {
-      clearErrors("phone");
+      setValue("age", undefined);
+    }
+    clearErrors(["date_of_birth", "age"]);
+  };
+
+  const handlePhoneBlur = async () => {
+    const phone = values.phone;
+    if (!phone || phone.length < 10) return;
+    try {
+      const isUnique = await checkPhoneUnique(phone);
+      if (!isUnique) {
+        setError("phone", { type: "manual", message: "This phone number is already registered" });
+      } else {
+        clearErrors("phone");
+      }
+    } catch (error) {
+      // SessionExpiredError: redirect to sign-in is already in flight.
+      // Any other failure (network, server) skips the advisory check
+      // rather than blocking registration on it.
+      if (!(error instanceof SessionExpiredError)) {
+        console.warn("Phone uniqueness check skipped:", error);
+      }
     }
   };
 
@@ -84,8 +121,9 @@ export function PatientRegistrationForm() {
     try {
       const newPatient = await createPatient(data);
       router.push(`/staff/patients/${newPatient.id}`);
-    } catch (error: any) {
-      setSubmitError(error.message || "Failed to register patient");
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "Failed to register patient";
+      setSubmitError(message);
     } finally {
       setIsSubmitting(false);
     }
