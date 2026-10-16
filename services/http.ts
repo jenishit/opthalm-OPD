@@ -1,5 +1,5 @@
 import { useAuthStore } from "@/lib/store/auth-store";
-import type { ApiEnvelope, ApiErrorBody } from "@/types/api";
+import type { ApiEnvelope, ApiErrorBody, LoginResponse } from "@/types/api";
 
 export class ApiError extends Error {
   readonly status: number;
@@ -7,6 +7,7 @@ export class ApiError extends Error {
 
   constructor(status: number, messages: string[]) {
     super(messages.join(", "));
+    this.name = "ApiError";
     this.status = status;
     this.messages = messages;
   }
