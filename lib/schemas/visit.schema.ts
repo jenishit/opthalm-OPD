@@ -61,6 +61,7 @@ export const visitDiagnosisSchema = z.object({
   diagnosis_name: z.string().optional(),
   icd10_code: z.string().optional(),
   laterality: z.enum(laterality).default("OU"),
+  status: z.enum(["provisional", "confirmed", "resolved"]).optional(),
 });
 
 export type VisitDiagnosis = z.infer<typeof visitDiagnosisSchema>;
