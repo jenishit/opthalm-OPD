@@ -211,8 +211,8 @@ export function IntakeExamForm({ patientId }: { patientId: string }) {
         )}
 
         {/* Scrollable Form Content */}
-        <div className="flex-1 overflow-y-auto p-4 md:p-6 bg-background">
-          <div className="max-w-4xl mx-auto space-y-6">
+        <div className="flex-1 overflow-y-auto bg-background p-4 md:p-6">
+          <div className="mx-auto max-w-5xl space-y-6">
             <div className={activeIntakeTab === "chief-complaint" ? "block" : "hidden"}><ChiefComplaintSection /></div>
             <div className={activeIntakeTab === "symptoms" ? "block" : "hidden"}><SymptomsSection /></div>
             <div className={activeIntakeTab === "refraction" ? "block" : "hidden"}><RefractionSection /></div>
@@ -223,44 +223,54 @@ export function IntakeExamForm({ patientId }: { patientId: string }) {
           </div>
         </div>
 
-        {/* Footer Actions */}
-        <div className="bg-card p-4 border-t border-border/60 shrink-0 flex flex-wrap justify-between items-center gap-3">
-          <div className="text-sm text-muted-foreground">
-            Saving visit for Dr. {methods.watch("examined_by") || "Unassigned"}
-          </div>
-          <div className="flex gap-3">
-            <button
-              type="button"
-              onClick={() => {
-                const currentIndex = tabs.findIndex(t => t.id === activeIntakeTab);
-                if (currentIndex > 0) setActiveIntakeTab(tabs[currentIndex - 1].id);
-              }}
-              disabled={activeIntakeTab === tabs[0].id}
-              className="px-4 py-2 bg-card border border-border rounded-full text-sm font-medium text-foreground shadow-organic-sm hover:bg-muted transition-colors disabled:opacity-50"
-            >
-              Previous
-            </button>
-
-            {activeIntakeTab === tabs[tabs.length - 1].id ? (
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="px-6 py-2 bg-primary text-primary-foreground rounded-full text-sm font-semibold shadow-organic-sm hover:bg-primary/90 hover:-translate-y-0.5 transition-all disabled:opacity-50"
-              >
-                {isSubmitting ? "Saving..." : "Save Complete Visit"}
-              </button>
-            ) : (
+        {/* Sticky action bar — reference consult footer */}
+        <div className="shrink-0 border-t border-line bg-card p-3">
+          <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-3">
+            <div className="min-w-0">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                {tabs.find((t) => t.id === activeIntakeTab)?.label}
+              </p>
+              <p className="truncate font-display text-sm font-medium text-foreground">
+                Examining doctor: {methods.watch("examined_by") || "Unassigned"}
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
               <button
                 type="button"
                 onClick={() => {
-                  const currentIndex = tabs.findIndex(t => t.id === activeIntakeTab);
-                  if (currentIndex < tabs.length - 1) setActiveIntakeTab(tabs[currentIndex + 1].id);
+                  const currentIndex = tabs.findIndex((t) => t.id === activeIntakeTab);
+                  if (currentIndex > 0) goToTab(tabs[currentIndex - 1].id);
                 }}
-                className="px-5 py-2 bg-primary text-primary-foreground rounded-full text-sm font-medium shadow-organic-sm hover:bg-primary/90 hover:-translate-y-0.5 transition-all"
+                disabled={activeIntakeTab === tabs[0].id}
+                className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted disabled:opacity-40"
               >
-                Next
+                <ChevronLeft className="size-4" />
+                Previous
               </button>
-            )}
+
+              {activeIntakeTab === tabs[tabs.length - 1].id ? (
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="inline-flex items-center gap-1.5 rounded-full bg-primary px-6 py-2 text-sm font-semibold text-primary-foreground transition-all hover:bg-primary-hover disabled:pointer-events-none disabled:opacity-50"
+                >
+                  <Check className="size-4" />
+                  {isSubmitting ? "Saving..." : "Save Complete Visit"}
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => {
+                    const currentIndex = tabs.findIndex((t) => t.id === activeIntakeTab);
+                    if (currentIndex < tabs.length - 1) goToTab(tabs[currentIndex + 1].id);
+                  }}
+                  className="inline-flex items-center gap-1.5 rounded-md bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground transition-all hover:bg-primary-hover "
+                >
+                  Next
+                  <ChevronRight className="size-4" />
+                </button>
+              )}
+            </div>
           </div>
         </div>
 
