@@ -131,7 +131,7 @@ export function VisitDetailView({ visitData }: { visitData: FullVisitData }) {
 
       {/* Refraction */}
       {readings && readings.length > 0 && (
-        <div className="bg-card rounded-2xl border border-border/60 shadow-organic-sm overflow-hidden">
+        <div className="bg-card rounded-2xl border border-border/60 overflow-hidden">
           <div className="px-4 py-3 border-b border-border/60 bg-muted/40">
             <h3 className="font-medium text-foreground text-sm">Vision & Refraction</h3>
           </div>
@@ -175,7 +175,7 @@ export function VisitDetailView({ visitData }: { visitData: FullVisitData }) {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
         {/* Diagnoses */}
-        <div className="bg-card rounded-2xl border border-border/60 shadow-organic-sm overflow-hidden">
+        <div className="bg-card rounded-2xl border border-border/60 overflow-hidden">
           <div className="px-4 py-3 border-b border-border/60 bg-muted/40">
             <h3 className="font-medium text-foreground text-sm">Diagnoses</h3>
           </div>
@@ -199,7 +199,7 @@ export function VisitDetailView({ visitData }: { visitData: FullVisitData }) {
         </div>
 
         {/* Treatments & Follow Up */}
-        <div className="bg-card rounded-2xl border border-border/60 shadow-organic-sm overflow-hidden flex flex-col">
+        <div className="bg-card rounded-2xl border border-border/60 overflow-hidden flex flex-col">
           <div className="px-4 py-3 border-b border-border/60 bg-muted/40">
             <h3 className="font-medium text-foreground text-sm">Treatment Plan</h3>
           </div>
