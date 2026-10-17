@@ -1,6 +1,12 @@
 import { apiFetch } from "./http";
 import type { Visit, VisitStatus } from "@/lib/schemas/visit.schema";
-import type { PatientVisitsDTO, VisitDTO, VisitItemDTO, VisitUpsertRequest } from "@/types/api";
+import type {
+  PatientVisitsDTO,
+  VisitCreateDTO,
+  VisitDTO,
+  VisitItemDTO,
+  VisitUpsertRequest,
+} from "@/types/api";
 
 export function toUiVisit(dto: VisitItemDTO, patientId: string): Visit {
   return {
