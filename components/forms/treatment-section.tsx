@@ -122,7 +122,7 @@ export function TreatmentSection() {
                   {type === "procedure" && (
                     <div>
                       <div className="flex items-center gap-2 mb-2">
-                        <span className="rounded-full bg-accent/10 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-accent">
+                        <span className="rounded-full bg-clay-soft px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-clay">
                           Procedure
                         </span>
                       </div>
@@ -164,9 +164,9 @@ export function TreatmentSection() {
       </div>
 
       {/* Follow Up */}
-      <div className="bg-card p-6 rounded-2xl border border-border/60 shadow-organic-sm">
+      <div className="bg-card p-6 rounded-2xl border border-border/60 ">
         <div className="flex items-center gap-2 border-b border-border/60 pb-3 mb-5">
-          <Calendar className="h-5 w-5 text-accent" />
+          <Calendar className="h-5 w-5 text-clay" />
           <h3 className="font-display text-lg font-medium text-foreground">Follow-up Plan</h3>
         </div>
 
