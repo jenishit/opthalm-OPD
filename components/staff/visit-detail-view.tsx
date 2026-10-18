@@ -218,7 +218,7 @@ export function VisitDetailView({ visitData }: { visitData: FullVisitData }) {
                       </div>
                     ) : t.type === "procedure" ? (
                       <div>
-                        <span className="text-xs font-bold text-accent uppercase tracking-wider mb-1 block">Procedure</span>
+                        <span className="text-xs font-bold text-clay uppercase tracking-wider mb-1 block">Procedure</span>
                         <div className="font-medium text-foreground">{t.procedure_name}</div>
                       </div>
                     ) : (
@@ -236,9 +236,9 @@ export function VisitDetailView({ visitData }: { visitData: FullVisitData }) {
 
             {followUp && (
               <div className="mt-6 pt-4 border-t border-border/60">
-                <div className="flex justify-between items-center bg-accent/10 p-3 rounded-xl border border-accent/20">
+                <div className="flex justify-between items-center bg-clay-soft p-3 rounded-xl border border-clay/20">
                   <div>
-                    <span className="block text-xs font-bold text-accent uppercase mb-1">Next Follow-up</span>
+                    <span className="block text-xs font-bold text-clay uppercase mb-1">Next Follow-up</span>
                     <span className="font-semibold text-foreground">{formatDate(followUp.follow_up_date)}</span>
                   </div>
                   {followUp.reason && (
