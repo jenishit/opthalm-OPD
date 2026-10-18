@@ -25,7 +25,7 @@ export function InvestigationsSection() {
           </div>
           <button
             type="button"
-            onClick={() => append({ investigation_name: "", status: "ordered" })}
+            onClick={() => append({ type: "other", investigation_name: "", status: "ordered" })}
             className="inline-flex items-center gap-1.5 rounded-full bg-status-examining-bg px-3.5 py-1.5 text-sm font-medium text-status-examining transition-colors hover:brightness-95"
           >
             <Plus className="h-4 w-4" /> Add Test
@@ -73,7 +73,7 @@ export function InvestigationsSection() {
                   <div className="md:col-span-2">
                     <label className="block text-sm font-medium text-foreground mb-1.5">Results / Notes</label>
                     <textarea
-                      {...register(`investigations.${index}.results`)}
+                      {...register(`investigations.${index}.result`)}
                       rows={2}
                       placeholder="Findings..."
                       className={fieldCls}
