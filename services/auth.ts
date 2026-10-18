@@ -1,6 +1,17 @@
+import { useAuthStore } from "@/lib/store/auth-store";
 import { apiFetch } from "./http";
-import type { LoginRequest, LoginResponse, ProfileResponse } from "@/types/api";
+import type {
+  LoginRequest,
+  LoginResponse,
+  RefreshRequest,
+  RequestPasswordResetRequest,
+  ConfirmPasswordResetRequest,
+  ConfirmEmailVerificationRequest,
+  SignupRequest,
+  ProfileResponse,
+} from "@/types/api";
 
+/** POST /auth/login — public. */
 export function login(body: LoginRequest): Promise<LoginResponse> {
   return apiFetch<LoginResponse>("/auth/login", {
     method: "POST",
