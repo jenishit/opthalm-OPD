@@ -116,7 +116,7 @@ export default function VisitPage({
           )}
           <Link
             href={`/staff/patients/${patient.id}/visits/${visitData.visit.id}/edit`}
-            className="flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-organic-sm transition-all hover:-translate-y-0.5 hover:shadow-organic hover:bg-primary/90 focus:outline-none focus:ring-3 focus:ring-ring/50"
+            className="flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-all hover:bg-primary-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
           >
             <Edit className="h-4 w-4" />
             Edit Visit
