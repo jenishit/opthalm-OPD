@@ -129,163 +129,344 @@ export function PatientRegistrationForm() {
     }
   };
 
+  const submitFromReview = async () => {
+    const valid = await trigger(undefined, { shouldFocus: true });
+    if (valid) void handleSubmit(onSubmit)();
+  };
+
+  const ageDisplay = values.age != null ? String(values.age) : "\u2014";
+  const fullName = [values.first_name, values.last_name].filter(Boolean).join(" ") || "New patient";
+  const addressLine = [values.address_street, values.address_city, values.address_state]
+    .filter(Boolean)
+    .join(", ");
+
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-      {submitError && (
-        <div className="rounded-2xl bg-destructive/10 p-3.5 text-sm text-destructive">
+    <form
+      onSubmit={(event) => {
+        event.preventDefault();
+        if (step === steps.length - 1) void submitFromReview();
+        else void goNext();
+      }}
+      className="flex flex-col gap-5"
+    >
+      <StepRail steps={steps} current={step} onSelect={goTo} />
+
+      {submitError ? (
+        <div className="rounded-2xl border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm font-medium text-destructive">
           {submitError}
         </div>
-      )}
+      ) : null}
 
-      <div className="grid grid-cols-1 gap-y-6 gap-x-5 sm:grid-cols-2">
-        {/* Name Fields */}
-        <div>
-          <label htmlFor="first_name" className={labelCls}>
-            First Name <span className="text-destructive">*</span>
-          </label>
-          <input {...register("first_name")} type="text" className={inputCls} />
-          {errors.first_name && <p className={errorCls}>{errors.first_name.message}</p>}
-        </div>
+      <div className={chartShell}>
+        {step === 0 ? (
+          <div className="grid gap-6 p-5 sm:p-6 md:grid-cols-[190px_1fr]">
+            <div className="flex flex-col items-center justify-center gap-2 rounded-2xl border-[1.5px] border-dashed border-border/80 bg-muted/30 p-5 text-center">
+              <div className="flex size-28 items-center justify-center rounded-full bg-primary/10 font-display text-3xl font-medium text-primary">
+                {(values.first_name?.[0] ?? "") + (values.last_name?.[0] ?? "") || <UserRound className="size-10" />}
+              </div>
+              <p className="font-display text-lg font-medium text-foreground">{fullName}</p>
+              <p className={chartLabel}>{sex ? `${sex} · new registration` : "new registration"}</p>
+            </div>
 
-        <div>
-          <label htmlFor="last_name" className={labelCls}>
-            Last Name <span className="text-destructive">*</span>
-          </label>
-          <input {...register("last_name")} type="text" className={inputCls} />
-          {errors.last_name && <p className={errorCls}>{errors.last_name.message}</p>}
-        </div>
+            <div className="flex flex-col gap-5">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div>
+                  <label htmlFor="first_name" className={labelCls}>
+                    First Name <span className="text-destructive">*</span>
+                  </label>
+                  <input
+                    {...register("first_name")}
+                    id="first_name"
+                    type="text"
+                    autoComplete="given-name"
+                    className={`${chartField} mt-1.5`}
+                  />
+                  {errors.first_name ? <p className={errorCls}>{errors.first_name.message}</p> : null}
+                </div>
+                <div>
+                  <label htmlFor="last_name" className={labelCls}>
+                    Last Name <span className="text-destructive">*</span>
+                  </label>
+                  <input
+                    {...register("last_name")}
+                    id="last_name"
+                    type="text"
+                    autoComplete="family-name"
+                    className={`${chartField} mt-1.5`}
+                  />
+                  {errors.last_name ? <p className={errorCls}>{errors.last_name.message}</p> : null}
+                </div>
+              </div>
 
-        {/* Phone */}
-        <div>
-          <label htmlFor="phone" className={labelCls}>
-            Phone Number <span className="text-destructive">*</span>
-          </label>
-          <input {...register("phone")} onBlur={handlePhoneBlur} type="tel" className={inputCls} />
-          {errors.phone && <p className={errorCls}>{errors.phone.message}</p>}
-        </div>
-
-        {/* Sex */}
-        <div>
-          <label htmlFor="sex" className={labelCls}>
-            Sex <span className="text-destructive">*</span>
-          </label>
-          <select {...register("sex")} className={inputCls}>
-            {sexOptions.map((opt) => (
-              <option key={opt} value={opt}>
-                {opt}
-              </option>
-            ))}
-          </select>
-          {errors.sex && <p className={errorCls}>{errors.sex.message}</p>}
-        </div>
-
-        {/* DOB / Age Toggle Section */}
-        <div className="sm:col-span-2 rounded-2xl border border-border/60 bg-muted/40 p-5">
-          <div className="mb-4 flex items-center justify-between">
-            <label className="text-sm font-medium text-foreground">
-              Age Verification <span className="text-destructive">*</span>
-            </label>
-            <div className="flex items-center gap-2.5">
-              <span className={`text-xs ${!useAge ? "font-bold text-primary" : "text-muted-foreground"}`}>DOB</span>
-              <button
-                type="button"
-                onClick={() => {
-                  setUseAge(!useAge);
-                  // Clear the other field when switching
-                  if (!useAge) setValue("date_of_birth", undefined);
-                  else setValue("age", undefined);
-                }}
-                className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-3 focus:ring-ring/50 ${useAge ? "bg-primary" : "bg-border"}`}
-              >
-                <span
-                  className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-card shadow-organic-sm ring-0 transition duration-200 ease-in-out ${useAge ? "translate-x-5" : "translate-x-0"}`}
-                />
-              </button>
-              <span className={`text-xs ${useAge ? "font-bold text-primary" : "text-muted-foreground"}`}>Age</span>
+              <div>
+                <span className={labelCls}>Sex</span>
+                <div className="mt-2 grid grid-cols-3 gap-2 sm:max-w-md">
+                  {sexTiles.map((tile) => {
+                    const Icon = tile.icon;
+                    const on = sex === tile.value;
+                    return (
+                      <button
+                        key={tile.value}
+                        type="button"
+                        aria-pressed={on}
+                        onClick={() => setValue("sex", tile.value, { shouldValidate: true, shouldDirty: true })}
+                        className={`flex h-20 flex-col items-center justify-center gap-1 rounded-xl border text-sm font-semibold transition-colors ${
+                          on
+                            ? "border-primary bg-primary text-primary-foreground "
+                            : "border-border/60 bg-card text-muted-foreground hover:border-primary/50 hover:text-foreground"
+                        }`}
+                      >
+                        <Icon className="size-6" />
+                        {tile.label}
+                      </button>
+                    );
+                  })}
+                </div>
+                {errors.sex ? <p className={errorCls}>{errors.sex.message}</p> : null}
+              </div>
             </div>
           </div>
+        ) : null}
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {!useAge ? (
+        {step === 1 ? (
+          <div className="flex flex-col gap-6 p-5 sm:p-6">
+            <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
-                <label htmlFor="date_of_birth" className={subLabelCls}>
-                  Date of Birth
-                </label>
-                <input {...register("date_of_birth")} type="date" className={inputCls} />
-                {errors.date_of_birth && <p className={errorCls}>{errors.date_of_birth.message}</p>}
+                <p className="font-display text-xl font-medium text-foreground">Age verification</p>
+                <p className="text-sm text-muted-foreground">
+                  Either a date of birth or an exact age is required.
+                </p>
               </div>
-            ) : (
-              <div>
-                <label htmlFor="age" className={subLabelCls}>
-                  Current Age (Years)
-                </label>
+              <Segmented
+                label="Age entry mode"
+                value={useAge ? "age" : "dob"}
+                onChange={(mode) => {
+                  if ((mode === "age") !== useAge) toggleAgeMode();
+                }}
+                options={[
+                  { value: "dob", label: "Date of birth" },
+                  { value: "age", label: "Age" },
+                ]}
+              />
+            </div>
+
+            {useAge ? (
+              <div className="grid gap-6 rounded-2xl border border-border/60 bg-muted/30 p-5 sm:grid-cols-[1fr_auto] sm:items-center">
+                <div>
+                  <div className="flex items-baseline justify-between">
+                    <label htmlFor="age" className={chartLabel}>
+                      Years
+                    </label>
+                    <span className="font-display text-4xl font-medium tabular-nums text-foreground">
+                      {ageDisplay}
+                    </span>
+                  </div>
+                  <input
+                    id="age"
+                    type="range"
+                    min="0"
+                    max="110"
+                    value={values.age ?? 40}
+                    onChange={(event) =>
+                      setValue("age", Number(event.target.value), {
+                        shouldDirty: true,
+                        shouldValidate: true,
+                      })
+                    }
+                    className="mt-3 w-full accent-primary"
+                  />
+                </div>
                 <input
-                  {...register("age", { valueAsNumber: true })}
                   type="number"
                   min="0"
                   max="150"
-                  className={inputCls}
+                  aria-label="Age in years"
+                  value={values.age ?? ""}
+                  onChange={(event) =>
+                    setValue("age", event.target.value === "" ? undefined : Number(event.target.value), {
+                      shouldDirty: true,
+                      shouldValidate: true,
+                    })
+                  }
+                  className={`${chartField} w-28 text-center text-lg tabular-nums`}
                 />
-                {errors.age && <p className={errorCls}>{errors.age.message}</p>}
+                {errors.age ? <p className={errorCls}>{errors.age.message}</p> : null}
+              </div>
+            ) : (
+              <div className="rounded-2xl border border-border/60 bg-muted/30 p-5">
+                <label htmlFor="date_of_birth" className={labelCls}>
+                  Date of birth
+                </label>
+                <input
+                  {...register("date_of_birth")}
+                  id="date_of_birth"
+                  type="date"
+                  className={`${chartField} mt-1.5 max-w-xs`}
+                />
+                {errors.date_of_birth ? <p className={errorCls}>{errors.date_of_birth.message}</p> : null}
               </div>
             )}
+
+            {errors.date_of_birth && useAge ? (
+              <p className={errorCls}>{errors.date_of_birth.message}</p>
+            ) : null}
           </div>
-          {(errors.date_of_birth || errors.age) && !errors.date_of_birth?.message && !errors.age?.message && (
-            <p className="mt-3 text-sm text-destructive">Please provide either a Date of Birth or an Age.</p>
-          )}
-        </div>
+        ) : null}
 
-        {/* Occupation */}
-        <div>
-          <label htmlFor="occupation" className={labelCls}>
-            Occupation
-          </label>
-          <input {...register("occupation")} type="text" className={inputCls} />
-        </div>
-
-        {/* Address Fields */}
-        <div className="sm:col-span-2 mt-2">
-          <h3 className="font-display mb-4 border-b border-border/60 pb-2 text-base font-medium text-foreground">
-            Address
-          </h3>
-          <div className="grid grid-cols-1 gap-y-4 gap-x-5 sm:grid-cols-2">
-            <div className="sm:col-span-2">
-              <label htmlFor="address_street" className={subLabelCls}>
-                Street / Area
+        {step === 2 ? (
+          <div className="grid gap-5 p-5 sm:p-6 sm:grid-cols-2">
+            <div>
+              <label htmlFor="phone" className={labelCls}>
+                Phone Number <span className="text-destructive">*</span>
               </label>
-              <input {...register("address_street")} type="text" className={inputCls} />
+              <input
+                {...register("phone")}
+                id="phone"
+                type="tel"
+                inputMode="numeric"
+                autoComplete="tel"
+                onBlur={handlePhoneBlur}
+                className={`${chartField} mt-1.5`}
+              />
+              {errors.phone ? <p className={errorCls}>{errors.phone.message}</p> : null}
             </div>
             <div>
-              <label htmlFor="address_city" className={subLabelCls}>
-                City
+              <label htmlFor="occupation" className={labelCls}>
+                Occupation
               </label>
-              <input {...register("address_city")} type="text" className={inputCls} />
+              <input
+                {...register("occupation")}
+                id="occupation"
+                type="text"
+                className={`${chartField} mt-1.5`}
+              />
             </div>
-            <div>
-              <label htmlFor="address_state" className={subLabelCls}>
-                State / Province
-              </label>
-              <input {...register("address_state")} type="text" className={inputCls} />
+
+            <div className="sm:col-span-2 sm:mt-2">
+              <h3 className="font-display mb-4 border-b border-border/60 pb-2 text-base font-medium text-foreground">
+                Address
+              </h3>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="sm:col-span-2">
+                  <label htmlFor="address_street" className={chartLabel}>
+                    Street / Area
+                  </label>
+                  <input
+                    {...register("address_street")}
+                    id="address_street"
+                    type="text"
+                    className={`${chartField} mt-1.5`}
+                  />
+                </div>
+                <div>
+                  <label htmlFor="address_city" className={chartLabel}>
+                    City
+                  </label>
+                  <input
+                    {...register("address_city")}
+                    id="address_city"
+                    type="text"
+                    className={`${chartField} mt-1.5`}
+                  />
+                </div>
+                <div>
+                  <label htmlFor="address_state" className={chartLabel}>
+                    State / Province
+                  </label>
+                  <input
+                    {...register("address_state")}
+                    id="address_state"
+                    type="text"
+                    className={`${chartField} mt-1.5`}
+                  />
+                </div>
+              </div>
             </div>
           </div>
-        </div>
+        ) : null}
+
+        {step === 3 ? (
+          <div className="flex flex-col gap-5 p-5 sm:p-6">
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/60 pb-4">
+              <div className="flex items-center gap-3">
+                <div className="flex size-14 items-center justify-center rounded-full bg-primary/10 font-display text-xl font-medium text-primary">
+                  {(values.first_name?.[0] ?? "") + (values.last_name?.[0] ?? "") || <UserRound className="size-6" />}
+                </div>
+                <div>
+                  <p className="font-display text-lg font-medium text-foreground">{fullName}</p>
+                  <p className={chartLabel}>
+                    {sex}
+                    {useAge && values.age != null ? ` · ${values.age} yrs` : ""}
+                    {!useAge && values.date_of_birth ? ` · born ${values.date_of_birth}` : ""}
+                  </p>
+                </div>
+              </div>
+              <Chip onClick={() => setStep(0)}>Edit patient</Chip>
+            </div>
+
+            <dl className="grid gap-4 sm:grid-cols-2">
+              <div className="rounded-xl border border-border/60 bg-muted/30 p-3">
+                <dt className={chartLabel}>Phone</dt>
+                <dd className="mt-1 text-sm font-medium tabular-nums text-foreground">
+                  {values.phone || "\u2014"}
+                </dd>
+              </div>
+              <div className="rounded-xl border border-border/60 bg-muted/30 p-3">
+                <dt className={chartLabel}>Occupation</dt>
+                <dd className="mt-1 text-sm font-medium text-foreground">{values.occupation || "\u2014"}</dd>
+              </div>
+              <div className="rounded-xl border border-border/60 bg-muted/30 p-3 sm:col-span-2">
+                <dt className={chartLabel}>Address</dt>
+                <dd className="mt-1 text-sm font-medium text-foreground">{addressLine || "\u2014"}</dd>
+              </div>
+            </dl>
+
+            <p className="text-sm text-muted-foreground">
+              Saving creates the patient record. Vision, diagnosis and prescription are captured in the
+              first clinical visit.
+            </p>
+          </div>
+        ) : null}
       </div>
 
-      <div className="flex justify-end gap-3 border-t border-border/60 pt-5">
+      <div className="flex items-center justify-between gap-3">
         <button
           type="button"
-          onClick={() => router.back()}
-          className="rounded-full border border-border bg-card px-5 py-2 text-sm font-medium text-foreground shadow-organic-sm transition-colors hover:bg-muted"
+          disabled={step === 0}
+          onClick={() => (step === 0 ? undefined : setStep(step - 1))}
+          className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted disabled:opacity-40"
         >
-          Cancel
+          <ChevronLeft className="size-4" />
+          Back
         </button>
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className="inline-flex justify-center rounded-full bg-primary px-5 py-2 text-sm font-medium text-primary-foreground shadow-organic-sm transition-all hover:-translate-y-0.5 hover:bg-primary/90 hover:shadow-organic disabled:opacity-50 disabled:hover:translate-y-0"
-        >
-          {isSubmitting ? "Registering..." : "Register Patient"}
-        </button>
+
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => router.back()}
+            className="rounded-full px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          >
+            Cancel
+          </button>
+          {step < steps.length - 1 ? (
+            <button
+              type="submit"
+              className="inline-flex items-center gap-1.5 rounded-md bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground transition-all hover:bg-primary-hover "
+            >
+              Next
+              <ChevronRight className="size-4" />
+            </button>
+          ) : (
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="inline-flex items-center gap-1.5 rounded-md bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground transition-all hover:bg-primary-hover disabled:pointer-events-none disabled:opacity-50"
+            >
+              {isSubmitting ? "Registering..." : "Register Patient"}
+              <Check className="size-4" />
+            </button>
+          )}
+        </div>
       </div>
     </form>
   );
