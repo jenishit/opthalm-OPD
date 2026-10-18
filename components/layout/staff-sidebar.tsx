@@ -112,9 +112,7 @@ export function StaffSidebar() {
           })}
         </nav>
 
-        <div className="p-4 text-xs text-primary-foreground/50">
-          Staff App v1.0
-        </div>
+        <div className="p-4 text-xs text-mute md:hidden">EyeClinic OPD</div>
       </aside>
     </>
   );
