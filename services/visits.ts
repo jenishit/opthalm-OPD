@@ -29,6 +29,12 @@ export function getVisitDto(id: string): Promise<VisitDTO> {
   return apiFetch<VisitDTO>(`/visit/${id}`);
 }
 
-export function updateVisitDto(id: string, body: VisitUpsertRequest): Promise<unknown> {
-  return apiFetch<unknown>(`/visit/${id}`, { method: "PATCH", body: JSON.stringify(body) });
+/** POST /visit — returns the created visit with `examine_by` as a plain string. */
+export function createVisitDto(body: VisitUpsertRequest): Promise<VisitCreateDTO> {
+  return apiFetch<VisitCreateDTO>("/visit", { method: "POST", body: JSON.stringify(body) });
+}
+
+/** PATCH /visit/:id reuses the create body; returns a message. */
+export function updateVisitDto(id: string, body: VisitUpsertRequest): Promise<void> {
+  return apiFetch<void>(`/visit/${id}`, { method: "PATCH", body: JSON.stringify(body) });
 }
