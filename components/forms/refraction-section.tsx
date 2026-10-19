@@ -29,168 +29,228 @@ export function RefractionSection() {
   });
 
   const usesSpectacles = watch("history.uses_spectacles");
+  const visibleStages = stages.filter((stage) => stage.id !== "old_rx" || usesSpectacles);
 
-  const addReadingPair = (stage: "unaided" | "old_rx" | "pinhole" | "retinoscopy" | "subjective_acceptance" | "final_rx") => {
+  const addReadingPair = (stage: StageId) => {
     append([
-      { stage, eye: "OD", sphere: 0, cylinder: 0, axis: 0, va: "6/6" },
-      { stage, eye: "OS", sphere: 0, cylinder: 0, axis: 0, va: "6/6" },
+      { stage, eye: "OD", va: "6/6" },
+      { stage, eye: "OS", va: "6/6" },
     ]);
   };
 
-  const getReadingsByStage = (stage: string) => {
-    return fields.map((field, index) => ({ field, index })).filter((item) => item.field.stage === stage);
-  };
-
-  const stages = [
-    { id: "unaided", label: "Unaided Vision" },
-    { id: "old_rx", label: "Present Glasses Prescription (PGP)", show: usesSpectacles },
-    { id: "retinoscopy", label: "Auto Refraction (AR)" },
-    { id: "subjective_acceptance", label: "Subjective Refraction" },
-    { id: "final_rx", label: "Final Prescription (Rx)" },
-  ];
+  const getReadingsByStage = (stage: string) =>
+    fields
+      .map((field, index) => ({ field, index }))
+      .filter((item) => item.field.stage === stage)
+      .sort((a, b) => (a.field.eye === "OD" ? -1 : 1) - (b.field.eye === "OD" ? -1 : 1));
 
   return (
-    <div className="space-y-6">
-      {/* Quick Add Buttons */}
-      <div className="bg-card p-4 rounded-2xl border border-border/60 shadow-organic-sm flex flex-wrap items-center gap-2">
-        <span className="text-sm font-medium text-foreground mr-2">Add Reading:</span>
-        {stages.filter((s) => s.show !== false).map((stage) => (
-          <button
-            key={stage.id}
-            type="button"
-            onClick={() => addReadingPair(stage.id as any)}
-            className="inline-flex items-center gap-1 rounded-full border border-border bg-muted/60 px-3 py-1.5 text-xs font-semibold text-foreground transition-colors hover:bg-muted"
-          >
-            <Plus className="h-3 w-3" /> {stage.label}
-          </button>
-        ))}
+    <div className="space-y-5">
+      <div className={chartShell}>
+        <div className="border-b border-border/60 bg-muted/40 px-4 py-3">
+          <p className={chartLabel}>Add a refraction reading</p>
+        </div>
+        <div className="flex flex-wrap gap-2 p-4">
+          {visibleStages.map((stage) => (
+            <button
+              key={stage.id}
+              type="button"
+              onClick={() => addReadingPair(stage.id)}
+              className="inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-card px-3 py-1.5 text-xs font-semibold text-foreground transition-colors hover:border-primary/50 hover:bg-primary/5 hover:text-primary"
+            >
+              <Plus className="size-3.5" />
+              {stage.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {fields.length === 0 ? (
-        <div className="bg-card p-10 rounded-2xl border border-dashed border-border text-center">
-          <Eye className="mx-auto h-12 w-12 text-muted-foreground/50 mb-2" />
-          <h3 className="mt-2 text-sm font-semibold text-foreground">No Refraction Readings</h3>
-          <p className="mt-1 text-sm text-muted-foreground">Click a button above to add refraction readings.</p>
+        <div className="rounded-2xl border-2 border-dashed border-border/70 bg-card p-10 text-center">
+          <Eye className="mx-auto mb-2 size-10 text-muted-foreground/50" />
+          <h3 className="font-display text-lg font-medium text-foreground">No refraction yet</h3>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Tap a stage above to open its OD / OS chart.
+          </p>
         </div>
       ) : (
-        <div className="space-y-6">
-          {stages.map((stage) => {
+        <div className="space-y-4">
+          {visibleStages.map((stage) => {
             const stageReadings = getReadingsByStage(stage.id);
             if (stageReadings.length === 0) return null;
+            const isFinal = stage.id === "final_rx";
+            const template = isFinal
+              ? "grid-cols-[56px_repeat(7,minmax(104px,1fr))]"
+              : "grid-cols-[56px_repeat(5,minmax(104px,1fr))]";
 
             return (
-              <div key={stage.id} className="bg-card p-5 rounded-2xl border border-border/60 shadow-organic-sm">
-                <div className="flex justify-between items-center mb-4 border-b border-border/60 pb-3">
-                  <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">{stage.label}</h3>
+              <div key={stage.id} className={chartShell}>
+                <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border/60 bg-muted/40 px-4 py-3">
+                  <div>
+                    <h3 className="font-display text-lg font-medium text-foreground">{stage.label}</h3>
+                    <p className={chartLabel}>{stage.hint}</p>
+                  </div>
                   <button
                     type="button"
                     onClick={() => {
-                      // Remove all readings for this stage
-                      const toRemove = stageReadings.map((r) => r.index).sort((a, b) => b - a); // sort descending so indices don't shift
-                      toRemove.forEach((idx) => remove(idx));
+                      const toRemove = stageReadings.map((r) => r.index).sort((a, b) => b - a);
+                      toRemove.forEach((index) => remove(index));
                     }}
-                    className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium text-destructive transition-colors hover:bg-destructive/10"
+                    className="inline-flex items-center gap-1.5 rounded-full border border-destructive/20 px-3 py-1.5 text-xs font-semibold text-destructive transition-colors hover:bg-destructive/10"
                   >
-                    <Trash2 className="h-3 w-3" /> Clear Stage
+                    <Trash2 className="size-3.5" /> Clear stage
                   </button>
                 </div>
 
                 <div className="overflow-x-auto">
-                  <table className="min-w-full text-sm">
-                    <thead>
-                      <tr className="border-b border-border/60">
-                        <th className="px-2 py-2 text-left text-xs font-semibold text-muted-foreground">Eye</th>
-                        <th className="px-2 py-2 text-left text-xs font-semibold text-muted-foreground w-24">Sph</th>
-                        <th className="px-2 py-2 text-left text-xs font-semibold text-muted-foreground w-24">Cyl</th>
-                        <th className="px-2 py-2 text-left text-xs font-semibold text-muted-foreground w-24">Axis</th>
-                        <th className="px-2 py-2 text-left text-xs font-semibold text-muted-foreground w-24">Add</th>
-                        <th className="px-2 py-2 text-left text-xs font-semibold text-muted-foreground w-24">V/A</th>
-                        {stage.id === "final_rx" && (
-                          <th className="px-2 py-2 text-left text-xs font-semibold text-muted-foreground">Details</th>
-                        )}
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-border/40">
-                      {stageReadings.map(({ field, index }) => (
-                        <tr
-                          key={field.id}
-                          className={field.eye === "OD" ? "bg-status-examining-bg/50" : "bg-status-completed-bg/50"}
+                  <div className={`grid min-w-[620px] ${template}`}>
+                    <div className="border-b border-border/60 p-2" />
+                    {["Sphere", "Cylinder", "Axis", "Add", "Vision"].map((column) => (
+                      <div
+                        key={column}
+                        className={`border-b border-l border-border/60 p-2 text-center ${chartLabel}`}
+                      >
+                        {column}
+                      </div>
+                    ))}
+                    {isFinal ? (
+                      <>
+                        <div className={`border-b border-l border-border/60 p-2 text-center ${chartLabel}`}>
+                          PD
+                        </div>
+                        <div className={`border-b border-l border-border/60 p-2 text-center ${chartLabel}`}>
+                          Lens
+                        </div>
+                      </>
+                    ) : null}
+
+                    {stageReadings.map(({ field, index }) => (
+                      <React.Fragment key={field.id}>
+                        <div
+                          className={`flex flex-col items-center justify-center border-b border-border/60 p-2 ${
+                            field.eye === "OD"
+                              ? "bg-status-examining-bg/50 text-status-examining"
+                              : "bg-status-completed-bg/50 text-status-completed"
+                          }`}
                         >
-                          <td
-                            className={`px-2 py-3 font-bold ${field.eye === "OD" ? "text-status-examining" : "text-status-completed"}`}
-                          >
-                            {field.eye}
-                            {/* Hidden field for stage and eye to maintain context */}
-                            <input type="hidden" {...register(`readings.${index}.stage`)} />
-                            <input type="hidden" {...register(`readings.${index}.eye`)} />
-                          </td>
-                          <td className="px-2 py-2">
-                            <input
-                              type="number"
-                              step="0.25"
-                              {...register(`readings.${index}.sphere`, { valueAsNumber: true })}
-                              className={cellCls}
-                            />
-                          </td>
-                          <td className="px-2 py-2">
-                            <input
-                              type="number"
-                              step="0.25"
-                              {...register(`readings.${index}.cylinder`, { valueAsNumber: true })}
-                              className={cellCls}
-                            />
-                          </td>
-                          <td className="px-2 py-2">
-                            <input
-                              type="number"
-                              min="0"
-                              max="180"
-                              {...register(`readings.${index}.axis`, { valueAsNumber: true })}
-                              className={cellCls}
-                            />
-                          </td>
-                          <td className="px-2 py-2">
-                            <input
-                              type="number"
-                              step="0.25"
-                              min="0"
-                              {...register(`readings.${index}.add_power`, { valueAsNumber: true })}
-                              className={cellCls}
-                            />
-                          </td>
-                          <td className="px-2 py-2">
-                            <select {...register(`readings.${index}.va`)} className={cellCls}>
-                              <option value="6/6">6/6</option>
-                              <option value="6/9">6/9</option>
-                              <option value="6/12">6/12</option>
-                              <option value="6/18">6/18</option>
-                              <option value="6/24">6/24</option>
-                              <option value="6/36">6/36</option>
-                              <option value="6/60">6/60</option>
-                              <option value="CF">CF</option>
-                              <option value="HM">HM</option>
-                              <option value="PL">PL</option>
-                            </select>
-                          </td>
-                          {stage.id === "final_rx" && (
-                            <td className="px-2 py-2 flex gap-2">
-                              <input
-                                type="number"
-                                placeholder="PD"
-                                {...register(`readings.${index}.pd`, { valueAsNumber: true })}
-                                className={`${cellCls} w-16`}
+                          <span className="font-display text-base font-semibold">{field.eye}</span>
+                          <span className="text-[9px] font-semibold uppercase tracking-[0.14em] opacity-70">
+                            {field.eye === "OD" ? "right" : "left"}
+                          </span>
+                        </div>
+
+                        <div className="border-b border-l border-border/60 p-1.5">
+                          <Controller
+                            control={control}
+                            name={`readings.${index}.sphere`}
+                            render={({ field: input }) => (
+                              <NumericCell
+                                label={`Sphere · ${field.eye}`}
+                                value={input.value ?? undefined}
+                                onChange={input.onChange}
                               />
-                              <select {...register(`readings.${index}.lens_type`)} className={`${cellCls} w-24`}>
+                            )}
+                          />
+                        </div>
+                        <div className="border-b border-l border-border/60 p-1.5">
+                          <Controller
+                            control={control}
+                            name={`readings.${index}.cylinder`}
+                            render={({ field: input }) => (
+                              <NumericCell
+                                label={`Cylinder · ${field.eye}`}
+                                value={input.value ?? undefined}
+                                onChange={input.onChange}
+                              />
+                            )}
+                          />
+                        </div>
+                        <div className="border-b border-l border-border/60 p-1.5">
+                          <Controller
+                            control={control}
+                            name={`readings.${index}.axis`}
+                            render={({ field: input }) => (
+                              <NumericCell
+                                label={`Axis · ${field.eye}`}
+                                value={input.value ?? undefined}
+                                onChange={input.onChange}
+                                step={5}
+                                min={0}
+                                max={180}
+                                decimals={0}
+                                signed={false}
+                                suffix="°"
+                              />
+                            )}
+                          />
+                        </div>
+                        <div className="border-b border-l border-border/60 p-1.5">
+                          <Controller
+                            control={control}
+                            name={`readings.${index}.add_power`}
+                            render={({ field: input }) => (
+                              <NumericCell
+                                label={`Near add · ${field.eye}`}
+                                value={input.value ?? undefined}
+                                onChange={input.onChange}
+                                min={0}
+                                max={12}
+                              />
+                            )}
+                          />
+                        </div>
+                        <div className="border-b border-l border-border/60 p-1.5">
+                          <select
+                            {...register(`readings.${index}.va`)}
+                            aria-label={`Visual acuity · ${field.eye}`}
+                            className={cellBorder}
+                          >
+                            {acuityOptions.map((option) => (
+                              <option key={option} value={option}>
+                                {option}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+
+                        {isFinal ? (
+                          <>
+                            <div className="border-b border-l border-border/60 p-1.5">
+                              <Controller
+                                control={control}
+                                name={`readings.${index}.pd`}
+                                render={({ field: input }) => (
+                                  <NumericCell
+                                    label={`Pupillary distance · ${field.eye}`}
+                                    value={input.value ?? undefined}
+                                    onChange={input.onChange}
+                                    step={0.5}
+                                    min={20}
+                                    max={90}
+                                    decimals={1}
+                                    signed={false}
+                                  />
+                                )}
+                              />
+                            </div>
+                            <div className="border-b border-l border-border/60 p-1.5">
+                              <select
+                                {...register(`readings.${index}.lens_type`)}
+                                aria-label={`Lens type · ${field.eye}`}
+                                className={cellBorder}
+                              >
                                 <option value="single_vision">Single</option>
                                 <option value="bifocal">Bifocal</option>
-                                <option value="progressive">Prog.</option>
+                                <option value="progressive">Progressive</option>
+                                <option value="contact_lens">Contact</option>
+                                <option value="none">None</option>
                               </select>
-                            </td>
-                          )}
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                            </div>
+                          </>
+                        ) : null}
+                      </React.Fragment>
+                    ))}
+                  </div>
                 </div>
               </div>
             );
