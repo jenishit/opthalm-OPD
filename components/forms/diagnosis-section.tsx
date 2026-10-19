@@ -19,7 +19,7 @@ export function DiagnosisSection() {
 
   return (
     <div className="space-y-6">
-      <div className="bg-card p-6 rounded-2xl border border-border/60 shadow-organic-sm">
+      <div className="bg-card p-6 rounded-2xl border border-border/60 ">
         <div className="flex items-center gap-2.5 border-b border-border/60 pb-3 mb-5">
           <span className="flex size-8 items-center justify-center rounded-full bg-destructive/10 text-destructive">
             <Stethoscope className="h-4 w-4" />
