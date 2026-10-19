@@ -55,10 +55,10 @@ export function ChiefComplaintSection() {
       </div>
 
       {/* History (carried forward) */}
-      <div className="bg-card p-6 rounded-2xl border border-border/60 shadow-organic-sm border-l-4 border-l-accent">
+      <div className="bg-card p-6 rounded-2xl border border-border/60 border-l-4 border-l-clay">
         <div className="flex flex-wrap justify-between items-center gap-2 border-b border-border/60 pb-3 mb-5">
           <h3 className="font-display text-lg font-medium text-foreground">Patient History</h3>
-          <span className="text-xs bg-accent/10 text-accent border border-accent/20 px-2.5 py-1 rounded-full font-medium">Carried Forward &amp; Editable</span>
+          <span className="text-xs bg-clay-soft text-clay border border-clay/20 px-2.5 py-1 rounded-full font-medium">Carried Forward &amp; Editable</span>
         </div>
 
         <div className="grid gap-6">
@@ -141,7 +141,7 @@ export function ChiefComplaintSection() {
               {...register("history.notes")}
               rows={2}
               placeholder="General history notes..."
-              className={`${fieldClass} bg-accent/5`}
+              className={`${fieldClass} bg-clay/5`}
             />
           </div>
         </div>
