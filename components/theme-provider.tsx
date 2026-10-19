@@ -1,6 +1,10 @@
 "use client";
 
-// Theme provider skeleton (dark mode support lands later).
-export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  return <>{children}</>;
+import { ThemeProvider as NextThemesProvider } from "next-themes";
+
+export function ThemeProvider({
+  children,
+  ...props
+}: React.ComponentProps<typeof NextThemesProvider>) {
+  return <NextThemesProvider {...props}>{children}</NextThemesProvider>;
 }
