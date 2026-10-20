@@ -13,22 +13,9 @@ import { Button } from "@/components/ui/button";
 export default function Home() {
   return (
     <div className="relative flex flex-1 flex-col items-center justify-center overflow-hidden bg-background px-6 py-16">
-      <div
-        className="organic-blob absolute -top-24 -left-32 h-96 w-96 bg-primary/10"
-        aria-hidden
-      />
-      <div
-        className="organic-blob absolute top-1/3 -right-24 h-80 w-80 bg-accent/10"
-        aria-hidden
-      />
-      <div
-        className="organic-blob absolute -bottom-32 left-1/4 h-72 w-72 bg-status-examining/10"
-        aria-hidden
-      />
-
       <div className="relative z-10 flex w-full max-w-4xl flex-col items-center gap-12">
         <div className="flex flex-col items-center gap-4 text-center">
-          <div className="flex items-center gap-2 rounded-full bg-primary/10 px-4 py-1.5 text-sm font-medium text-primary">
+          <div className="flex items-center gap-2 rounded-full bg-sage-soft px-4 py-1.5 text-sm font-semibold text-sage">
             <Eye className="size-4" />
             EyeClinic OPD
           </div>
