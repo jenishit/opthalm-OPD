@@ -59,7 +59,7 @@ export function HistoryTimeline({ patientId }: { patientId: string }) {
         return (
           <div key={history.id} className="relative pl-6 md:pl-8">
             {/* Timeline Dot */}
-            <div className={`absolute -left-[9px] top-1 h-4 w-4 rounded-full border-2 border-card shadow-organic-sm ${isLatest ? "bg-primary" : "bg-border"}`} />
+            <div className={`absolute -left-[9px] top-1 h-4 w-4 rounded-full border-2 border-card ${isLatest ? "bg-primary" : "bg-border"}`} />
 
             <div className="mb-1 flex items-center gap-2">
               <span className={`text-sm font-semibold ${isLatest ? "text-primary" : "text-foreground"}`}>
