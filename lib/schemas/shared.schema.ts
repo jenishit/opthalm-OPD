@@ -25,6 +25,8 @@ export const investigationSchema = z.object({
   id: z.string().optional(),
   visit_id: z.string().optional(),
   type: z.enum(investigationType),
+  investigation_name: z.string().optional(),
+  status: z.enum(["ordered", "completed", "reviewed"]).optional(),
   result: z.string().optional(),
   notes: z.string().optional(),
 });
