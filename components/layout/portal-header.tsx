@@ -29,15 +29,15 @@ export function PortalHeader() {
                 {portalPatient.first_name} {portalPatient.last_name}
               </div>
             </div>
-            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-accent/10 font-semibold text-accent">
+            <div className="font-display grid size-9 shrink-0 place-items-center rounded-full bg-sage-soft font-semibold text-sage">
               {portalPatient.first_name.charAt(0)}
             </div>
             <button
               onClick={handleLogout}
-              className="rounded-full p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              className="grid size-11 place-items-center rounded-md border border-line bg-card text-ink transition-colors hover:border-sage"
               title="Log out"
             >
-              <LogOut className="h-5 w-5" />
+              <LogOut className="size-5" />
             </button>
           </div>
         ) : null}
