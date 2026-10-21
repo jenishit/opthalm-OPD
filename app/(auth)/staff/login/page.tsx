@@ -42,7 +42,7 @@ export default function StaffLoginPage() {
     setIsLoading(true);
     try {
       const session = await login(values);
-      setAccessToken(session.access_token);
+      setAuthTokens(session.access_token, session.refresh_token);
       const profile = await getMyProfile();
       loginStaff({
         id: profile.user_id,
@@ -53,8 +53,19 @@ export default function StaffLoginPage() {
       });
       router.push("/staff/queue");
     } catch (error) {
-      const message = error instanceof ApiError ? error.messages.join(", ") : "Sign-in failed";
-      toast.error(message);
+      if (error instanceof SubscriptionInactiveError) {
+        // Tokens came back fine, but the clinic's subscription is inactive —
+        // every gated call will 402 until a platform admin reactivates it.
+        // Don't leave half a session behind.
+        useAuthStore.getState().logoutStaff();
+        toast.error("Clinic subscription is inactive", {
+          description:
+            "Ask the platform administrator to reactivate your clinic's subscription, then sign in again.",
+        });
+      } else {
+        const message = error instanceof ApiError ? error.messages.join(", ") : "Sign-in failed";
+        toast.error(message);
+      }
     } finally {
       setIsLoading(false);
     }
