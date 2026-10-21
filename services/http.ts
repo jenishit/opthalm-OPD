@@ -112,8 +112,24 @@ export async function apiFetch<T>(path: string, init: RequestInit = {}, retried 
   const body = (await res.json().catch(() => null)) as ApiEnvelope<T> | ApiErrorBody | null;
 
   if (!res.ok) {
-    const messages = body && "messages" in body ? body.messages : ["Request failed"];
-    throw new ApiError(res.status, messages);
+    if (res.status === 402) {
+      throw new SubscriptionInactiveError(extractMessages(body as ApiErrorBody, res));
+    }
+
+    // Expired access token → rotate via the refresh token and retry once.
+    if (res.status === 401 && !AUTH_FREE.some((p) => path.startsWith(p))) {
+      if (retried === false) {
+        const refreshed = await refreshAccessToken();
+        if (refreshed) {
+          return apiFetch<T>(path, init, true);
+        }
+      }
+      // Session unrecoverable: the redirect to /staff/login is already in
+      // flight; fail with a distinct error so callers can ignore quietly.
+      throw new SessionExpiredError(extractMessages(body as ApiErrorBody, res));
+    }
+
+    throw new ApiError(res.status, extractMessages(body as ApiErrorBody, res));
   }
 
   return (body as ApiEnvelope<T>).data;
