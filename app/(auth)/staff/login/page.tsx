@@ -73,12 +73,10 @@ export default function StaffLoginPage() {
 
   return (
     <div className="relative flex min-h-screen items-center justify-center bg-background p-4">
-      <div className="organic-blob absolute top-10 right-0 h-64 w-64 bg-primary/10" aria-hidden />
-      <div className="organic-blob absolute bottom-10 left-0 h-56 w-56 bg-accent/10" aria-hidden />
 
       <Card className="relative z-10 w-full max-w-md">
         <CardHeader className="items-center space-y-1 text-center">
-          <div className="mb-2 flex size-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+          <div className="mb-2 flex size-12 items-center justify-center rounded-full bg-primary text-primary-foreground">
             <Eye className="size-6" />
           </div>
           <CardTitle className="font-display text-2xl font-medium tracking-tight">Staff sign in</CardTitle>
