@@ -63,43 +63,62 @@ export function StaffHeader() {
           <span className="sr-only">Open sidebar</span>
         </button>
 
-        <nav className="hidden text-sm font-medium text-muted-foreground sm:flex">
-          <ol className="flex items-center space-x-2">
-            {breadcrumbs.map((crumb, index) => (
-              <li key={index} className="flex items-center">
-                {index > 0 && <span className="mx-2 text-border">/</span>}
-                <span className={crumb.isLast ? "text-foreground" : ""}>
-                  {crumb.label}
-                </span>
-              </li>
-            ))}
-          </ol>
-        </nav>
+        <div className="min-w-0">
+          <div className="mono-label truncate">{dateLabel}</div>
+          <h1 className="truncate font-display text-2xl font-semibold text-foreground md:text-3xl">
+            {title}
+          </h1>
+        </div>
       </div>
 
-      <div className="flex items-center gap-4">
-        {staffUser ? (
-          <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2">
+        {staffUser && (
+          <span className="pill pill-mute !hidden !px-3 !py-1.5 sm:!inline-flex">
+            {isDoctor ? (
+              <Stethoscope className="size-3.5" />
+            ) : (
+              <Receipt className="size-3.5" />
+            )}
+            {staffUser.role} view
+          </span>
+        )}
+
+        <button
+          type="button"
+          aria-label="Toggle dark mode"
+          onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
+          className="grid size-11 place-items-center rounded-md border border-line bg-card text-ink hover:border-sage"
+        >
+          {mounted && resolvedTheme === "dark" ? (
+            <Sun className="size-5" />
+          ) : (
+            <Moon className="size-5" />
+          )}
+        </button>
+
+        {staffUser && (
+          <div className="flex items-center gap-2.5">
             <div className="hidden text-right text-sm md:block">
-              <div className="font-medium text-foreground">{staffUser.name}</div>
-              <div className="text-xs text-muted-foreground capitalize">{staffUser.role}</div>
+              <div className="font-semibold text-foreground">
+                {staffUser.name}
+              </div>
+              <div className="font-mono text-[11px] uppercase tracking-widest text-mute">
+                {staffUser.role}
+              </div>
             </div>
-            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 font-semibold text-primary">
+            <div className="font-display grid size-9 shrink-0 place-items-center rounded-full bg-sage-soft font-semibold text-sage">
               {staffUser.name.charAt(0)}
             </div>
             <button
               onClick={handleLogout}
-              className="rounded-full p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              className="grid size-11 place-items-center rounded-md border border-line bg-card text-ink transition-colors hover:border-sage"
               title="Log out"
             >
-              <LogOut className="h-5 w-5" />
+              <LogOut className="size-5" />
             </button>
           </div>
-        ) : (
-          <div className="text-sm font-medium text-accent">Not logged in</div>
         )}
       </div>
     </header>
   );
 }
-
