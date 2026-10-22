@@ -92,6 +92,28 @@ export function createPatientDto(body: CreatePatientRequest): Promise<PatientDTO
   return apiFetch<PatientDTO>("/patient", { method: "POST", body: JSON.stringify(body) });
 }
 
-export function updatePatientDto(id: string, body: UpdatePatientRequest): Promise<PatientDTO> {
-  return apiFetch<PatientDTO>(`/patient/${id}`, { method: "PATCH", body: JSON.stringify(body) });
+/**
+ * PATCH /patient/:id reuses the create body (full_name, dob and phone are
+ * required). Merge a partial update over the stored patient first.
+ */
+export async function updatePatientDto(
+  id: string,
+  partial: Partial<CreatePatientRequest>
+): Promise<void> {
+  const current = await getPatientDto(id);
+  const body: UpdatePatientRequest = {
+    full_name: partial.full_name ?? current.full_name,
+    dob: partial.dob ?? current.dob,
+    gender: partial.gender ?? current.gender ?? undefined,
+    phone: partial.phone ?? current.phone,
+    occupation: partial.occupation ?? current.occupation ?? undefined,
+    email: partial.email ?? current.email ?? undefined,
+    address: partial.address ?? current.address ?? undefined,
+  };
+  await apiFetch<void>(`/patient/${id}`, { method: "PATCH", body: JSON.stringify(body) });
+}
+
+/** PATCH /patient/:id/delete — soft delete, returns a message. */
+export function deletePatientDto(id: string): Promise<void> {
+  return apiFetch<void>(`/patient/${id}/delete`, { method: "PATCH" });
 }
