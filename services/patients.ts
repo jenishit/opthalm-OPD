@@ -56,8 +56,10 @@ export function toCreateRequest(form: PatientFormData): CreatePatientRequest {
   };
 }
 
-export function toUpdateRequest(form: Partial<PatientFormData>): UpdatePatientRequest {
-  const body: UpdatePatientRequest = {};
+// Builds a partial update; services.updatePatientDto merges it over the
+// stored patient before PATCHing (the endpoint requires the full body).
+export function toUpdateRequest(form: Partial<PatientFormData>): Partial<CreatePatientRequest> {
+  const body: Partial<CreatePatientRequest> = {};
   if (form.first_name !== undefined || form.last_name !== undefined) {
     body.full_name = `${form.first_name ?? ""} ${form.last_name ?? ""}`.trim();
   }
