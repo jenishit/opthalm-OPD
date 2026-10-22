@@ -31,7 +31,7 @@ export default function Home() {
         <div className="grid w-full gap-5 sm:grid-cols-2">
           <Card className="group border-none p-1 transition-transform hover:-translate-y-1">
             <CardHeader>
-              <div className="mb-2 flex size-11 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+              <div className="mb-2 flex size-11 items-center justify-center rounded-full bg-primary text-primary-foreground">
                 <Stethoscope className="size-5" />
               </div>
               <CardTitle className="text-lg">Staff</CardTitle>
