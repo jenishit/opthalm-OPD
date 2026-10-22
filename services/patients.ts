@@ -67,6 +67,11 @@ export function toUpdateRequest(form: Partial<PatientFormData>): Partial<CreateP
   if (form.sex !== undefined) body.gender = form.sex;
   if (form.phone !== undefined) body.phone = form.phone;
   if (form.occupation !== undefined) body.occupation = form.occupation;
+  if (form.address_street !== undefined) {
+    // Preserve other address parts the caller already knows about by leaving
+    // them to the merge in updatePatientDto.
+    body.address = form.address_street;
+  }
   return body;
 }
 
