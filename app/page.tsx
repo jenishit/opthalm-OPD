@@ -52,7 +52,7 @@ export default function Home() {
 
           <Card className="group border-none p-1 transition-transform hover:-translate-y-1">
             <CardHeader>
-              <div className="mb-2 flex size-11 items-center justify-center rounded-2xl bg-accent/10 text-accent">
+              <div className="mb-2 flex size-11 items-center justify-center rounded-full bg-clay text-onacc">
                 <UserRound className="size-5" />
               </div>
               <CardTitle className="text-lg">Patient portal</CardTitle>
