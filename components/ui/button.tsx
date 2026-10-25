@@ -55,11 +55,19 @@ function Button({
     asChild?: boolean
     render?: ButtonPrimitive.Props["render"]
   }) {
+  const resolved = asChild ? (children as React.ReactElement) : render
+  // Base UI assumes the render target is a native <button>. When we render
+  // something else (e.g. next/link, which is an <a>), opt out of native button
+  // semantics so Base UI applies the right attributes and keyboard handling.
+  const isNativeTarget =
+    !React.isValidElement(resolved) ||
+    (typeof resolved.type === "string" && resolved.type === "button")
   return (
     <ButtonPrimitive
       data-slot="button"
       className={cn(buttonVariants({ variant, size, className }))}
-      render={asChild ? (children as React.ReactElement) : render}
+      render={resolved}
+      nativeButton={resolved ? isNativeTarget : undefined}
       {...props}
     >
       {asChild ? undefined : children}
