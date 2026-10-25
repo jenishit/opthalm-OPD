@@ -15,7 +15,7 @@ export default function PatientsPage() {
         </Link>
       </div>
 
-      <div className="flex-1 rounded-2xl border border-border/60 bg-card shadow-organic-sm overflow-hidden flex flex-col">
+      <div className="flex-1 rounded-2xl border border-border/60 bg-card overflow-hidden flex flex-col">
         <PatientListTable />
       </div>
     </div>
