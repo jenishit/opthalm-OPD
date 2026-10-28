@@ -1,13 +1,13 @@
-import type { Staff } from "@/lib/schemas/shared.schema";
-import type { Patient } from "@/lib/schemas/patient.schema";
-import type { PatientHistory } from "@/lib/schemas/history.schema";
-import type { Condition, DiagnosisCatalog, Medicine } from "@/lib/schemas/catalog.schema";
-import type { Visit, VisitSymptoms, VisitDiagnosis } from "@/lib/schemas/visit.schema";
-import type { RefractionReading } from "@/lib/schemas/refraction.schema";
-import type { ExaminationFindings } from "@/lib/schemas/examination.schema";
-import type { Treatment, FollowUp } from "@/lib/schemas/treatment.schema";
-import type { Investigation, PatientAccessToken } from "@/lib/schemas/shared.schema";
-import type { Prescription } from "@/lib/schemas/prescription.schema";
+import type { Staff } from "@/schemas/shared-schema";
+import type { Patient } from "@/schemas/patient-schema";
+import type { PatientHistory } from "@/schemas/history-schema";
+import type { Condition, DiagnosisCatalog, Medicine } from "@/schemas/catalog-schema";
+import type { Visit, VisitSymptoms, VisitDiagnosis } from "@/schemas/visit-schema";
+import type { RefractionReading } from "@/schemas/refraction-schema";
+import type { ExaminationFindings } from "@/schemas/examination-schema";
+import type { Treatment, FollowUp } from "@/schemas/treatment-schema";
+import type { Investigation, PatientAccessToken } from "@/schemas/shared-schema";
+import type { Prescription } from "@/schemas/prescription-schema";
 
 // ═══════════════════════════════════════════════════════════════════════════
 // STAFF

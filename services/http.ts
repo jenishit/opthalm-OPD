@@ -1,5 +1,6 @@
-import { useAuthStore } from "@/lib/store/auth-store";
-import type { ApiEnvelope, ApiErrorBody, LoginResponse } from "@/types/api";
+import { signOut } from "next-auth/react";
+import { useAuthStore } from "@/stores/authStore";
+import type { ApiEnvelope, ApiErrorBody, LoginResponse } from "@/types/api-types";
 
 export class ApiError extends Error {
   readonly status: number;
@@ -57,6 +58,7 @@ function extractMessages(body: ApiErrorBody | null, res: Response): string[] {
 }
 
 let refreshInFlight: Promise<boolean> | null = null;
+let lastRefreshAt = 0;
 
 /**
  * POST /auth/refresh with the persisted refresh token; rotates both tokens
@@ -79,17 +81,26 @@ export async function refreshAccessToken(): Promise<boolean> {
       if (!res.ok || !body?.data?.access_token) throw new Error("refresh failed");
 
       setAuthTokens(body.data.access_token, body.data.refresh_token || refreshToken);
+      lastRefreshAt = Date.now();
       return true;
     } catch {
       // The session is no longer recoverable — drop the staff session and
       // send the user back to sign in (the caller's rejection is expected
       // to surface as SessionExpiredError; ignore it silently).
+      //
+      // Must go through next-auth's signOut() rather than a manual redirect:
+      // logoutStaff() only clears the local store, but the NextAuth session
+      // cookie is a self-contained 7-day JWT that doesn't know the backend
+      // revoked this session. A bare `window.location.assign("/login")`
+      // leaves that cookie valid, and the auth route layout treats any
+      // signed-in cookie as reason to immediately redirect back to /queue —
+      // an infinite redirect loop that never lets the user re-authenticate.
       logoutStaff();
       if (
         typeof window !== "undefined" &&
-        !window.location.pathname.startsWith("/staff/login")
+        !window.location.pathname.startsWith("/login")
       ) {
-        window.location.assign("/staff/login");
+        signOut({ callbackUrl: "/login" });
       }
       return false;
     } finally {
@@ -118,15 +129,31 @@ export async function apiFetch<T>(path: string, init: RequestInit = {}, retried 
 
     // Expired access token → rotate via the refresh token and retry once.
     if (res.status === 401 && !AUTH_FREE.some((p) => path.startsWith(p))) {
+      const messages = extractMessages(body as ApiErrorBody, res);
+      // The Go backend answers a role denial with the same 401 status it uses
+      // for a dead token and tells the two apart by message: "user is
+      // unauthorized to access the resource" (RBAC) vs the token being
+      // expired. A denial must surface to the caller — it is not a dead
+      // session, so do not refresh, log out or redirect.
+      if (messages.some((m) => /unauthorized to access the resource/i.test(m))) {
+        throw new ApiError(401, messages);
+      }
       if (retried === false) {
+        // Another pending 401 may have just rotated the token already; retry
+        // with the current token instead of refreshing a second time with a
+        // possibly consumed refresh-token pair.
+        const current = useAuthStore.getState().accessToken;
+        if (current && current !== token && Date.now() - lastRefreshAt < 15000) {
+          return apiFetch<T>(path, init, true);
+        }
         const refreshed = await refreshAccessToken();
         if (refreshed) {
           return apiFetch<T>(path, init, true);
         }
       }
-      // Session unrecoverable: the redirect to /staff/login is already in
+      // Session unrecoverable: the redirect to /login is already in
       // flight; fail with a distinct error so callers can ignore quietly.
-      throw new SessionExpiredError(extractMessages(body as ApiErrorBody, res));
+      throw new SessionExpiredError(messages);
     }
 
     throw new ApiError(res.status, extractMessages(body as ApiErrorBody, res));

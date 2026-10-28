@@ -42,6 +42,11 @@
   --color-status-cancelled: var(--status-cancelled);
   --color-status-cancelled-foreground: var(--status-cancelled-foreground);
   --color-status-cancelled-bg: var(--status-cancelled-bg);
+  --color-status-scheduled-ink: var(--status-scheduled-ink);
+  --color-status-waiting-ink: var(--status-waiting-ink);
+  --color-status-examining-ink: var(--status-examining-ink);
+  --color-status-completed-ink: var(--status-completed-ink);
+  --color-status-cancelled-ink: var(--status-cancelled-ink);
 
   /* Reference palette (ophthalmic-management-system) */
   --color-app: var(--c-app);
@@ -55,6 +60,7 @@
   --color-onacc: var(--c-onacc);
   --color-sage-soft: var(--c-sage-soft);
   --color-clay-soft: var(--c-clay-soft);
+  --color-clay-ink: var(--c-clay-ink);
   --color-ok: var(--c-ok);
   --color-ok-soft: var(--c-ok-soft);
   --color-ok-ink: var(--c-ok-ink);
@@ -75,9 +81,14 @@
   --color-c5: var(--c-chart-5);
   --color-c6: var(--c-chart-6);
 
-  --font-sans: var(--font-source-sans);
-  --font-display: var(--font-lora);
-  --font-mono: var(--font-inconsolata);
+  /* Devanagari glyphs (BS dates) fall back to Noto Sans Devanagari per-glyph */
+  --font-sans: var(--font-source-sans), var(--font-noto-dev);
+  --font-display: var(--font-lora), var(--font-noto-dev);
+  --font-mono: var(--font-inconsolata), var(--font-noto-dev);
+
+  /* Brand fonts for the auth surfaces (Poppins body, Instrument Serif display) */
+  --font-brand-sans: var(--font-poppins), var(--font-source-sans), var(--font-noto-dev);
+  --font-brand-serif: var(--font-instrument), var(--font-lora), var(--font-noto-dev);
 
   /* Flat 6px geometry, like the reference */
   --radius-sm: 3px;
@@ -109,6 +120,7 @@
   --c-onacc: #FFFFFF;
   --c-sage-soft: #E6EEE0;
   --c-clay-soft: #F6E3DB;
+  --c-clay-ink: #7C3F2C;
   --c-ok: #3F7D3A;
   --c-ok-soft: #E3EEDD;
   --c-ok-ink: #2D5A27;
@@ -177,6 +189,13 @@
   --status-cancelled: var(--c-bad-ink);
   --status-cancelled-foreground: #FFFFFF;
   --status-cancelled-bg: var(--c-bad-soft);
+
+  /* Tone-matched text for pale status tints (WCAG-safe on the tint) */
+  --status-scheduled-ink: var(--c-ok-ink);
+  --status-waiting-ink: var(--c-warn-ink);
+  --status-examining-ink: #1E4D85;
+  --status-completed-ink: var(--c-ok-ink);
+  --status-cancelled-ink: var(--c-bad-ink);
 }
 
 /* ==========================================================================
@@ -197,6 +216,7 @@
   --c-onacc: #10190F;
   --c-sage-soft: #243229;
   --c-clay-soft: #3A2A25;
+  --c-clay-ink: #E4A183;
   --c-ok: #7DBA75;
   --c-ok-soft: #22332A;
   --c-ok-ink: #A7D6A0;
@@ -265,6 +285,12 @@
   --status-cancelled: var(--c-bad);
   --status-cancelled-foreground: var(--c-onacc);
   --status-cancelled-bg: var(--c-bad-soft);
+
+  --status-scheduled-ink: var(--c-ok-ink);
+  --status-waiting-ink: var(--c-warn-ink);
+  --status-examining-ink: var(--c-t-new);
+  --status-completed-ink: var(--c-ok-ink);
+  --status-cancelled-ink: var(--c-bad-ink);
 }
 
 body {
@@ -284,11 +310,17 @@ h3 {
    Reference component classes
    -------------------------------------------------------------------------- */
 .mono-label {
-  font-family: var(--font-inconsolata), ui-monospace, monospace;
+  font-family: var(--font-inconsolata), var(--font-noto-dev), ui-monospace, monospace;
   font-size: 11px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--c-mute);
+}
+
+/* Mono labels inside the sage brand panel (staff login) carry light ink —
+   the default mute is invisible on the deep green. */
+.sage-mono .mono-label {
+  color: rgba(255, 255, 255, 0.8);
 }
 
 .pill {
@@ -334,7 +366,7 @@ h3 {
   min-width: 64px;
   min-height: 42px;
   padding: 2px 10px;
-  font-family: var(--font-inconsolata), ui-monospace, monospace;
+  font-family: var(--font-inconsolata), var(--font-noto-dev), ui-monospace, monospace;
   font-size: 1.2rem;
   color: var(--c-ink);
   background: var(--c-card);
@@ -350,7 +382,7 @@ h3 {
 }
 .cell.empty {
   color: var(--c-mute);
-  font-family: var(--font-source-sans), system-ui, sans-serif;
+  font-family: var(--font-source-sans), var(--font-noto-dev), system-ui, sans-serif;
   font-size: 0.82rem;
 }
 .cell.abn {
@@ -358,28 +390,15 @@ h3 {
   background: var(--c-clay-soft);
 }
 
-.ty-new {
-  background: var(--c-t-new-soft);
-  border-left: 4px solid var(--c-t-new);
-}
-.ty-fu {
-  background: var(--c-ok-soft);
-  border-left: 4px solid var(--c-ok);
-}
-.ty-surg {
-  background: var(--c-t-surg-soft);
-  border-left: 4px solid var(--c-t-surg);
-}
-
 .paper {
   background: #fff;
   color: #1d2420;
-  font-family: var(--font-source-sans), system-ui, sans-serif;
+  font-family: var(--font-source-sans), var(--font-noto-dev), system-ui, sans-serif;
 }
 .paper h1,
 .paper h2,
 .paper h3 {
-  font-family: var(--font-lora), Georgia, serif;
+  font-family: var(--font-lora), var(--font-noto-dev), Georgia, serif;
   color: #1d2420;
 }
 .paper table {
