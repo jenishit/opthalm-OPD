@@ -7,7 +7,7 @@ export default function NewPatientPage() {
     <div className="flex flex-col gap-6 max-w-3xl mx-auto">
       <div className="flex items-center gap-4">
         <Link
-          href="/staff/patients"
+          href="/patients"
           className="p-0 -ml-0.5 grid size-11 place-items-center rounded-md border border-line bg-card text-ink hover:border-sage"
         >
           <ArrowLeft className="h-5 w-5" />

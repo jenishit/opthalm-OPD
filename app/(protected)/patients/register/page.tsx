@@ -9,7 +9,7 @@ export default function RegisterPatientPage() {
     <div className="mx-auto flex max-w-4xl flex-col gap-5">
       <div className="flex items-center gap-3">
         <Link
-          href="/staff/patients"
+          href="/patients"
           aria-label="Back to patients"
           className="-ml-1.5 grid size-11 place-items-center rounded-md border border-line bg-card text-ink hover:border-sage transition-colors"
         >
