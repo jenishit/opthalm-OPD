@@ -105,7 +105,7 @@ export default function VisitPage({
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Link
-            href={`/staff/patients/${patient.id}`}
+            href={`/patients/${patient.id}`}
             className="p-0 -ml-0.5 grid size-11 place-items-center rounded-md border border-line bg-card text-ink hover:border-sage"
           >
             <ArrowLeft className="h-5 w-5" />
@@ -130,7 +130,7 @@ export default function VisitPage({
             </button>
           )}
           <Link
-            href={`/staff/patients/${patient.id}/visits/${visitData.visit.id}/edit`}
+            href={`/patients/${patient.id}/visits/${visitData.visit.id}/edit`}
             className="flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-all hover:bg-primary-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
           >
             <Edit className="h-4 w-4" />

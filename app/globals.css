@@ -293,6 +293,66 @@
   --status-cancelled-ink: var(--c-bad-ink);
 }
 
+/* ==========================================================================
+   Accent themes — user-selectable in Settings → Preferences (lib/store/appearance.ts).
+   Reassigns the sage accent trio so every sage-derived surface (buttons, active
+   nav, focus rings, "green" status tints) follows the chosen accent together.
+   ========================================================================== */
+:root[data-accent="clay"] {
+  --c-sage: #B35A3F;
+  --c-sagehover: #96492F;
+  --c-sage-soft: #F6E3DB;
+}
+:root[data-accent="blue"] {
+  --c-sage: #2F6DB5;
+  --c-sagehover: #24568F;
+  --c-sage-soft: #DCE8F6;
+}
+:root[data-accent="violet"] {
+  --c-sage: #7A4FB0;
+  --c-sagehover: #623E8D;
+  --c-sage-soft: #E8DEF4;
+}
+:root[data-accent="gold"] {
+  --c-sage: #96700D;
+  --c-sagehover: #7A5A0A;
+  --c-sage-soft: #F6EBC8;
+}
+
+.dark[data-accent="clay"] {
+  --c-sage: #E4906F;
+  --c-sagehover: #EAA688;
+  --c-sage-soft: #3A2A25;
+}
+.dark[data-accent="blue"] {
+  --c-sage: #7FB0E6;
+  --c-sagehover: #9BC3ED;
+  --c-sage-soft: #1E2E40;
+}
+.dark[data-accent="violet"] {
+  --c-sage: #B99BE3;
+  --c-sagehover: #C7AEEA;
+  --c-sage-soft: #2E2441;
+}
+.dark[data-accent="gold"] {
+  --c-sage: #E0B84A;
+  --c-sagehover: #E8C766;
+  --c-sage-soft: #3A331C;
+}
+
+/* ==========================================================================
+   Font themes — overrides the raw next/font variables that --font-sans /
+   --font-display (in @theme inline above) read from, so every font-sans and
+   font-display usage follows without touching each call site.
+   ========================================================================== */
+:root[data-font="rounded"] {
+  --font-source-sans: var(--font-poppins), var(--font-noto-dev);
+  --font-lora: var(--font-poppins), var(--font-noto-dev);
+}
+:root[data-font="editorial"] {
+  --font-lora: var(--font-instrument), var(--font-noto-dev);
+}
+
 body {
   background: var(--background);
   color: var(--foreground);

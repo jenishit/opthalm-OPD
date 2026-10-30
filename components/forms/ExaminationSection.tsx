@@ -4,7 +4,7 @@ import React from "react";
 import { Controller, useFormContext } from "react-hook-form";
 import type { IntakeExamFormData } from "@/schemas/shared-schema";
 import { Activity, Eye, Focus } from "lucide-react";
-import { NumericCell, chartLabel, chartShell } from "@/components/ui";
+import { NumericCell, chartShell } from "@/components/ui/ChartUi";
 
 const dashedField =
   "w-full rounded-xl border-[1.5px] border-dashed border-border/80 bg-card px-3 py-2 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground/50 hover:border-primary/50 focus:border-solid focus:border-primary focus:ring-3 focus:ring-ring/30";
@@ -25,16 +25,16 @@ export function ExaminationSection() {
           </span>
           <div>
             <h3 className={sectionTitle}>General &amp; IOP</h3>
-            <p className={chartLabel}>Tap a dashed cell to enter a reading</p>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Tap a dashed cell to enter a reading</p>
           </div>
         </div>
 
         <div className="grid grid-cols-[minmax(110px,150px)_1fr_1fr] border-b border-border/60">
           <div className="p-2" />
-          <div className={`border-l border-border/60 p-2 text-center ${chartLabel}`}>
+          <div className={`border-l border-border/60 p-2 text-center text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground`}>
             Right eye · OD
           </div>
-          <div className={`border-l border-border/60 p-2 text-center ${chartLabel}`}>
+          <div className={`border-l border-border/60 p-2 text-center text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground`}>
             Left eye · OS
           </div>
         </div>
@@ -42,7 +42,7 @@ export function ExaminationSection() {
         <div className="grid grid-cols-[minmax(110px,150px)_1fr_1fr] items-center border-b border-border/60">
           <div className="p-3 sm:p-4">
             <p className="font-display text-base font-medium text-foreground">IOP</p>
-            <p className={chartLabel}>mmHg</p>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">mmHg</p>
           </div>
           <div className="border-l border-border/60 p-2.5">
             <Controller
@@ -84,13 +84,13 @@ export function ExaminationSection() {
 
         <div className="grid gap-4 p-3 sm:grid-cols-2 sm:p-4">
           <div>
-            <label htmlFor="iop_time" className={chartLabel}>
+            <label htmlFor="iop_time" className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
               Time of IOP
             </label>
             <input {...register("examination.iop_time")} id="iop_time" type="time" className={`${dashedField} mt-1.5`} />
           </div>
           <div>
-            <label htmlFor="bp" className={chartLabel}>
+            <label htmlFor="bp" className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
               Blood pressure
             </label>
             <input
@@ -112,13 +112,13 @@ export function ExaminationSection() {
           </span>
           <div>
             <h3 className={sectionTitle}>Orthoptics</h3>
-            <p className={chartLabel}>motility · alignment</p>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">motility · alignment</p>
           </div>
         </div>
 
         <div className="grid gap-4 p-4 md:grid-cols-3">
           <div>
-            <label htmlFor="convergence" className={chartLabel}>
+            <label htmlFor="convergence" className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
               Convergence
             </label>
             <textarea
@@ -130,7 +130,7 @@ export function ExaminationSection() {
             />
           </div>
           <div>
-            <label htmlFor="cover_test" className={chartLabel}>
+            <label htmlFor="cover_test" className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
               Cover test
             </label>
             <textarea
@@ -142,7 +142,7 @@ export function ExaminationSection() {
             />
           </div>
           <div>
-            <label htmlFor="eom" className={chartLabel}>
+            <label htmlFor="eom" className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
               Extraocular movements
             </label>
             <textarea
@@ -164,13 +164,13 @@ export function ExaminationSection() {
           </span>
           <div>
             <h3 className={sectionTitle}>Clinical Evaluation</h3>
-            <p className={chartLabel}>slit lamp · fundus</p>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">slit lamp · fundus</p>
           </div>
         </div>
 
         <div className="space-y-7 p-4">
           <div>
-            <h4 className={`${chartLabel} mb-3`}>Anterior segment (slit lamp)</h4>
+            <h4 className={`text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground mb-3`}>Anterior segment (slit lamp)</h4>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <div className="rounded-2xl border border-status-examining/20 bg-status-examining-bg/50 p-4">
                 <label htmlFor="anterior_segment_od" className="mb-1.5 block text-sm font-semibold text-status-examining">
@@ -200,7 +200,7 @@ export function ExaminationSection() {
           </div>
 
           <div>
-            <h4 className={`${chartLabel} mb-3`}>Posterior segment (fundus)</h4>
+            <h4 className={`text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground mb-3`}>Posterior segment (fundus)</h4>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <div className="rounded-2xl border border-status-examining/20 bg-status-examining-bg/50 p-4">
                 <label htmlFor="fundus_od" className="mb-1.5 block text-sm font-semibold text-status-examining">

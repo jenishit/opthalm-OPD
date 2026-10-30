@@ -159,7 +159,7 @@ export function PatientListTable() {
                   </td>
                   <td className="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
                     <Link
-                      href={`/staff/patients/${patient.id}`}
+                      href={`/patients/${patient.id}`}
                       className="inline-flex items-center gap-1 text-primary hover:text-primary/80"
                     >
                       View Profile

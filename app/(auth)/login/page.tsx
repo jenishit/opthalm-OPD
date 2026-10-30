@@ -1,4 +1,3 @@
-"use client";
 import { AuthShell } from "../_components/AuthShell";
 import { LoginForm } from "../_components/LoginForm";
 

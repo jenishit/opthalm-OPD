@@ -4,7 +4,7 @@ import React from "react";
 import { Controller, useFormContext, useFieldArray } from "react-hook-form";
 import type { IntakeExamFormData } from "@/schemas/shared-schema";
 import { Plus, Trash2, Eye } from "lucide-react";
-import { NumericCell, chartLabel, chartShell } from "@/components/ui";
+import { NumericCell, chartShell } from "@/components/ui/ChartUi";
 
 const acuityOptions = ["6/6", "6/9", "6/12", "6/18", "6/24", "6/36", "6/60", "CF", "HM", "PL"];
 
@@ -48,7 +48,7 @@ export function RefractionSection() {
     <div className="space-y-5">
       <div className={chartShell}>
         <div className="border-b border-border/60 bg-muted/40 px-4 py-3">
-          <p className={chartLabel}>Add a refraction reading</p>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Add a refraction reading</p>
         </div>
         <div className="flex flex-wrap gap-2 p-4">
           {visibleStages.map((stage) => (
@@ -88,7 +88,7 @@ export function RefractionSection() {
                 <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border/60 bg-muted/40 px-4 py-3">
                   <div>
                     <h3 className="font-display text-lg font-medium text-foreground">{stage.label}</h3>
-                    <p className={chartLabel}>{stage.hint}</p>
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">{stage.hint}</p>
                   </div>
                   <button
                     type="button"
@@ -108,17 +108,17 @@ export function RefractionSection() {
                     {["Sphere", "Cylinder", "Axis", "Add", "Vision"].map((column) => (
                       <div
                         key={column}
-                        className={`border-b border-l border-border/60 p-2 text-center ${chartLabel}`}
+                        className={`border-b border-l border-border/60 p-2 text-center text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground`}
                       >
                         {column}
                       </div>
                     ))}
                     {isFinal ? (
                       <>
-                        <div className={`border-b border-l border-border/60 p-2 text-center ${chartLabel}`}>
+                        <div className={`border-b border-l border-border/60 p-2 text-center text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground`}>
                           PD
                         </div>
-                        <div className={`border-b border-l border-border/60 p-2 text-center ${chartLabel}`}>
+                        <div className={`border-b border-l border-border/60 p-2 text-center text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground`}>
                           Lens
                         </div>
                       </>

@@ -9,7 +9,7 @@ export default async function NewVisitPage({ params }: { params: Promise<{ id: s
     <div className="flex h-full flex-col gap-4">
       <div className="flex items-center gap-4">
         <Link
-          href={`/staff/patients/${id}`}
+          href={`/patients/${id}`}
           className="p-0 -ml-0.5 grid size-11 place-items-center rounded-md border border-line bg-card text-ink hover:border-sage"
         >
           <ArrowLeft className="h-5 w-5" />

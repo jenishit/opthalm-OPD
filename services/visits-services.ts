@@ -107,7 +107,13 @@ const treatmentsStore: Record<string, Treatment[]> = { ...mockTreatments };
 const investigationsStore: Record<string, Investigation[]> = { ...mockInvestigations };
 const followUpStore: Record<string, FollowUp> = { ...mockFollowUps };
 
-function stashClinicalVisit(visitId: string, data: IntakeExamFormData): void {
+/**
+ * Attaches the clinical sub-documents (symptoms, refraction, exam findings,
+ * diagnoses, treatments, investigations, follow-up) to an existing visit id.
+ * Exported so callers that already hold a real visit id (e.g. today's queue)
+ * can save clinical data without creating a duplicate visit via createFullVisit.
+ */
+export function stashClinicalVisit(visitId: string, data: IntakeExamFormData): void {
   symptomsStore[visitId] = { ...data.symptoms, id: `vs${Date.now()}`, visit_id: visitId };
   refractionStore[visitId] = data.readings.map((r, i) => ({
     ...r,

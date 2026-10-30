@@ -4,10 +4,6 @@ import React, { useState } from "react";
 import { Check, Minus, Plus, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-/** Small uppercase label, the equivalent of the reference's mono-label in our type system. */
-export const chartLabel =
-  "text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground";
-
 export const chartShell =
   "overflow-hidden rounded-2xl border border-border/60 bg-card ";
 
@@ -296,7 +292,7 @@ export function ChartField({
 }) {
   return (
     <label className={cn("flex flex-col gap-1", className)}>
-      <span className={chartLabel}>{label}</span>
+      <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">{label}</span>
       {children}
     </label>
   );

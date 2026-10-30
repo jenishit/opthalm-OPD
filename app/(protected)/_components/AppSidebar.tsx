@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { useUiStore } from "@/lib/store/ui";
 import { useAuthStore } from "@/stores/authStore";
+import { canAccess } from "@/lib/permissions";
 import { logoutStaffSession } from "@/services/auth-services";
 import { cn } from "@/lib/utils";
 import { OpthalmOKLogo } from "@/app/(auth)/_components/OpthalmOKLogo";
@@ -36,13 +37,29 @@ import {
 } from "@/components/shadcn/dropdown-menu";
 
 const NAV = [
-  { group: "Workspace", href: "/dashboard", label: "Overview", icon: LayoutDashboard },
+  {
+    group: "Workspace",
+    href: "/dashboard",
+    label: "Overview",
+    icon: LayoutDashboard,
+  },
   { group: "Care", href: "/patients", label: "Patients", icon: Users },
-  { group: "Care", href: "/appointments", label: "Appointments", icon: CalendarDays },
+  {
+    group: "Care",
+    href: "/appointments",
+    label: "Appointments",
+    icon: CalendarDays,
+  },
   { group: "Care", href: "/examinations", label: "Examinations", icon: Eye },
-  { group: "Care", href: "/prescriptions", label: "Prescriptions", icon: FileText, badge: "5" },
+  {
+    group: "Care",
+    href: "/prescriptions",
+    label: "Prescriptions",
+    icon: FileText,
+    badge: "5",
+  },
   { group: "Optical", href: "/inventory", label: "Inventory", icon: Package },
-  { group: "Optical", href: "/sales", label: "POS & Sales", icon: ShoppingCart },
+  { group: "Optical", href: "/pos", label: "POS & Sales", icon: ShoppingCart },
   {
     group: "Optical",
     href: "/customer-orders",
@@ -52,7 +69,12 @@ const NAV = [
     badgeMuted: true,
   },
   { group: "Optical", href: "/orders", label: "Supplier Orders", icon: Truck },
-  { group: "Manage", href: "/reports", label: "Reports", icon: ChartNoAxesCombined },
+  {
+    group: "Manage",
+    href: "/reports",
+    label: "Reports",
+    icon: ChartNoAxesCombined,
+  },
   { group: "Manage", href: "/teams", label: "Team & Roles", icon: ShieldCheck },
   { group: "Manage", href: "/settings", label: "Settings", icon: Settings },
 ] as const;
@@ -63,6 +85,8 @@ export function AppSidebar() {
   const pathname = usePathname();
   const { sidebarCollapsed, setSidebarCollapsed } = useUiStore();
   const { staffUser } = useAuthStore();
+  // Show everything while the role hasn't resolved yet to avoid a flash of an empty sidebar.
+  const visibleNav = staffUser ? NAV.filter((item) => canAccess(staffUser.role, item.href)) : NAV;
 
   const handleLogout = async () => {
     await logoutStaffSession();
@@ -82,7 +106,7 @@ export function AppSidebar() {
       <aside
         className={cn(
           "fixed inset-y-0 left-0 z-50 flex w-72 shrink-0 flex-col gap-4 overflow-y-auto bg-[#182721] px-3 py-4 text-[#E7ECE4] transition-transform duration-200 md:static md:translate-x-0",
-          sidebarCollapsed ? "-translate-x-full" : "translate-x-0"
+          sidebarCollapsed ? "-translate-x-full" : "translate-x-0",
         )}
       >
         <button
@@ -104,7 +128,9 @@ export function AppSidebar() {
             C
           </span>
           <span className="min-w-0 flex-1">
-            <b className="block truncate text-sm font-semibold text-white">ClearView Clinic</b>
+            <b className="block truncate text-sm font-semibold text-white">
+              ClearView Clinic
+            </b>
             <small className="block truncate text-xs text-[#9EAAA2]">
               Melbourne · Main practice
             </small>
@@ -114,12 +140,12 @@ export function AppSidebar() {
 
         {/* Nav */}
         <nav className="flex flex-1 flex-col gap-4">
-          {GROUPS.map((group) => (
+          {GROUPS.filter((group) => visibleNav.some((item) => item.group === group)).map((group) => (
             <div key={group} className="flex flex-col gap-0.5">
               <span className="px-3 pb-1 font-mono text-[10px] font-semibold uppercase tracking-widest text-[#6F8075]">
                 {group}
               </span>
-              {NAV.filter((item) => item.group === group).map((item) => {
+              {visibleNav.filter((item) => item.group === group).map((item) => {
                 const active = pathname === item.href;
                 const Icon = item.icon;
                 return (
@@ -131,7 +157,7 @@ export function AppSidebar() {
                       "flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors",
                       active
                         ? "bg-white/10 font-medium text-white"
-                        : "text-[#B9C4BC] hover:bg-white/5 hover:text-white"
+                        : "text-[#B9C4BC] hover:bg-white/5 hover:text-white",
                     )}
                   >
                     <Icon size={17} strokeWidth={1.8} className="shrink-0" />
@@ -142,7 +168,7 @@ export function AppSidebar() {
                           "grid h-5 min-w-5 shrink-0 place-items-center rounded-full px-1.5 text-[11px] font-semibold",
                           "badgeMuted" in item && item.badgeMuted
                             ? "bg-white/10 text-[#C7D2C9]"
-                            : "bg-[#D9A441] text-[#2B2008]"
+                            : "bg-[#D9A441] text-[#2B2008]",
                         )}
                       >
                         {item.badge}
@@ -165,8 +191,12 @@ export function AppSidebar() {
               <LifeBuoy size={16} />
             </span>
             <span className="min-w-0 flex-1">
-              <b className="block text-sm font-semibold text-white">Need a hand?</b>
-              <small className="block text-xs text-[#9EAAA2]">Visit our help centre</small>
+              <b className="block text-sm font-semibold text-white">
+                Need a hand?
+              </b>
+              <small className="block text-xs text-[#9EAAA2]">
+                Visit our help centre
+              </small>
             </span>
             <ArrowUpRight size={14} className="shrink-0 text-[#9EAAA2]" />
           </Link>
@@ -175,9 +205,7 @@ export function AppSidebar() {
 
           {staffUser && (
             <DropdownMenu>
-              <DropdownMenuTrigger
-                className="flex w-full items-center gap-2.5 rounded-lg px-1 py-1 text-left transition-colors hover:bg-white/5"
-              >
+              <DropdownMenuTrigger className="flex w-full items-center gap-2.5 rounded-lg px-1 py-1 text-left transition-colors hover:bg-white/5">
                 <span className="grid size-9 shrink-0 place-items-center rounded-full bg-[#D98BA0] font-display text-sm font-semibold text-white">
                   {staffUser.name.charAt(0)}
                 </span>

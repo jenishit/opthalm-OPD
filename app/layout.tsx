@@ -3,6 +3,7 @@ import { Inconsolata, Instrument_Serif, Lora, Noto_Sans_Devanagari, Poppins, Sou
 import { SessionProvider } from "next-auth/react";
 import { ThemeProvider } from "@/providers/ThemeProvider";
 import { AuthProvider } from "@/providers/AuthProvider";
+import { AppearanceProvider } from "@/providers/AppearanceProvider";
 import { Toaster } from "@/components/shadcn/sonner";
 import "./globals.css";
 
@@ -73,7 +74,9 @@ export default function RootLayout({
             {/* Base path follows the catch-all route location — see
                 app/api/nextauth/[...nextauth]/route.ts. */}
             <SessionProvider basePath="/api/nextauth" refetchOnWindowFocus={false} refetchInterval={0}>
-              <AuthProvider>{children}</AuthProvider>
+              <AuthProvider>
+                <AppearanceProvider>{children}</AppearanceProvider>
+              </AuthProvider>
               <Toaster />
             </SessionProvider>
           </ThemeProvider>

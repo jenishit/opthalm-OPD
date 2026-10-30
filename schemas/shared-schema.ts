@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 // ── Staff ───────────────────────────────────────────────────────────────────
-export const staffRole = ["doctor", "optometrist", "receptionist"] as const;
+export const staffRole = ["doctor", "optometrist", "optician", "receptionist", "manager"] as const;
 
 export const staffSchema = z.object({
   id: z.string(),

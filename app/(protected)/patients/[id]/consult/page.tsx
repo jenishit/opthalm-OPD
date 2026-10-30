@@ -12,7 +12,7 @@ export default async function ConsultPage({
     <div className="flex h-full min-h-0 flex-col gap-4">
       <div className="flex items-center gap-3">
         <Link
-          href={`/staff/patients/${patientId}`}
+          href={`/patients/${patientId}`}
           aria-label="Back to patient record"
           className="-ml-1.5 grid size-11 place-items-center rounded-md border border-line bg-card text-ink hover:border-sage transition-colors"
         >

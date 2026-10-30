@@ -3,7 +3,7 @@
 import React, { useMemo, useState } from "react";
 import { CalendarDays, Check, ChevronLeft, ChevronRight, X } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/shadcn/popover";
-import { Segmented } from "@/components/ui";
+import { Segmented } from "@/components/ui/ChartUi";
 import { cn } from "@/lib/utils";
 import {
   adToBs,

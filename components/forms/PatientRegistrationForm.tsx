@@ -20,9 +20,9 @@ import {
 import { patientFormSchema, type PatientFormData, sexOptions } from "@/schemas/patient-schema";
 import { createPatient, checkPhoneUnique } from "@/services/patients-services";
 import { SessionExpiredError } from "@/services/http";
-import { NepaliDateField } from "@/components/ui";
+import { NepaliDateField } from "@/components/ui/NepaliDateField";
 import { adToBs, formatAd, formatBs } from "@/lib/nepali-calendar";
-import { Chip, Segmented, StepRail, chartField, chartLabel, chartShell } from "@/components/ui";
+import { Chip, Segmented, StepRail, chartField, chartShell } from "@/components/ui/ChartUi";
 
 const labelCls = "block text-sm font-medium text-foreground";
 const errorCls = "mt-1.5 text-sm text-destructive";
@@ -262,7 +262,7 @@ export function PatientRegistrationForm() {
               <div className="grid gap-6 rounded-2xl border border-border/60 bg-muted/30 p-5 sm:grid-cols-[1fr_auto] sm:items-center">
                 <div>
                   <div className="flex items-baseline justify-between">
-                    <label htmlFor="age" className={chartLabel}>
+                    <label htmlFor="age" className={"text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground"}>
                       Years
                     </label>
                     <span className="font-display text-4xl font-medium tabular-nums text-foreground">
@@ -360,7 +360,7 @@ export function PatientRegistrationForm() {
               </h3>
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="sm:col-span-2">
-                  <label htmlFor="address_street" className={chartLabel}>
+                  <label htmlFor="address_street" className={"text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground"}>
                     Street / Area
                   </label>
                   <input
@@ -371,7 +371,7 @@ export function PatientRegistrationForm() {
                   />
                 </div>
                 <div>
-                  <label htmlFor="address_city" className={chartLabel}>
+                  <label htmlFor="address_city" className={"text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground"}>
                     City
                   </label>
                   <input
@@ -382,7 +382,7 @@ export function PatientRegistrationForm() {
                   />
                 </div>
                 <div>
-                  <label htmlFor="address_state" className={chartLabel}>
+                  <label htmlFor="address_state" className={"text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground"}>
                     State / Province
                   </label>
                   <input
@@ -418,17 +418,17 @@ export function PatientRegistrationForm() {
 
             <dl className="grid gap-4 sm:grid-cols-2">
               <div className="rounded-xl border border-border/60 bg-muted/30 p-3">
-                <dt className={chartLabel}>Phone</dt>
+                <dt className={"text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground"}>Phone</dt>
                 <dd className="mt-1 text-sm font-medium tabular-nums text-foreground">
                   {values.phone || "\u2014"}
                 </dd>
               </div>
               <div className="rounded-xl border border-border/60 bg-muted/30 p-3">
-                <dt className={chartLabel}>Occupation</dt>
+                <dt className={"text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground"}>Occupation</dt>
                 <dd className="mt-1 text-sm font-medium text-foreground">{values.occupation || "\u2014"}</dd>
               </div>
               <div className="rounded-xl border border-border/60 bg-muted/30 p-3 sm:col-span-2">
-                <dt className={chartLabel}>Address</dt>
+                <dt className={"text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground"}>Address</dt>
                 <dd className="mt-1 text-sm font-medium text-foreground">{addressLine || "\u2014"}</dd>
               </div>
             </dl>

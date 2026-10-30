@@ -124,7 +124,7 @@ export function PatientProfile({ patientId }: { patientId: string }) {
               <ul className="divide-y divide-border/60">
                 {visits.map((visit) => (
                   <li key={visit.id} className="group hover:bg-muted/40 transition-colors">
-                    <Link href={`/staff/patients/${patientId}/visits/${visit.id}`} className="block p-4">
+                    <Link href={`/patients/${patientId}/visits/${visit.id}`} className="block p-4">
                       <div className="flex justify-between items-start mb-1">
                         <div className="font-medium text-foreground text-sm">
                           {new Date(visit.visit_date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}

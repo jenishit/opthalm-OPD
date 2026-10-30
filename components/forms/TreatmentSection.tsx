@@ -5,7 +5,7 @@ import { useFormContext, useFieldArray } from "react-hook-form";
 import type { IntakeExamFormData } from "@/schemas/shared-schema";
 import { Pill, Trash2, Calendar } from "lucide-react";
 import { CatalogCombobox } from "./CatalogCombobox";
-import { NepaliDateField } from "@/components/ui";
+import { NepaliDateField } from "@/components/ui/NepaliDateField";
 
 const fieldCls =
   "w-full rounded-xl border border-input bg-card px-3 py-2 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-ring focus-visible:ring-2 focus-visible:ring-ring/40";
