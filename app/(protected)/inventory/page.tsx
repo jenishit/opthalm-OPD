@@ -10,16 +10,20 @@ import SectionHeading from "../dashboard/_components/SectionHeading";
 import { useInventoryItems } from "@/lib/hooks/use-inventory-items";
 import { formatCurrency } from "@/lib/utils";
 import type { InventoryCategory, InventoryItemDTO } from "@/types/api-types";
-import { InventoryTable } from "./_components/InventoryTable";
+import { InventoryTable, type InventoryView } from "./_components/InventoryTable";
 import { AddProductDialog } from "./_components/AddProductDialog";
 import { AddStockDialog } from "./_components/AddStockDialog";
+import { EditExpiryDialog } from "./_components/EditExpiryDialog";
+import { ExpiryTracker } from "./_components/ExpiryTracker";
 
 export default function InventoryPage() {
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState<InventoryCategory | "all">("all");
+  const [view, setView] = useState<InventoryView>("list");
   const [addOpen, setAddOpen] = useState(false);
   const [scanOpen, setScanOpen] = useState(false);
   const [stockItem, setStockItem] = useState<InventoryItemDTO | null>(null);
+  const [expiryItem, setExpiryItem] = useState<InventoryItemDTO | null>(null);
 
   const { items, loading, usingMock, refresh } = useInventoryItems(search);
   const filtered = category === "all" ? items : items.filter((i) => i.category === category);
@@ -92,10 +96,18 @@ export default function InventoryPage() {
         search={search}
         onSearchChange={setSearch}
         onAddStock={setStockItem}
+        onSetExpiry={setExpiryItem}
+        view={view}
+        onViewChange={setView}
       />
+
+      <div className="mt-4">
+        <ExpiryTracker items={items} />
+      </div>
 
       <AddProductDialog open={addOpen} onOpenChange={setAddOpen} onCreated={refresh} />
       <AddStockDialog item={stockItem} onOpenChange={(open) => !open && setStockItem(null)} onUpdated={refresh} />
+      <EditExpiryDialog item={expiryItem} onOpenChange={(open) => !open && setExpiryItem(null)} onUpdated={refresh} />
       <ScanBarcodeDialog
         open={scanOpen}
         onOpenChange={setScanOpen}

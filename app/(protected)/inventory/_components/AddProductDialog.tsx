@@ -32,6 +32,7 @@ const EMPTY = {
   selling_price: "",
   quantity_on_hand: "",
   reorder_threshold: "",
+  expiry_date: "",
 };
 
 export function AddProductDialog({
@@ -71,6 +72,7 @@ export function AddProductDialog({
         selling_price: form.selling_price ? Number(form.selling_price) : undefined,
         quantity_on_hand: form.quantity_on_hand ? Number(form.quantity_on_hand) : undefined,
         reorder_threshold: form.reorder_threshold ? Number(form.reorder_threshold) : undefined,
+        expiry_date: form.expiry_date || undefined,
       });
       toast.success(`${form.name} added to inventory`);
       setForm(EMPTY);
@@ -183,6 +185,15 @@ export function AddProductDialog({
               />
             </Field>
           </div>
+
+          <Field>
+            <FieldLabel>Expiry date (optional)</FieldLabel>
+            <Input
+              type="date"
+              value={form.expiry_date}
+              onChange={(e) => set("expiry_date", e.target.value)}
+            />
+          </Field>
 
           <DialogFooter>
             <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>

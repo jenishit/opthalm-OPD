@@ -1,17 +1,21 @@
 "use client";
 
-import { toast } from "sonner";
+import { useState } from "react";
 import { Button } from "@/components/shadcn/button";
 import SectionHeading from "../dashboard/_components/SectionHeading";
 import { CalendarCheck, CalendarDays, CheckCircle2, Clock3, Plus } from "lucide-react";
 import StatCard from "@/components/ui/StatCard";
 import { DaySchedule } from "./_components/DaySchedule";
+import { WeekView } from "./_components/WeekView";
+import { MonthView } from "./_components/MonthView";
+import { ViewSwitcher, type ScheduleView } from "./_components/ViewSwitcher";
 import { useAuthStore } from "@/stores/authStore";
 import { isReadOnly } from "@/lib/permissions";
 
 export default function AppointmentPage() {
   const staffUser = useAuthStore((s) => s.staffUser);
   const readOnly = isReadOnly(staffUser?.role, "/appointments");
+  const [view, setView] = useState<ScheduleView>("Day");
 
   return (
     <div className="flex h-full flex-col">
@@ -25,7 +29,7 @@ export default function AppointmentPage() {
         }
         actions={
           !readOnly && (
-            <Button onClick={() => toast.info("Appointment booking is coming soon")}>
+            <Button onClick={() => setView("Week")}>
               <Plus />
               Book appointment
             </Button>
@@ -54,8 +58,14 @@ export default function AppointmentPage() {
         />
       </div>
 
+      <div className="mb-4">
+        <ViewSwitcher value={view} onChange={setView} />
+      </div>
+
       <div className="min-h-0 flex-1">
-        <DaySchedule />
+        {view === "Day" && <DaySchedule />}
+        {view === "Week" && <WeekView />}
+        {view === "Month" && <MonthView />}
       </div>
     </div>
   );

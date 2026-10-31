@@ -2,10 +2,7 @@ import type { Staff } from "@/schemas/shared-schema";
 import type { Patient } from "@/schemas/patient-schema";
 import type { PatientHistory } from "@/schemas/history-schema";
 import type { Condition, DiagnosisCatalog, Medicine } from "@/schemas/catalog-schema";
-import type { Visit, VisitSymptoms, VisitDiagnosis } from "@/schemas/visit-schema";
-import type { RefractionReading } from "@/schemas/refraction-schema";
-import type { ExaminationFindings } from "@/schemas/examination-schema";
-import type { Treatment, FollowUp } from "@/schemas/treatment-schema";
+import type { Visit } from "@/schemas/visit-schema";
 import type { Investigation, PatientAccessToken } from "@/schemas/shared-schema";
 import type { Prescription } from "@/schemas/prescription-schema";
 
@@ -291,241 +288,17 @@ export const mockVisits: Visit[] = [
 ];
 
 // ═══════════════════════════════════════════════════════════════════════════
-// VISIT SYMPTOMS
-// ═══════════════════════════════════════════════════════════════════════════
-
-export const mockVisitSymptoms: Record<string, VisitSymptoms> = {
-  v1: {
-    id: "vs1", visit_id: "v1",
-    foreign_body_sensation: "none", redness: "none", swelling: "none",
-    diminished_distance_vision: "OU", diminished_near_vision: "none",
-    blurring: "OU", headache: "OU", eye_pain: "none",
-    watery_eyes: "none", discharge: "none", itching: "none",
-    photophobia: "none", floaters: "none", flashes: "none",
-    double_vision: "none", recent_fever: false,
-  },
-  v2: {
-    id: "vs2", visit_id: "v2",
-    foreign_body_sensation: "none", redness: "none", swelling: "none",
-    diminished_distance_vision: "none", diminished_near_vision: "none",
-    blurring: "none", headache: "none", eye_pain: "OS",
-    watery_eyes: "none", discharge: "none", itching: "none",
-    photophobia: "none", floaters: "OD", flashes: "none",
-    double_vision: "none", recent_fever: false,
-  },
-  v7: {
-    id: "vs7", visit_id: "v7",
-    foreign_body_sensation: "none", redness: "none", swelling: "none",
-    diminished_distance_vision: "none", diminished_near_vision: "OU",
-    blurring: "OU", headache: "OU", eye_pain: "none",
-    watery_eyes: "none", discharge: "none", itching: "none",
-    photophobia: "none", floaters: "none", flashes: "none",
-    double_vision: "none", recent_fever: false,
-  },
-  v9: {
-    id: "vs9", visit_id: "v9",
-    foreign_body_sensation: "none", redness: "none", swelling: "none",
-    diminished_distance_vision: "OS", diminished_near_vision: "none",
-    blurring: "OS", headache: "none", eye_pain: "OS",
-    watery_eyes: "none", discharge: "none", itching: "none",
-    photophobia: "none", floaters: "none", flashes: "none",
-    double_vision: "none", recent_fever: false,
-  },
-  v10: {
-    id: "vs10", visit_id: "v10",
-    foreign_body_sensation: "OD", redness: "none", swelling: "none",
-    diminished_distance_vision: "none", diminished_near_vision: "OU",
-    blurring: "none", headache: "none", eye_pain: "none",
-    watery_eyes: "OU", discharge: "none", itching: "OU",
-    photophobia: "none", floaters: "none", flashes: "none",
-    double_vision: "none", recent_fever: false,
-  },
-};
-
-// ═══════════════════════════════════════════════════════════════════════════
-// REFRACTION READINGS
-// ═══════════════════════════════════════════════════════════════════════════
-
-export const mockRefractionReadings: Record<string, RefractionReading[]> = {
-  v1: [
-    { id: "r1", visit_id: "v1", eye: "OD", stage: "unaided", va: "6/18" },
-    { id: "r2", visit_id: "v1", eye: "OS", stage: "unaided", va: "6/12" },
-    { id: "r3", visit_id: "v1", eye: "OD", stage: "final_rx", sphere: -2.50, cylinder: -0.75, axis: 90, va: "6/6", pd: 32, lens_type: "single_vision" },
-    { id: "r4", visit_id: "v1", eye: "OS", stage: "final_rx", sphere: -1.75, cylinder: -0.50, axis: 85, va: "6/6", pd: 31, lens_type: "single_vision" },
-  ],
-  v7: [
-    { id: "r5", visit_id: "v7", eye: "OD", stage: "unaided", va: "6/6" },
-    { id: "r6", visit_id: "v7", eye: "OS", stage: "unaided", va: "6/6" },
-    { id: "r7", visit_id: "v7", eye: "OD", stage: "final_rx", sphere: 0.0, cylinder: 0.0, axis: 0, add_power: 2.00, va: "N6", pd: 33, lens_type: "progressive" },
-    { id: "r8", visit_id: "v7", eye: "OS", stage: "final_rx", sphere: 0.0, cylinder: -0.25, axis: 180, add_power: 2.00, va: "N6", pd: 32, lens_type: "progressive" },
-  ],
-  v9: [
-    { id: "r9", visit_id: "v9", eye: "OD", stage: "unaided", va: "6/9" },
-    { id: "r10", visit_id: "v9", eye: "OS", stage: "unaided", va: "6/12" },
-    { id: "r11", visit_id: "v9", eye: "OD", stage: "final_rx", sphere: -1.00, cylinder: -0.50, axis: 170, add_power: 2.50, va: "6/6", pd: 30, lens_type: "bifocal" },
-    { id: "r12", visit_id: "v9", eye: "OS", stage: "final_rx", sphere: -1.25, cylinder: -0.75, axis: 10, add_power: 2.50, va: "6/6", pd: 31, lens_type: "bifocal" },
-  ],
-  v10: [
-    { id: "r13", visit_id: "v10", eye: "OD", stage: "unaided", va: "6/9" },
-    { id: "r14", visit_id: "v10", eye: "OS", stage: "unaided", va: "6/6" },
-    { id: "r15", visit_id: "v10", eye: "OD", stage: "final_rx", sphere: 0.75, cylinder: -0.50, axis: 90, add_power: 2.75, va: "6/6", pd: 30, lens_type: "progressive" },
-    { id: "r16", visit_id: "v10", eye: "OS", stage: "final_rx", sphere: 0.50, cylinder: -0.25, axis: 80, add_power: 2.75, va: "6/6", pd: 31, lens_type: "progressive" },
-  ],
-};
-
-// ═══════════════════════════════════════════════════════════════════════════
-// EXAMINATION FINDINGS
-// ═══════════════════════════════════════════════════════════════════════════
-
-export const mockExaminationFindings: Record<string, ExaminationFindings> = {
-  v1: {
-    id: "ef1", visit_id: "v1", iop_od: 14, iop_os: 15,
-    convergence: "Normal", cover_test: "Orthophoria",
-    eom: "Full in all gazes OU",
-    anterior_segment_od: "Clear cornea, deep AC, normal iris, clear lens",
-    anterior_segment_os: "Clear cornea, deep AC, normal iris, clear lens",
-    fundus_od: "CDR 0.3, healthy rim, no NPDR signs",
-    fundus_os: "CDR 0.3, healthy rim, no NPDR signs",
-  },
-  v2: {
-    id: "ef2", visit_id: "v2", iop_od: 22, iop_os: 26,
-    convergence: "Normal", cover_test: "Orthophoria",
-    eom: "Full in all gazes OU",
-    anterior_segment_od: "Open angles, mild nuclear sclerosis",
-    anterior_segment_os: "Open angles, mild nuclear sclerosis",
-    fundus_od: "CDR 0.6, inferior notching, RNFL defect",
-    fundus_os: "CDR 0.7, superior and inferior notching, RNFL thinning",
-  },
-  v7: {
-    id: "ef7", visit_id: "v7", iop_od: 16, iop_os: 15,
-    convergence: "Normal", cover_test: "Orthophoria",
-    eom: "Full OU",
-    anterior_segment_od: "Clear, early nuclear sclerosis",
-    anterior_segment_os: "Clear, early nuclear sclerosis",
-    fundus_od: "CDR 0.3, normal macula, no DR",
-    fundus_os: "CDR 0.3, normal macula, no DR",
-  },
-  v9: {
-    id: "ef9", visit_id: "v9", iop_od: 18, iop_os: 24,
-    convergence: "Normal", cover_test: "Orthophoria",
-    eom: "Full OU",
-    anterior_segment_od: "Open angles grade 4, clear lens",
-    anterior_segment_os: "Open angles grade 3, early NS",
-    fundus_od: "CDR 0.5, healthy rim",
-    fundus_os: "CDR 0.6, thin inferior rim, early RNFL defect",
-  },
-  v10: {
-    id: "ef10", visit_id: "v10", iop_od: 14, iop_os: 13,
-    convergence: "Normal", cover_test: "Orthophoria",
-    eom: "Full OU",
-    anterior_segment_od: "PCO, posterior chamber IOL in place",
-    anterior_segment_os: "Early cortical cataract peripheral",
-    fundus_od: "Healthy disc, dry macula, no DR",
-    fundus_os: "CDR 0.3, normal",
-  },
-};
-
-// ═══════════════════════════════════════════════════════════════════════════
-// VISIT DIAGNOSES
-// ═══════════════════════════════════════════════════════════════════════════
-
-export const mockVisitDiagnoses: Record<string, VisitDiagnosis[]> = {
-  v1: [
-    { id: "vd1", visit_id: "v1", diagnosis_id: "d1", diagnosis_name: "Myopia", icd10_code: "H52.1", laterality: "OU" },
-    { id: "vd2", visit_id: "v1", diagnosis_id: "d3", diagnosis_name: "Astigmatism", icd10_code: "H52.2", laterality: "OU" },
-  ],
-  v2: [
-    { id: "vd3", visit_id: "v2", diagnosis_id: "d5", diagnosis_name: "Primary Open Angle Glaucoma", icd10_code: "H40.11", laterality: "OU" },
-  ],
-  v7: [
-    { id: "vd4", visit_id: "v7", diagnosis_id: "d4", diagnosis_name: "Presbyopia", icd10_code: "H52.4", laterality: "OU" },
-  ],
-  v9: [
-    { id: "vd5", visit_id: "v9", diagnosis_id: "d5", diagnosis_name: "Primary Open Angle Glaucoma", icd10_code: "H40.11", laterality: "OU" },
-    { id: "vd6", visit_id: "v9", diagnosis_id: "d1", diagnosis_name: "Myopia", icd10_code: "H52.1", laterality: "OU" },
-    { id: "vd7", visit_id: "v9", diagnosis_id: "d4", diagnosis_name: "Presbyopia", icd10_code: "H52.4", laterality: "OU" },
-  ],
-  v10: [
-    { id: "vd8", visit_id: "v10", diagnosis_id: "d9", diagnosis_name: "Dry Eye Disease", icd10_code: "H04.12", laterality: "OU" },
-    { id: "vd9", visit_id: "v10", diagnosis_id: "d4", diagnosis_name: "Presbyopia", icd10_code: "H52.4", laterality: "OU" },
-  ],
-};
-
-// ═══════════════════════════════════════════════════════════════════════════
-// TREATMENTS
-// ═══════════════════════════════════════════════════════════════════════════
-
-export const mockTreatments: Record<string, Treatment[]> = {
-  v1: [
-    {
-      id: "t1", visit_id: "v1", type: "advice",
-      advice_text: "New spectacle prescription provided. Use anti-reflective coating lenses.",
-    },
-    {
-      id: "t2", visit_id: "v1", type: "advice",
-      advice_text: "Follow 20-20-20 rule for screen use. Annual eye check recommended.",
-    },
-  ],
-  v2: [
-    {
-      id: "t3", visit_id: "v2", type: "medicine", medicine_id: "m5",
-      medicine_name: "Timolol Maleate 0.5%",
-      route: "Topical", dosage: "1 drop", frequency: "Twice daily", duration: "Continue",
-    },
-    {
-      id: "t4", visit_id: "v2", type: "medicine", medicine_id: "m6",
-      medicine_name: "Latanoprost 0.005%",
-      route: "Topical", dosage: "1 drop", frequency: "Once daily", duration: "At bedtime, continue",
-    },
-  ],
-  v7: [
-    {
-      id: "t5", visit_id: "v7", type: "advice",
-      advice_text: "Progressive lenses prescribed. May take 1-2 weeks to adapt.",
-    },
-  ],
-  v9: [
-    {
-      id: "t6", visit_id: "v9", type: "medicine", medicine_id: "m5",
-      medicine_name: "Timolol Maleate 0.5%",
-      route: "Topical", dosage: "1 drop", frequency: "Twice daily", duration: "Continue",
-    },
-    {
-      id: "t7", visit_id: "v9", type: "advice",
-      advice_text: "Bifocal lenses prescribed. Follow-up in 3 months for IOP check.",
-    },
-  ],
-  v10: [
-    {
-      id: "t8", visit_id: "v10", type: "medicine", medicine_id: "m4",
-      medicine_name: "Carboxymethylcellulose 0.5%",
-      route: "Topical", dosage: "1 drop", frequency: "Four times daily", duration: "3 months",
-    },
-    {
-      id: "t9", visit_id: "v10", type: "advice",
-      advice_text: "Progressive lenses prescribed. Lubricating drops to be used regularly.",
-    },
-  ],
-};
-
-// ═══════════════════════════════════════════════════════════════════════════
 // INVESTIGATIONS
 // ═══════════════════════════════════════════════════════════════════════════
+//
+// Symptoms/refraction/exam findings/diagnoses/treatments/follow-ups now come
+// from the real /visit/:id/* clinical endpoints — only investigations still
+// have no endpoint, so they're the one clinical sub-document still mocked.
 
 export const mockInvestigations: Record<string, Investigation[]> = {
   v10: [
     { id: "inv1", visit_id: "v10", type: "schirmer_test", result: "OD: 8mm, OS: 10mm", notes: "Borderline dry" },
   ],
-};
-
-// ═══════════════════════════════════════════════════════════════════════════
-// FOLLOW-UPS
-// ═══════════════════════════════════════════════════════════════════════════
-
-export const mockFollowUps: Record<string, FollowUp> = {
-  v2: { id: "fu1", visit_id: "v2", follow_up_date: "2026-10-13", reason: "IOP re-check and visual field", reminder_sent_at: null },
-  v9: { id: "fu2", visit_id: "v9", follow_up_date: "2025-04-12", reason: "IOP check and OCT", reminder_sent_at: null },
-  v10: { id: "fu3", visit_id: "v10", follow_up_date: "2025-09-20", reason: "Dry eye reassessment", reminder_sent_at: null },
 };
 
 // ═══════════════════════════════════════════════════════════════════════════

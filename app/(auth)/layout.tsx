@@ -11,7 +11,7 @@ export default async function AuthLayout({
 }) {
   const session = await auth();
   if (session?.user) {
-    redirect("/queue");
+    redirect("/dashboard");
   }
 
   return <>{children}</>;

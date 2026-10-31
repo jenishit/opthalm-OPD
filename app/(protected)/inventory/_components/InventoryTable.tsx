@@ -1,6 +1,6 @@
 "use client";
 
-import { Glasses, Loader2, MoreHorizontal, PackagePlus, SlidersHorizontal } from "lucide-react";
+import { Glasses, LayoutGrid, List, Loader2, MoreHorizontal, PackagePlus, SlidersHorizontal, CalendarClock } from "lucide-react";
 import { toast } from "sonner";
 import { Input } from "@/components/shadcn/input";
 import {
@@ -23,9 +23,21 @@ import {
   CATEGORY_TABS,
   STOCK_STATUS_LABEL,
   STOCK_STATUS_PILL,
+  daysUntilExpiry,
+  expiryLabel,
+  expiryTone,
   stockStatus,
 } from "@/lib/inventory-category";
 import type { InventoryCategory, InventoryItemDTO } from "@/types/api-types";
+import { InventoryGrid } from "./InventoryGrid";
+
+const EXPIRY_PILL: Record<"bad" | "warn" | "mute", string> = {
+  bad: "pill-bad",
+  warn: "pill-warn",
+  mute: "pill-mute",
+};
+
+export type InventoryView = "list" | "grid";
 
 export function InventoryTable({
   items,
@@ -36,6 +48,9 @@ export function InventoryTable({
   search,
   onSearchChange,
   onAddStock,
+  onSetExpiry,
+  view,
+  onViewChange,
 }: {
   items: InventoryItemDTO[];
   loading: boolean;
@@ -45,6 +60,9 @@ export function InventoryTable({
   search: string;
   onSearchChange: (search: string) => void;
   onAddStock: (item: InventoryItemDTO) => void;
+  onSetExpiry: (item: InventoryItemDTO) => void;
+  view: InventoryView;
+  onViewChange: (view: InventoryView) => void;
 }) {
   return (
     <div className="overflow-hidden rounded-xl border border-line bg-card shadow-sm">
@@ -77,6 +95,32 @@ export function InventoryTable({
             <SlidersHorizontal className="size-4" />
             Filter
           </button>
+          <div className="inline-flex gap-0.5 rounded-md border border-line bg-muted/40 p-0.5">
+            <button
+              type="button"
+              aria-label="List view"
+              aria-pressed={view === "list"}
+              onClick={() => onViewChange("list")}
+              className={cn(
+                "inline-flex size-8 items-center justify-center rounded-[5px]",
+                view === "list" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              <List className="size-4" />
+            </button>
+            <button
+              type="button"
+              aria-label="Grid view"
+              aria-pressed={view === "grid"}
+              onClick={() => onViewChange("grid")}
+              className={cn(
+                "inline-flex size-8 items-center justify-center rounded-[5px]",
+                view === "grid" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              <LayoutGrid className="size-4" />
+            </button>
+          </div>
         </div>
       </div>
 
@@ -86,6 +130,11 @@ export function InventoryTable({
         </div>
       )}
 
+      {view === "grid" ? (
+        <div className="p-4">
+          <InventoryGrid items={items} loading={loading} search={search} onAddStock={onAddStock} onSetExpiry={onSetExpiry} />
+        </div>
+      ) : (
       <Table>
         <TableHeader>
           <TableRow>
@@ -115,6 +164,8 @@ export function InventoryTable({
           ) : (
             items.map((item) => {
               const status = stockStatus(item);
+              const days = daysUntilExpiry(item);
+              const tone = expiryTone(days);
               return (
                 <TableRow key={item.id}>
                   <TableCell>
@@ -143,7 +194,15 @@ export function InventoryTable({
                     {formatCurrency(item.selling_price)}
                   </TableCell>
                   <TableCell>
-                    <span className={cn("pill", STOCK_STATUS_PILL[status])}>{STOCK_STATUS_LABEL[status]}</span>
+                    <div className="flex flex-wrap gap-1">
+                      <span className={cn("pill", STOCK_STATUS_PILL[status])}>{STOCK_STATUS_LABEL[status]}</span>
+                      {days != null && tone && (
+                        <span className={cn("pill", EXPIRY_PILL[tone])}>
+                          <CalendarClock size={11} />
+                          {expiryLabel(days)}
+                        </span>
+                      )}
+                    </div>
                   </TableCell>
                   <TableCell>
                     <DropdownMenu>
@@ -155,6 +214,10 @@ export function InventoryTable({
                           <PackagePlus className="size-4" />
                           Add stock
                         </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => onSetExpiry(item)}>
+                          <CalendarClock className="size-4" />
+                          Set expiry date
+                        </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>
@@ -164,6 +227,7 @@ export function InventoryTable({
           )}
         </TableBody>
       </Table>
+      )}
 
       {items.length > 0 && (
         <div className="flex items-center justify-between border-t border-line/70 px-4 py-2.5 text-xs text-muted-foreground">

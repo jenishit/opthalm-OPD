@@ -30,7 +30,7 @@ const BLANK_SYMPTOMS: IntakeExamFormData["symptoms"] = {
 /**
  * Maps the examination chart's working state (ExamState) onto the backend's
  * clinical-document shape (IntakeExamFormData) so it can be saved via
- * stashClinicalVisit/createFullVisit and rendered by VisitDetailView on the
+ * saveClinicalData/createFullVisit and rendered by VisitDetailView on the
  * patient's profile.
  *
  * This chart doesn't collect every field IntakeExamFormData models — symptoms,

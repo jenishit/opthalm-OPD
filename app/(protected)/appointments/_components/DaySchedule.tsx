@@ -20,7 +20,6 @@ const STATUS_LABEL: Record<VisitStatus, string> = {
 export function DaySchedule() {
   const [queue, setQueue] = useState<QueueItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [view, setView] = useState<"Day" | "Week" | "Month">("Day");
 
   useEffect(() => {
     let active = true;
@@ -53,23 +52,7 @@ export function DaySchedule() {
   return (
     <div className="flex h-full min-h-[600px] flex-col rounded-xl border border-line bg-card shadow-sm">
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line/70 px-5 py-3.5">
-        <div className="inline-flex gap-0.5 rounded-lg bg-muted/60 p-0.5">
-          {(["Day", "Week", "Month"] as const).map((v) => (
-            <button
-              key={v}
-              onClick={() => {
-                setView(v);
-                if (v !== "Day") toast.info(`${v} view is coming soon`);
-              }}
-              className={cn(
-                "rounded-md px-3 py-1.5 text-xs font-semibold transition-colors",
-                view === v ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
-              )}
-            >
-              {v}
-            </button>
-          ))}
-        </div>
+        <h3 className="font-display text-base font-semibold text-foreground">Day schedule</h3>
         <div className="flex items-center gap-2">
           <button
             onClick={() => toast.info("Schedule filters are coming soon")}
@@ -108,7 +91,7 @@ export function DaySchedule() {
       <div className="min-h-0 flex-1 overflow-y-auto px-5 pb-5">
         {loading ? (
           <div className="flex items-center justify-center gap-2 py-16 text-sm text-muted-foreground">
-            <Loader2 className="size-4 animate-spin" /> Loading today's queue…
+            <Loader2 className="size-4 animate-spin" /> Loading today&apos;s queue…
           </div>
         ) : (
           <>

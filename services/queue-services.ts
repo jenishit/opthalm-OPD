@@ -44,3 +44,36 @@ export async function getTodayQueue(status?: VisitStatus): Promise<QueueItem[]> 
     return dateA - dateB;
   });
 }
+
+/**
+ * All visits whose visit_date falls within [startDate, endDate] (both
+ * "YYYY-MM-DD", inclusive) — backs the Week and Month appointment views.
+ *
+ * Same N+1 assembly as getTodayQueue (no dedicated range endpoint on the
+ * backend yet): fetch every patient, then every patient's visits, then
+ * filter client-side.
+ */
+export async function getQueueForRange(startDate: string, endDate: string): Promise<QueueItem[]> {
+  const patients = await listPatientDtos();
+  const visitLists = await Promise.all(
+    patients.map((patient) => getPatientVisitDtos(patient.patient_id))
+  );
+
+  const queueItems: QueueItem[] = [];
+  patients.forEach((patientDto, index) => {
+    for (const dto of visitLists[index]?.visits ?? []) {
+      const date = String(dto.visit_date).slice(0, 10);
+      if (date < startDate || date > endDate) continue;
+      queueItems.push({
+        visit: toUiVisit(dto, patientDto.patient_id),
+        patient: toUiPatient(patientDto),
+      });
+    }
+  });
+
+  return queueItems.sort((a, b) => {
+    const dateA = a.visit.created_at ? new Date(a.visit.created_at).getTime() : 0;
+    const dateB = b.visit.created_at ? new Date(b.visit.created_at).getTime() : 0;
+    return dateA - dateB;
+  });
+}

@@ -31,7 +31,7 @@ import type { ExamPatient, ExamState, Urg } from "./_components/types";
 import { cn, setIn, fmtDate, addDays, today0, avatarAccent } from "@/lib/utils";
 import { COND, ANAT } from "@/types/eye-types";
 import { useAuthStore } from "@/stores/authStore";
-import { stashClinicalVisit, updateVisitStatus } from "@/services/visits-services";
+import { saveClinicalData, updateVisitStatus } from "@/services/visits-services";
 import { createPrescription } from "@/services/prescriptions-services";
 import { ApiError } from "@/services/http";
 
@@ -168,7 +168,7 @@ export default function ExaminationsPage() {
   const persistExam = async (): Promise<boolean> => {
     if (!p.visitId) return false;
     const data = examToIntakeData(ex, p, staffUser?.name ?? "Staff");
-    stashClinicalVisit(p.visitId, data);
+    await saveClinicalData(p.visitId, data);
     await updateVisitStatus(p.visitId, "completed");
     return true;
   };

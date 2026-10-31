@@ -14,6 +14,8 @@ import {
 import StatCard from "@/components/ui/StatCard";
 import AppointmentQueue from "./_components/AppointmentQueue";
 import PerformanceChart from "./_components/PerformanceChart";
+import QuickActions from "./_components/QuickActions";
+import RecentActivity from "./_components/RecentActivity";
 
 function greeting() {
   const hour = new Date().getHours();
@@ -93,6 +95,11 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1.08fr_0.92fr]">
         <AppointmentQueue />
         <PerformanceChart />
+      </div>
+
+      <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <QuickActions />
+        <RecentActivity />
       </div>
     </>
   );

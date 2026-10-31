@@ -358,6 +358,8 @@ export interface CreateInventoryItemRequest {
   quantity_on_hand?: number;
   reorder_threshold?: number;
   unit?: string;
+  /** ISO date (YYYY-MM-DD) the current stock expires on, e.g. for contacts, coatings, meds. */
+  expiry_date?: string;
 }
 
 export interface UpdateInventoryItemRequest {
@@ -370,6 +372,8 @@ export interface UpdateInventoryItemRequest {
   cost_price?: number;
   selling_price?: number;
   reorder_threshold?: number;
+  /** ISO date (YYYY-MM-DD), or null to clear it. */
+  expiry_date?: string | null;
 }
 
 export interface InventoryItemDTO {
@@ -386,6 +390,8 @@ export interface InventoryItemDTO {
   selling_price: number;
   quantity_on_hand: number;
   reorder_threshold: number;
+  /** ISO date (YYYY-MM-DD) the current stock expires on; null when the item has no shelf life. */
+  expiry_date: string | null;
   is_active: boolean;
   created_at: string;
   updated_at: string;

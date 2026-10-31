@@ -58,7 +58,7 @@ export function LoginForm() {
       toast.error("Invalid Credentials");
       return;
     }
-    router.push("/queue");
+    router.push("/dashboard");
 
     router.refresh();
   };

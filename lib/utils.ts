@@ -30,6 +30,28 @@ export const addDays = (d: Date, n: number) => {
 export const fmtDate = (d: Date, o: Intl.DateTimeFormatOptions = { day: "numeric", month: "short" }) =>
   d.toLocaleDateString("en-GB", o);
 
+/** "YYYY-MM-DD" in local time — the key used to match a Date against a visit_date string. */
+export const iso = (d: Date) => {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+};
+
+/** Monday of the week containing d (local time), at midnight. */
+export const mondayOf = (d: Date) => {
+  const x = new Date(d);
+  x.setHours(0, 0, 0, 0);
+  const offset = (x.getDay() + 6) % 7; // Sunday(0) -> 6, Monday(1) -> 0, ...
+  x.setDate(x.getDate() - offset);
+  return x;
+};
+
+export const DAYS = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"];
+
+/** Short random id for optimistic local records before a server id is assigned. */
+export const uid = () => Math.random().toString(36).slice(2, 10);
+
 /** Deterministic avatar background hue + initials from a display name, for mock/local patient records with no photo. */
 export const avatarAccent = (name: string) => {
   const hue = (name.charCodeAt(0) * 7 + name.length * 31) % 360;
