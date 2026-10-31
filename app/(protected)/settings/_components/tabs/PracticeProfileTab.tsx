@@ -1,12 +1,89 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Eye, Globe } from "lucide-react";
+import { Eye, Globe, Loader2 } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { Toggle } from "../Toggle";
 import { SaveRow } from "../SaveRow";
+import { getClinic, updateClinic } from "@/services/clinic-services";
+import { ApiError } from "@/services/http";
+import type { ClinicResponse } from "@/types/clinic-types";
+
+const CURRENCY_OPTIONS = [
+  { value: "AUD", label: "AUD — Australian Dollar" },
+  { value: "USD", label: "USD — US Dollar" },
+  { value: "NPR", label: "NPR — Nepalese Rupee" },
+];
+
+const TIMEZONE_OPTIONS = [
+  { value: "Australia/Melbourne", label: "Australia / Melbourne" },
+  { value: "Asia/Kathmandu", label: "Asia / Kathmandu" },
+];
 
 export function PracticeProfileTab() {
+  const [clinic, setClinic] = useState<ClinicResponse | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [lastSaved, setLastSaved] = useState<string | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    getClinic()
+      .then((data) => {
+        if (active) setClinic(data);
+      })
+      .catch((error) => {
+        console.error("Failed to load clinic profile", error);
+        toast.error("Failed to load practice profile");
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  function set<K extends keyof ClinicResponse>(key: K, value: ClinicResponse[K]) {
+    setClinic((c) => (c ? { ...c, [key]: value } : c));
+  }
+
+  async function handleSave() {
+    if (!clinic) return;
+    setSaving(true);
+    try {
+      await updateClinic(clinic.id, {
+        clinic_name: clinic.clinic_name,
+        registration_no: clinic.registration_no,
+        tagline: clinic.tagline,
+        address: clinic.address,
+        phone: clinic.phone,
+        email: clinic.email,
+        report_footer: clinic.report_footer,
+        workspace_slug: clinic.workspace_slug,
+        default_currency: clinic.default_currency,
+        timezone: clinic.timezone,
+        require_consent_before_exam: clinic.require_consent_before_exam,
+        low_stock_notifications: clinic.low_stock_notifications,
+      });
+      setLastSaved(new Date().toISOString());
+      toast.success("Practice settings saved");
+    } catch (error) {
+      toast.error(error instanceof ApiError ? error.message : "Failed to save practice settings");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  if (loading || !clinic) {
+    return (
+      <div className="flex items-center justify-center gap-2 py-16 text-[11px] text-[#92988c]">
+        <Loader2 size={15} className="animate-spin" /> Loading practice profile…
+      </div>
+    );
+  }
+
   return (
     <>
       <div className="flex items-center justify-between gap-3 pb-[14px]">
@@ -26,11 +103,16 @@ export function PracticeProfileTab() {
           <Eye size={28} />
         </div>
         <div className="min-w-[160px] flex-1">
-          <h2 className="m-0 font-['Playfair_Display',serif] text-base font-semibold text-[#23342c]">ClearView Eye Clinic & Optical</h2>
-          <p className="m-0 mt-[5px] text-[10px] text-[#92988c]">Better vision, brighter lives.</p>
+          <h2 className="m-0 font-['Playfair_Display',serif] text-base font-semibold text-[#23342c]">{clinic.clinic_name}</h2>
+          <input
+            value={clinic.tagline ?? ""}
+            onChange={(e) => set("tagline", e.target.value)}
+            placeholder="A short tagline shown under your clinic name"
+            className="m-0 mt-[5px] w-full bg-transparent text-[10px] text-[#92988c] outline-none placeholder:text-[#c3c6bb]"
+          />
         </div>
         <Button
-          onClick={() => toast.info("Logo upload selected")}
+          onClick={() => toast.info("Logo upload isn't wired up yet")}
           className="min-h-[30px] rounded-[7px] border border-[#e2dfd5] bg-[#fffefa] px-2.5 text-[11px] font-semibold text-[#48564a] hover:border-[#cbd5c8] hover:bg-[#f3f4ec]"
         >
           Update logo
@@ -41,7 +123,8 @@ export function PracticeProfileTab() {
         <label className="flex flex-col gap-[7px] text-[10px] font-semibold text-[#687468]">
           Practice name
           <input
-            defaultValue="ClearView Eye Clinic & Optical"
+            value={clinic.clinic_name}
+            onChange={(e) => set("clinic_name", e.target.value)}
             className="min-h-[37px] w-full rounded-[7px] border border-[#e7e4da] bg-[#fffefa] px-2.5 py-[9px] text-[11px] text-[#4c5c4f] outline-none focus:border-[#72957c]"
           />
         </label>
@@ -50,7 +133,8 @@ export function PracticeProfileTab() {
           <div className="flex min-h-[37px] items-center gap-1.5 rounded-[7px] border border-[#e7e4da] bg-[#fffefa] px-2.5 text-[11px] text-[#4c5c4f] focus-within:border-[#72957c]">
             <Globe size={13} className="shrink-0 text-[#a0a399]" />
             <input
-              defaultValue="clearview"
+              value={clinic.workspace_slug ?? ""}
+              onChange={(e) => set("workspace_slug", e.target.value)}
               className="w-20 bg-transparent outline-none"
             />
             <span className="text-[#a0a399]">.opthalmok.app</span>
@@ -60,14 +144,16 @@ export function PracticeProfileTab() {
           <label className="flex flex-col gap-[7px] text-[10px] font-semibold text-[#687468]">
             Contact email
             <input
-              defaultValue="hello@clearview.example"
+              value={clinic.email ?? ""}
+              onChange={(e) => set("email", e.target.value)}
               className="min-h-[37px] w-full rounded-[7px] border border-[#e7e4da] bg-[#fffefa] px-2.5 py-[9px] text-[11px] text-[#4c5c4f] outline-none focus:border-[#72957c]"
             />
           </label>
           <label className="flex flex-col gap-[7px] text-[10px] font-semibold text-[#687468]">
             Phone number
             <input
-              defaultValue="+61 3 9000 1234"
+              value={clinic.phone ?? ""}
+              onChange={(e) => set("phone", e.target.value)}
               className="min-h-[37px] w-full rounded-[7px] border border-[#e7e4da] bg-[#fffefa] px-2.5 py-[9px] text-[11px] text-[#4c5c4f] outline-none focus:border-[#72957c]"
             />
           </label>
@@ -75,24 +161,38 @@ export function PracticeProfileTab() {
         <label className="flex flex-col gap-[7px] text-[10px] font-semibold text-[#687468]">
           Practice address
           <input
-            defaultValue="123 Main Street, Melbourne VIC 3000, Australia"
+            value={clinic.address ?? ""}
+            onChange={(e) => set("address", e.target.value)}
             className="min-h-[37px] w-full rounded-[7px] border border-[#e7e4da] bg-[#fffefa] px-2.5 py-[9px] text-[11px] text-[#4c5c4f] outline-none focus:border-[#72957c]"
           />
         </label>
         <div className="grid grid-cols-1 gap-[13px] sm:grid-cols-2">
           <label className="flex flex-col gap-[7px] text-[10px] font-semibold text-[#687468]">
             Default currency
-            <select className="min-h-[37px] w-full rounded-[7px] border border-[#e7e4da] bg-[#fffefa] px-2.5 py-[9px] text-[11px] text-[#4c5c4f] outline-none focus:border-[#72957c]">
-              <option>AUD — Australian Dollar</option>
-              <option>USD — US Dollar</option>
-              <option>NPR — Nepalese Rupee</option>
+            <select
+              value={clinic.default_currency ?? "AUD"}
+              onChange={(e) => set("default_currency", e.target.value)}
+              className="min-h-[37px] w-full rounded-[7px] border border-[#e7e4da] bg-[#fffefa] px-2.5 py-[9px] text-[11px] text-[#4c5c4f] outline-none focus:border-[#72957c]"
+            >
+              {CURRENCY_OPTIONS.map((c) => (
+                <option key={c.value} value={c.value}>
+                  {c.label}
+                </option>
+              ))}
             </select>
           </label>
           <label className="flex flex-col gap-[7px] text-[10px] font-semibold text-[#687468]">
             Time zone
-            <select className="min-h-[37px] w-full rounded-[7px] border border-[#e7e4da] bg-[#fffefa] px-2.5 py-[9px] text-[11px] text-[#4c5c4f] outline-none focus:border-[#72957c]">
-              <option>Australia / Melbourne</option>
-              <option>Asia / Kathmandu</option>
+            <select
+              value={clinic.timezone ?? "Australia/Melbourne"}
+              onChange={(e) => set("timezone", e.target.value)}
+              className="min-h-[37px] w-full rounded-[7px] border border-[#e7e4da] bg-[#fffefa] px-2.5 py-[9px] text-[11px] text-[#4c5c4f] outline-none focus:border-[#72957c]"
+            >
+              {TIMEZONE_OPTIONS.map((tz) => (
+                <option key={tz.value} value={tz.value}>
+                  {tz.label}
+                </option>
+              ))}
             </select>
           </label>
         </div>
@@ -104,10 +204,14 @@ export function PracticeProfileTab() {
             <b className="text-[11px] text-[#23342c]">Require patient consent before examination</b>
             <p className="mt-[5px] text-[10px] text-[#92988c]">Staff must record consent before beginning a clinical examination.</p>
           </div>
-          <Toggle defaultOn label="Toggle consent" />
+          <Toggle
+            on={clinic.require_consent_before_exam ?? false}
+            onToggle={(next) => set("require_consent_before_exam", next)}
+            label="Toggle consent"
+          />
         </div>
 
-        <SaveRow onSave={() => toast.info("Practice settings saved")} />
+        <SaveRow onSave={handleSave} saving={saving} lastSaved={lastSaved} />
       </div>
     </>
   );

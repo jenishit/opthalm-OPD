@@ -117,7 +117,9 @@ export async function apiFetch<T>(path: string, init: RequestInit = {}, retried 
   const token = useAuthStore.getState().accessToken;
   const headers = new Headers(init.headers);
   headers.set("Accept", "application/json");
-  if (init.body) headers.set("Content-Type", "application/json");
+  // Leave FormData bodies alone — the browser sets the multipart boundary
+  // itself; overriding it here would break the upload.
+  if (init.body && !(init.body instanceof FormData)) headers.set("Content-Type", "application/json");
   if (token) headers.set("Authorization", `Bearer ${token}`);
 
   const res = await fetch(`/api${path}`, { ...init, headers });

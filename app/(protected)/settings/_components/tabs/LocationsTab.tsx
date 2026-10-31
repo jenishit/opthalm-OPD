@@ -1,46 +1,69 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { MapPin, Plus } from "lucide-react";
+import { Loader2, MapPin, Plus } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { Dialog, DialogContent, DialogFooter, DialogTitle } from "@/components/shadcn/dialog";
-import { SaveRow } from "../SaveRow";
+import { createClinicLocation, listClinicLocations } from "@/services/clinic-services";
+import { ApiError } from "@/services/http";
+import type { ClinicLocation, ClinicLocationStatus } from "@/types/clinic-types";
 
-interface Location {
-  name: string;
-  detail: string;
-  rooms: number;
-  status: "Active" | "Opening soon";
-}
+const STATUS_LABEL: Record<ClinicLocationStatus, string> = {
+  active: "Active",
+  opening_soon: "Opening soon",
+};
 
-const INITIAL: Location[] = [
-  { name: "Main clinic", detail: "123 Main Street, Melbourne VIC 3000", rooms: 4, status: "Active" },
-  { name: "Exam room 1", detail: "Comprehensive eye exams, refraction", rooms: 0, status: "Active" },
-  { name: "Exam room 2", detail: "Contact lens fittings, follow-ups", rooms: 0, status: "Active" },
-  { name: "Bayside annex", detail: "42 Beach Road, Brighton VIC 3186", rooms: 2, status: "Opening soon" },
-];
-
-const EMPTY_FORM = { name: "", detail: "", rooms: "", status: "Active" as Location["status"] };
+const EMPTY_FORM = { name: "", address: "", exam_rooms: "", status: "active" as ClinicLocationStatus };
 
 export function LocationsTab() {
-  const [locations, setLocations] = useState(INITIAL);
+  const [locations, setLocations] = useState<ClinicLocation[]>([]);
+  const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState(EMPTY_FORM);
+  const [submitting, setSubmitting] = useState(false);
 
-  function handleSubmit(e: React.FormEvent) {
+  useEffect(() => {
+    let active = true;
+    listClinicLocations()
+      .then((data) => {
+        if (active) setLocations(data);
+      })
+      .catch((error) => {
+        console.error("Failed to load locations", error);
+        toast.error("Failed to load locations");
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!form.name.trim()) {
       toast.error("Location name is required");
       return;
     }
-    setLocations((list) => [
-      ...list,
-      { name: form.name.trim(), detail: form.detail.trim(), rooms: Number(form.rooms) || 0, status: form.status },
-    ]);
-    toast.success(`${form.name} added`);
-    setForm(EMPTY_FORM);
-    setOpen(false);
+    setSubmitting(true);
+    try {
+      const created = await createClinicLocation({
+        name: form.name.trim(),
+        address: form.address.trim() || undefined,
+        exam_rooms: form.exam_rooms ? Number(form.exam_rooms) : undefined,
+        status: form.status,
+      });
+      setLocations((list) => [...list, created]);
+      toast.success(`${created.name} added`);
+      setForm(EMPTY_FORM);
+      setOpen(false);
+    } catch (error) {
+      toast.error(error instanceof ApiError ? error.message : "Failed to add location");
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
@@ -58,34 +81,42 @@ export function LocationsTab() {
           Add location
         </Button>
       </div>
-      <div className="flex flex-col gap-4">
-        {locations.map((l) => (
-          <div key={l.name} className="flex items-center justify-between gap-[15px] py-1">
-            <div className="flex items-center gap-2.5">
-              <span className="grid size-[34px] shrink-0 place-items-center rounded-[9px] bg-[#e9f0e8] text-[#214c3a]">
-                <MapPin size={16} />
-              </span>
-              <div>
-                <b className="text-[11px] text-[#23342c]">{l.name}</b>
-                <p className="mt-[5px] text-[10px] text-[#92988c]">
-                  {l.detail}
-                  {l.rooms > 0 ? ` · ${l.rooms} exam rooms` : ""}
-                </p>
+
+      {loading ? (
+        <div className="flex items-center justify-center gap-2 py-16 text-[11px] text-[#92988c]">
+          <Loader2 size={15} className="animate-spin" /> Loading locations…
+        </div>
+      ) : locations.length === 0 ? (
+        <div className="py-10 text-center text-[11px] text-[#92988c]">No locations added yet.</div>
+      ) : (
+        <div className="flex flex-col gap-4">
+          {locations.map((l) => (
+            <div key={l.id} className="flex items-center justify-between gap-[15px] py-1">
+              <div className="flex items-center gap-2.5">
+                <span className="grid size-[34px] shrink-0 place-items-center rounded-[9px] bg-[#e9f0e8] text-[#214c3a]">
+                  <MapPin size={16} />
+                </span>
+                <div>
+                  <b className="text-[11px] text-[#23342c]">{l.name}</b>
+                  <p className="mt-[5px] text-[10px] text-[#92988c]">
+                    {l.address}
+                    {l.exam_rooms > 0 ? ` · ${l.exam_rooms} exam rooms` : ""}
+                  </p>
+                </div>
               </div>
+              <span
+                className={
+                  "inline-flex items-center gap-[5px] rounded-[5px] px-[7px] py-1 text-[9px] font-semibold leading-none " +
+                  (l.status === "active" ? "bg-[#e7efe6] text-[#3e7350]" : "bg-[#f7efd9] text-[#9d7832]")
+                }
+              >
+                <i className="size-[5px] rounded-full bg-current opacity-80" />
+                {STATUS_LABEL[l.status]}
+              </span>
             </div>
-            <span
-              className={
-                "inline-flex items-center gap-[5px] rounded-[5px] px-[7px] py-1 text-[9px] font-semibold leading-none " +
-                (l.status === "Active" ? "bg-[#e7efe6] text-[#3e7350]" : "bg-[#f7efd9] text-[#9d7832]")
-              }
-            >
-              <i className="size-[5px] rounded-full bg-current opacity-80" />
-              {l.status}
-            </span>
-          </div>
-        ))}
-        <SaveRow onSave={() => toast.info("Location settings saved")} />
-      </div>
+          ))}
+        </div>
+      )}
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>
@@ -104,8 +135,8 @@ export function LocationsTab() {
             <label className="flex flex-col gap-[7px] text-[10px] font-semibold text-[#687468]">
               Address or description
               <input
-                value={form.detail}
-                onChange={(e) => setForm((f) => ({ ...f, detail: e.target.value }))}
+                value={form.address}
+                onChange={(e) => setForm((f) => ({ ...f, address: e.target.value }))}
                 placeholder="e.g. 88 Miller Street, North Sydney NSW"
                 className="min-h-[37px] w-full rounded-[7px] border border-[#e7e4da] bg-[#fffefa] px-2.5 py-[9px] text-[11px] text-[#4c5c4f] outline-none focus:border-[#72957c]"
               />
@@ -116,8 +147,8 @@ export function LocationsTab() {
                 <input
                   type="number"
                   min={0}
-                  value={form.rooms}
-                  onChange={(e) => setForm((f) => ({ ...f, rooms: e.target.value }))}
+                  value={form.exam_rooms}
+                  onChange={(e) => setForm((f) => ({ ...f, exam_rooms: e.target.value }))}
                   className="min-h-[37px] w-full rounded-[7px] border border-[#e7e4da] bg-[#fffefa] px-2.5 py-[9px] text-[11px] text-[#4c5c4f] outline-none focus:border-[#72957c]"
                 />
               </label>
@@ -125,11 +156,11 @@ export function LocationsTab() {
                 Status
                 <select
                   value={form.status}
-                  onChange={(e) => setForm((f) => ({ ...f, status: e.target.value as Location["status"] }))}
+                  onChange={(e) => setForm((f) => ({ ...f, status: e.target.value as ClinicLocationStatus }))}
                   className="min-h-[37px] w-full rounded-[7px] border border-[#e7e4da] bg-[#fffefa] px-2.5 py-[9px] text-[11px] text-[#4c5c4f] outline-none focus:border-[#72957c]"
                 >
-                  <option>Active</option>
-                  <option>Opening soon</option>
+                  <option value="active">Active</option>
+                  <option value="opening_soon">Opening soon</option>
                 </select>
               </label>
             </div>
@@ -139,9 +170,10 @@ export function LocationsTab() {
               </Button>
               <Button
                 type="submit"
-                className="min-h-9 rounded-[7px] border border-[#214c3a] bg-[#214c3a] px-3.5 text-[11px] font-semibold text-white hover:border-[#173d2c] hover:bg-[#173d2c]"
+                disabled={submitting}
+                className="min-h-9 rounded-[7px] border border-[#214c3a] bg-[#214c3a] px-3.5 text-[11px] font-semibold text-white hover:border-[#173d2c] hover:bg-[#173d2c] disabled:opacity-60"
               >
-                Add location
+                {submitting ? "Adding…" : "Add location"}
               </Button>
             </DialogFooter>
           </form>

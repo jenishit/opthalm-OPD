@@ -13,6 +13,14 @@ const nextConfig: NextConfig = {
         source: "/api/:path((?!nextauth(?:/|$)).*)",
         destination: `${backendUrl}/api/:path`,
       },
+      {
+        // Local-disk uploads (e.g. the payment QR code) are served by the
+        // backend at /uploads/..., public and unauthenticated — proxied the
+        // same way as /api/* so relative URLs the backend returns (e.g.
+        // qr_code_url) just work, regardless of BACKEND_URL per environment.
+        source: "/uploads/:path*",
+        destination: `${backendUrl}/uploads/:path*`,
+      },
     ];
   },
 };
