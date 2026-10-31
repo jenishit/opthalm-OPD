@@ -9,7 +9,8 @@ import { cn, formatCurrency } from "@/lib/utils";
 import { CATEGORY_TO_INVOICE_ITEM_TYPE } from "@/lib/inventory-category";
 import { createInvoice, recordPayment } from "@/services/billing-services";
 import { ApiError } from "@/services/http";
-import type { InventoryCategory, PaymentMethod } from "@/types/api-types";
+import type { InventoryCategory } from "@/types/inventory-types";
+import type { PaymentMethod } from "@/types/billing-types";
 import { usePosStore } from "./store";
 import { computeTotals, VAT_RATE } from "./totals";
 

@@ -1,6 +1,15 @@
 "use client";
 
-import { Glasses, LayoutGrid, List, Loader2, MoreHorizontal, PackagePlus, SlidersHorizontal, CalendarClock } from "lucide-react";
+import {
+  Glasses,
+  LayoutGrid,
+  List,
+  Loader2,
+  MoreHorizontal,
+  PackagePlus,
+  SlidersHorizontal,
+  CalendarClock,
+} from "lucide-react";
 import { toast } from "sonner";
 import { Input } from "@/components/shadcn/input";
 import {
@@ -28,7 +37,7 @@ import {
   expiryTone,
   stockStatus,
 } from "@/lib/inventory-category";
-import type { InventoryCategory, InventoryItemDTO } from "@/types/api-types";
+import type { InventoryCategory, InventoryItem } from "@/types/inventory-types";
 import { InventoryGrid } from "./InventoryGrid";
 
 const EXPIRY_PILL: Record<"bad" | "warn" | "mute", string> = {
@@ -52,15 +61,15 @@ export function InventoryTable({
   view,
   onViewChange,
 }: {
-  items: InventoryItemDTO[];
+  items: InventoryItem[];
   loading: boolean;
   usingMock: boolean;
   category: InventoryCategory | "all";
   onCategoryChange: (category: InventoryCategory | "all") => void;
   search: string;
   onSearchChange: (search: string) => void;
-  onAddStock: (item: InventoryItemDTO) => void;
-  onSetExpiry: (item: InventoryItemDTO) => void;
+  onAddStock: (item: InventoryItem) => void;
+  onSetExpiry: (item: InventoryItem) => void;
   view: InventoryView;
   onViewChange: (view: InventoryView) => void;
 }) {
@@ -74,7 +83,9 @@ export function InventoryTable({
               onClick={() => onCategoryChange(c)}
               className={cn(
                 "rounded-md px-3 py-1.5 text-xs font-semibold whitespace-nowrap transition-colors",
-                category === c ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+                category === c
+                  ? "bg-card text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground",
               )}
             >
               {c === "all" ? "All products" : CATEGORY_LABEL[c]}
@@ -103,7 +114,9 @@ export function InventoryTable({
               onClick={() => onViewChange("list")}
               className={cn(
                 "inline-flex size-8 items-center justify-center rounded-[5px]",
-                view === "list" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+                view === "list"
+                  ? "bg-card text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground",
               )}
             >
               <List className="size-4" />
@@ -115,7 +128,9 @@ export function InventoryTable({
               onClick={() => onViewChange("grid")}
               className={cn(
                 "inline-flex size-8 items-center justify-center rounded-[5px]",
-                view === "grid" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+                view === "grid"
+                  ? "bg-card text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground",
               )}
             >
               <LayoutGrid className="size-4" />
@@ -132,101 +147,124 @@ export function InventoryTable({
 
       {view === "grid" ? (
         <div className="p-4">
-          <InventoryGrid items={items} loading={loading} search={search} onAddStock={onAddStock} onSetExpiry={onSetExpiry} />
+          <InventoryGrid
+            items={items}
+            loading={loading}
+            search={search}
+            onAddStock={onAddStock}
+            onSetExpiry={onSetExpiry}
+          />
         </div>
       ) : (
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Product</TableHead>
-            <TableHead>SKU / barcode</TableHead>
-            <TableHead>Category</TableHead>
-            <TableHead>Stock</TableHead>
-            <TableHead>Unit price</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead className="w-10" />
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {loading ? (
+        <Table>
+          <TableHeader>
             <TableRow>
-              <TableCell colSpan={7} className="py-10 text-center text-sm text-muted-foreground">
-                <Loader2 className="mr-2 inline size-4 animate-spin" />
-                Loading inventory…
-              </TableCell>
+              <TableHead>Product</TableHead>
+              <TableHead>SKU / barcode</TableHead>
+              <TableHead>Category</TableHead>
+              <TableHead>Stock</TableHead>
+              <TableHead>Unit price</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead className="w-10" />
             </TableRow>
-          ) : items.length === 0 ? (
-            <TableRow>
-              <TableCell colSpan={7} className="py-10 text-center text-sm text-muted-foreground">
-                No products found{search && ` for "${search}"`}.
-              </TableCell>
-            </TableRow>
-          ) : (
-            items.map((item) => {
-              const status = stockStatus(item);
-              const days = daysUntilExpiry(item);
-              const tone = expiryTone(days);
-              return (
-                <TableRow key={item.id}>
-                  <TableCell>
-                    <div className="flex items-center gap-2.5">
-                      <span className="grid size-10 shrink-0 place-items-center rounded-md bg-sage-soft text-sage">
-                        <Glasses size={18} />
-                      </span>
-                      <div className="flex flex-col gap-0.5">
-                        <span className="font-medium text-foreground">{item.name}</span>
-                        <span className="text-xs text-muted-foreground">
-                          {item.brand ?? "—"}
-                          {item.model ? ` · ${item.model}` : ""}
+          </TableHeader>
+          <TableBody>
+            {loading ? (
+              <TableRow>
+                <TableCell
+                  colSpan={7}
+                  className="py-10 text-center text-sm text-muted-foreground"
+                >
+                  <Loader2 className="mr-2 inline size-4 animate-spin" />
+                  Loading inventory…
+                </TableCell>
+              </TableRow>
+            ) : items.length === 0 ? (
+              <TableRow>
+                <TableCell
+                  colSpan={7}
+                  className="py-10 text-center text-sm text-muted-foreground"
+                >
+                  No products found{search && ` for "${search}"`}.
+                </TableCell>
+              </TableRow>
+            ) : (
+              items.map((item) => {
+                const status = stockStatus(item);
+                const days = daysUntilExpiry(item);
+                const tone = expiryTone(days);
+                return (
+                  <TableRow key={item.id}>
+                    <TableCell>
+                      <div className="flex items-center gap-2.5">
+                        <span className="grid size-10 shrink-0 place-items-center rounded-md bg-sage-soft text-sage">
+                          <Glasses size={18} />
                         </span>
+                        <div className="flex flex-col gap-0.5">
+                          <span className="font-medium text-foreground">
+                            {item.name}
+                          </span>
+                          <span className="text-xs text-muted-foreground">
+                            {item.brand ?? "—"}
+                            {item.model ? ` · ${item.model}` : ""}
+                          </span>
+                        </div>
                       </div>
-                    </div>
-                  </TableCell>
-                  <TableCell className="font-mono text-xs text-muted-foreground">{item.sku}</TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {CATEGORY_LABEL[item.category as InventoryCategory] ?? item.category}
-                  </TableCell>
-                  <TableCell>
-                    <span className="font-semibold text-foreground">{item.quantity_on_hand}</span>{" "}
-                    <span className="text-xs text-muted-foreground">{item.unit ?? "units"}</span>
-                  </TableCell>
-                  <TableCell className="font-semibold text-foreground">
-                    {formatCurrency(item.selling_price)}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex flex-wrap gap-1">
-                      <span className={cn("pill", STOCK_STATUS_PILL[status])}>{STOCK_STATUS_LABEL[status]}</span>
-                      {days != null && tone && (
-                        <span className={cn("pill", EXPIRY_PILL[tone])}>
-                          <CalendarClock size={11} />
-                          {expiryLabel(days)}
+                    </TableCell>
+                    <TableCell className="font-mono text-xs text-muted-foreground">
+                      {item.sku}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {CATEGORY_LABEL[item.category as InventoryCategory] ??
+                        item.category}
+                    </TableCell>
+                    <TableCell>
+                      <span className="font-semibold text-foreground">
+                        {item.quantity_on_hand}
+                      </span>{" "}
+                      <span className="text-xs text-muted-foreground">
+                        {item.unit ?? "units"}
+                      </span>
+                    </TableCell>
+                    <TableCell className="font-semibold text-foreground">
+                      {formatCurrency(item.selling_price)}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex flex-wrap gap-1">
+                        <span className={cn("pill", STOCK_STATUS_PILL[status])}>
+                          {STOCK_STATUS_LABEL[status]}
                         </span>
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger className="inline-flex size-8 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground">
-                        <MoreHorizontal className="size-4" />
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => onAddStock(item)}>
-                          <PackagePlus className="size-4" />
-                          Add stock
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => onSetExpiry(item)}>
-                          <CalendarClock className="size-4" />
-                          Set expiry date
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
-              );
-            })
-          )}
-        </TableBody>
-      </Table>
+                        {days != null && tone && (
+                          <span className={cn("pill", EXPIRY_PILL[tone])}>
+                            <CalendarClock size={11} />
+                            {expiryLabel(days)}
+                          </span>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger className="inline-flex size-8 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground">
+                          <MoreHorizontal className="size-4" />
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => onAddStock(item)}>
+                            <PackagePlus className="size-4" />
+                            Add stock
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => onSetExpiry(item)}>
+                            <CalendarClock className="size-4" />
+                            Set expiry date
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                );
+              })
+            )}
+          </TableBody>
+        </Table>
       )}
 
       {items.length > 0 && (

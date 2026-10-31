@@ -8,41 +8,47 @@ import type { ExaminationFindings } from "@/schemas/examination-schema";
 import type { Treatment, FollowUp } from "@/schemas/treatment-schema";
 import type { Investigation, IntakeExamFormData } from "@/schemas/shared-schema";
 import type {
-  PatientVisitsDTO,
-  VisitCreateDTO,
-  VisitDTO,
-  VisitItemDTO,
+  PatientVisits,
+  VisitClinical,
+  VisitCreate,
+  Visit as VisitRecord,
+  VisitItem,
   VisitUpsertRequest,
-} from "@/types/api-types";
+} from "@/types/visit-types";
 
-export function toUiVisit(dto: VisitItemDTO, patientId: string): Visit {
+export function toUiVisit(record: VisitItem, patientId: string): Visit {
   return {
-    id: dto.id,
+    id: record.id,
     patient_id: patientId,
-    examined_by: dto.examine_by.name,
-    status: dto.status as VisitStatus,
-    visit_date: dto.visit_date,
-    chief_complaint: dto.chief_complaint,
-    created_at: dto.created_at,
-    updated_at: dto.updated_at,
+    examined_by: record.examine_by.name,
+    status: record.status as VisitStatus,
+    visit_date: record.visit_date,
+    chief_complaint: record.chief_complaint,
+    created_at: record.created_at,
+    updated_at: record.updated_at,
   };
 }
 
-export function getPatientVisitDtos(patientId: string): Promise<PatientVisitsDTO> {
-  return apiFetch<PatientVisitsDTO>(`/visit/patient/${patientId}`);
+// ── Raw records (wire shape) ─────────────────────────────────────────────────
+//
+// Private to this file — everything else in the app talks to the UI-facing
+// functions below, which convert to/from schemas/visit-schema.ts's Visit.
+
+function fetchPatientVisitRecords(patientId: string): Promise<PatientVisits> {
+  return apiFetch<PatientVisits>(`/visit/patient/${patientId}`);
 }
 
-export function getVisitDto(id: string): Promise<VisitDTO> {
-  return apiFetch<VisitDTO>(`/visit/${id}`);
+function fetchVisitRecord(id: string): Promise<VisitRecord> {
+  return apiFetch<VisitRecord>(`/visit/${id}`);
 }
 
 /** POST /visit — returns the created visit with `examine_by` as a plain string. */
-export function createVisitDto(body: VisitUpsertRequest): Promise<VisitCreateDTO> {
-  return apiFetch<VisitCreateDTO>("/visit", { method: "POST", body: JSON.stringify(body) });
+export function createVisit(body: VisitUpsertRequest): Promise<VisitCreate> {
+  return apiFetch<VisitCreate>("/visit", { method: "POST", body: JSON.stringify(body) });
 }
 
 /** PATCH /visit/:id reuses the create body; returns a message. */
-export function updateVisitDto(id: string, body: VisitUpsertRequest): Promise<void> {
+function patchVisitRecord(id: string, body: VisitUpsertRequest): Promise<void> {
   return apiFetch<void>(`/visit/${id}`, { method: "PATCH", body: JSON.stringify(body) });
 }
 
@@ -56,7 +62,7 @@ export async function getVisits(filters?: {
   if (!filters?.patient_id) {
     throw new NotImplementedError("Listing visits without a patient");
   }
-  const { visits } = await getPatientVisitDtos(filters.patient_id);
+  const { visits } = await fetchPatientVisitRecords(filters.patient_id);
   return visits
     .map((v) => toUiVisit(v, filters.patient_id!))
     .filter((v) => !filters.date || String(v.visit_date).slice(0, 10) === filters.date)
@@ -65,8 +71,8 @@ export async function getVisits(filters?: {
 
 export async function getVisit(id: string): Promise<Visit | null> {
   try {
-    const dto = await getVisitDto(id);
-    return toUiVisit(dto, dto.patient.id);
+    const record = await fetchVisitRecord(id);
+    return toUiVisit(record, record.patient.id);
   } catch (error) {
     if (error instanceof ApiError && error.status === 404) return null;
     throw error;
@@ -74,8 +80,8 @@ export async function getVisit(id: string): Promise<Visit | null> {
 }
 
 export async function updateVisitStatus(id: string, status: VisitStatus): Promise<Visit> {
-  const current = await getVisitDto(id);
-  await updateVisitDto(id, {
+  const current = await fetchVisitRecord(id);
+  await patchVisitRecord(id, {
     patient_id: current.patient.id,
     examine_by: current.examine_by.id,
     status,
@@ -87,8 +93,8 @@ export async function updateVisitStatus(id: string, status: VisitStatus): Promis
 
 /** Reschedules a visit to a new date — e.g. dragging it to another day on the appointments calendar. */
 export async function updateVisitDate(id: string, visitDate: string): Promise<Visit> {
-  const current = await getVisitDto(id);
-  await updateVisitDto(id, {
+  const current = await fetchVisitRecord(id);
+  await patchVisitRecord(id, {
     patient_id: current.patient.id,
     examine_by: current.examine_by.id,
     status: current.status,
@@ -100,8 +106,8 @@ export async function updateVisitDate(id: string, visitDate: string): Promise<Vi
 
 /** Rewrites the chief complaint — used to re-tag an appointment's type on the week board. */
 export async function updateVisitComplaint(id: string, chiefComplaint: string): Promise<Visit> {
-  const current = await getVisitDto(id);
-  await updateVisitDto(id, {
+  const current = await fetchVisitRecord(id);
+  await patchVisitRecord(id, {
     patient_id: current.patient.id,
     examine_by: current.examine_by.id,
     status: current.status,
@@ -119,19 +125,9 @@ export async function updateVisitComplaint(id: string, chiefComplaint: string): 
 
 const investigationsStore: Record<string, Investigation[]> = { ...mockInvestigations };
 
-/** Shape returned by GET /visit/:id/clinical — the whole chart in one call. */
-export interface VisitClinicalDTO {
-  symptoms: VisitSymptoms | null;
-  readings: RefractionReading[];
-  examination: ExaminationFindings | null;
-  diagnoses: VisitDiagnosis[];
-  treatments: Treatment[];
-  follow_up: FollowUp | null;
-}
-
 /** GET /visit/:id/clinical — the whole chart (symptoms, readings, exam findings, diagnoses, treatments, follow-up) in one call. */
-export function getVisitClinicalDto(visitId: string): Promise<VisitClinicalDTO> {
-  return apiFetch<VisitClinicalDTO>(`/visit/${visitId}/clinical`);
+export function getVisitClinical(visitId: string): Promise<VisitClinical> {
+  return apiFetch<VisitClinical>(`/visit/${visitId}/clinical`);
 }
 
 /** PUT /visit/:id/symptoms — replaces the visit's single symptoms document. */
@@ -233,7 +229,7 @@ export async function createFullVisit(
   const staffUser = useAuthStore.getState().staffUser;
   const today = new Date().toISOString().split("T")[0];
 
-  const dto = await createVisitDto({
+  const record = await createVisit({
     patient_id: patientId,
     // POST /visit expects the examiner's profile id; it resolves it to a
     // display ref internally.
@@ -243,18 +239,18 @@ export async function createFullVisit(
     chief_complaint: data.chief_complaint,
   });
 
-  await saveClinicalData(dto.id, data);
+  await saveClinicalData(record.id, data);
 
   return {
-    id: dto.id,
-    patient_id: dto.patient_id,
+    id: record.id,
+    patient_id: record.patient_id,
     // Keep the display name for the UI, not the raw id the API echoes back.
-    examined_by: staffUser?.name || data.examined_by || dto.examine_by,
-    status: dto.status as VisitStatus,
-    visit_date: dto.visit_date,
-    chief_complaint: dto.chief_complaint,
-    created_at: dto.created_at,
-    updated_at: dto.updated_at,
+    examined_by: staffUser?.name || data.examined_by || record.examine_by,
+    status: record.status as VisitStatus,
+    visit_date: record.visit_date,
+    chief_complaint: record.chief_complaint,
+    created_at: record.created_at,
+    updated_at: record.updated_at,
   };
 }
 
@@ -274,7 +270,7 @@ export async function getFullVisitData(visitId: string): Promise<FullVisitData |
   if (!visit) return null;
 
   const [clinical, investigations] = await Promise.all([
-    getVisitClinicalDto(visitId),
+    getVisitClinical(visitId),
     getVisitInvestigations(visitId),
   ]);
 

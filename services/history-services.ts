@@ -1,40 +1,62 @@
-import { delay } from "@/lib/mock/delay";
-import { mockPatientHistories, mockConditions } from "@/lib/mock/data";
+import { apiFetch } from "./http";
 import type { PatientHistory, PatientHistoryFormData } from "@/schemas/history-schema";
+import type {
+  CreatePatientHistoryRequest,
+  PatientHistory as PatientHistoryRecord,
+} from "@/types/patient-types";
 
-let histories = [...mockPatientHistories];
+function toUiPatientHistory(record: PatientHistoryRecord): PatientHistory {
+  return {
+    id: record.id,
+    patient_id: record.patient_id,
+    uses_spectacles: record.uses_spectacles,
+    systemic_medications: record.systemic_medications,
+    topical_medications: record.topical_medications,
+    notes: record.notes,
+    condition_ids: record.condition_ids,
+    created_at: record.created_at,
+    created_by: record.created_by,
+  };
+}
+
+/** GET /patient/:id/history — every entry for the patient, newest first, each with its resolved condition_ids. */
+function fetchPatientHistoryRecords(patientId: string): Promise<PatientHistoryRecord[]> {
+  return apiFetch<PatientHistoryRecord[]>(`/patient/${patientId}/history`);
+}
+
+/** POST /patient/:id/history — appends a new entry; existing entries are never updated or deleted. */
+function createPatientHistoryRecord(
+  patientId: string,
+  body: CreatePatientHistoryRequest
+): Promise<PatientHistoryRecord> {
+  return apiFetch<PatientHistoryRecord>(`/patient/${patientId}/history`, {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+}
+
+// ── UI-facing patient history API ────────────────────────────────────────────
 
 export async function getPatientHistories(patientId: string): Promise<PatientHistory[]> {
-  await delay();
-  return histories
-    .filter((h) => h.patient_id === patientId)
-    .sort((a, b) => {
-      const dateA = a.created_at ? new Date(a.created_at).getTime() : 0;
-      const dateB = b.created_at ? new Date(b.created_at).getTime() : 0;
-      return dateB - dateA; // Descending
-    });
+  const records = await fetchPatientHistoryRecords(patientId);
+  return records.map(toUiPatientHistory);
 }
 
 export async function getLatestPatientHistory(patientId: string): Promise<PatientHistory | null> {
-  const patientHistories = await getPatientHistories(patientId);
-  return patientHistories[0] ?? null;
+  const histories = await getPatientHistories(patientId);
+  return histories[0] ?? null;
 }
 
 export async function createPatientHistory(
   patientId: string,
-  data: PatientHistoryFormData,
-  staffId?: string
+  data: PatientHistoryFormData
 ): Promise<PatientHistory> {
-  await delay();
-  
-  const newHistory: PatientHistory = {
-    ...data,
-    id: `ph${Date.now()}`,
-    patient_id: patientId,
-    created_at: new Date().toISOString(),
-    created_by: staffId,
-  };
-  
-  histories = [newHistory, ...histories];
-  return newHistory;
+  const record = await createPatientHistoryRecord(patientId, {
+    uses_spectacles: data.uses_spectacles,
+    systemic_medications: data.systemic_medications || undefined,
+    topical_medications: data.topical_medications || undefined,
+    notes: data.notes || undefined,
+    condition_ids: data.condition_ids,
+  });
+  return toUiPatientHistory(record);
 }

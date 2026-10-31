@@ -1,6 +1,7 @@
 import { signOut } from "next-auth/react";
 import { useAuthStore } from "@/stores/authStore";
-import type { ApiEnvelope, ApiErrorBody, LoginResponse } from "@/types/api-types";
+import type { ApiEnvelope, ApiErrorBody } from "@/types/http-types";
+import type { LoginResponse } from "@/types/auth-types";
 
 export class ApiError extends Error {
   readonly status: number;

@@ -1,7 +1,6 @@
 import type { Staff } from "@/schemas/shared-schema";
 import type { Patient } from "@/schemas/patient-schema";
-import type { PatientHistory } from "@/schemas/history-schema";
-import type { Condition, DiagnosisCatalog, Medicine } from "@/schemas/catalog-schema";
+import type { DiagnosisCatalog, Medicine } from "@/schemas/catalog-schema";
 import type { Visit } from "@/schemas/visit-schema";
 import type { Investigation, PatientAccessToken } from "@/schemas/shared-schema";
 import type { Prescription } from "@/schemas/prescription-schema";
@@ -94,80 +93,6 @@ export const mockPatients: Patient[] = [
     date_of_birth: "1995-10-01", age: 30, sex: "Female", occupation: "Journalist",
     address_street: "Baneshwor", address_city: "Kathmandu", address_state: "Bagmati", address_pin: "44600",
     created_at: "2025-07-08T14:00:00Z", updated_at: "2025-07-08T14:00:00Z",
-  },
-];
-
-// ═══════════════════════════════════════════════════════════════════════════
-// HISTORY CONDITIONS CATALOG
-// ═══════════════════════════════════════════════════════════════════════════
-
-export const mockConditions: Condition[] = [
-  { id: "c1", name: "Diabetes Mellitus", category: "systemic" },
-  { id: "c2", name: "Hypertension", category: "systemic" },
-  { id: "c3", name: "Thyroid Disorder", category: "systemic" },
-  { id: "c4", name: "Asthma", category: "systemic" },
-  { id: "c5", name: "Tuberculosis", category: "systemic" },
-  { id: "c6", name: "Rheumatoid Arthritis", category: "systemic" },
-  { id: "c7", name: "Glaucoma", category: "ocular" },
-  { id: "c8", name: "Cataract (operated)", category: "ocular" },
-  { id: "c9", name: "Retinal Detachment (history)", category: "ocular" },
-  { id: "c10", name: "Allergic Conjunctivitis", category: "ocular" },
-  { id: "c11", name: "Dry Eye Syndrome", category: "ocular" },
-  { id: "c12", name: "Keratoconus", category: "ocular" },
-  { id: "c13", name: "Cardiac Disease", category: "systemic" },
-  { id: "c14", name: "Renal Disease", category: "systemic" },
-  { id: "c15", name: "Drug Allergy", category: "other" },
-];
-
-// ═══════════════════════════════════════════════════════════════════════════
-// PATIENT HISTORIES
-// ═══════════════════════════════════════════════════════════════════════════
-
-export const mockPatientHistories: PatientHistory[] = [
-  {
-    id: "ph1", patient_id: "p1", uses_spectacles: true,
-    systemic_medications: "Metformin 500mg BD", topical_medications: "",
-    notes: "Wearing glasses since 2015", condition_ids: ["c1"],
-    created_at: "2025-01-10T10:00:00Z", created_by: "s1",
-  },
-  {
-    id: "ph2", patient_id: "p2", uses_spectacles: true,
-    systemic_medications: "Amlodipine 5mg OD, Metformin 1000mg BD",
-    topical_medications: "Timolol 0.5% BD OU",
-    notes: "Known diabetic + hypertensive for 10 years. Glaucoma diagnosed 2023.",
-    condition_ids: ["c1", "c2", "c7"],
-    created_at: "2025-01-12T09:30:00Z", created_by: "s1",
-  },
-  {
-    id: "ph3", patient_id: "p2", uses_spectacles: true,
-    systemic_medications: "Amlodipine 5mg OD, Metformin 1000mg BD, Thyronorm 50mcg",
-    topical_medications: "Timolol 0.5% BD OU, Latanoprost 0.005% HS OU",
-    notes: "Thyroid disorder newly diagnosed. Glaucoma meds changed.",
-    condition_ids: ["c1", "c2", "c3", "c7"],
-    created_at: "2025-06-15T11:00:00Z", created_by: "s2",
-  },
-  {
-    id: "ph4", patient_id: "p3", uses_spectacles: true,
-    systemic_medications: "", topical_medications: "",
-    notes: "Uses computer 10+ hours daily. Progressive myopia.",
-    condition_ids: [],
-    created_at: "2025-02-01T14:00:00Z", created_by: "s3",
-  },
-  {
-    id: "ph5", patient_id: "p4", uses_spectacles: true,
-    systemic_medications: "Amlodipine 5mg OD",
-    topical_medications: "Carboxymethylcellulose 0.5% QID OU",
-    notes: "Cataract surgery OD in 2023. Dry eyes bilaterally.",
-    condition_ids: ["c2", "c8", "c11"],
-    created_at: "2025-03-05T08:00:00Z", created_by: "s1",
-  },
-  {
-    id: "ph6", patient_id: "p9", uses_spectacles: true,
-    systemic_medications: "Atenolol 25mg OD, Aspirin 75mg OD",
-    topical_medications: "Brimonidine 0.2% TDS OU",
-    notes: "Glaucoma + cardiac history. Family history of glaucoma.",
-    condition_ids: ["c2", "c7", "c13"],
-    created_at: "2025-06-10T09:00:00Z", created_by: "s2",
   },
 ];
 

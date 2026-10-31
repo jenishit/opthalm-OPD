@@ -3,20 +3,25 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { Loader2, PackagePlus } from "lucide-react";
-import { Dialog, DialogContent, DialogFooter, DialogTitle } from "@/components/shadcn/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogTitle,
+} from "@/components/shadcn/dialog";
 import { Button } from "@/components/shadcn/button";
 import { Input } from "@/components/shadcn/input";
 import { Field, FieldLabel } from "@/components/shadcn/field";
 import { addItemStock } from "@/services/inventory-services";
 import { ApiError } from "@/services/http";
-import type { InventoryItemDTO } from "@/types/api-types";
+import type { InventoryItem } from "@/types/inventory-types";
 
 export function AddStockDialog({
   item,
   onOpenChange,
   onUpdated,
 }: {
-  item: InventoryItemDTO | null;
+  item: InventoryItem | null;
   onOpenChange: (open: boolean) => void;
   onUpdated: () => void;
 }) {
@@ -34,14 +39,19 @@ export function AddStockDialog({
     }
     setSaving(true);
     try {
-      await addItemStock(item.id, { quantity: qty, notes: notes.trim() || undefined });
+      await addItemStock(item.id, {
+        quantity: qty,
+        notes: notes.trim() || undefined,
+      });
       toast.success(`Added ${qty} ${item.unit ?? "unit"}(s) to ${item.name}`);
       setQuantity("");
       setNotes("");
       onOpenChange(false);
       onUpdated();
     } catch (error) {
-      toast.error(error instanceof ApiError ? error.message : "Failed to add stock");
+      toast.error(
+        error instanceof ApiError ? error.message : "Failed to add stock",
+      );
     } finally {
       setSaving(false);
     }
@@ -63,9 +73,12 @@ export function AddStockDialog({
         {item && (
           <form onSubmit={handleSubmit} className="flex flex-col gap-3.5">
             <div className="rounded-md border border-line bg-app p-3">
-              <div className="font-display text-sm font-semibold text-foreground">{item.name}</div>
+              <div className="font-display text-sm font-semibold text-foreground">
+                {item.name}
+              </div>
               <div className="font-mono text-xs text-muted-foreground">
-                {item.sku} · {item.quantity_on_hand} {item.unit ?? "units"} on hand
+                {item.sku} · {item.quantity_on_hand} {item.unit ?? "units"} on
+                hand
               </div>
             </div>
             <Field>
@@ -88,11 +101,19 @@ export function AddStockDialog({
               />
             </Field>
             <DialogFooter>
-              <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() => onOpenChange(false)}
+              >
                 Cancel
               </Button>
               <Button type="submit" disabled={saving}>
-                {saving ? <Loader2 className="size-4 animate-spin" /> : <PackagePlus className="size-4" />}
+                {saving ? (
+                  <Loader2 className="size-4 animate-spin" />
+                ) : (
+                  <PackagePlus className="size-4" />
+                )}
                 Add stock
               </Button>
             </DialogFooter>

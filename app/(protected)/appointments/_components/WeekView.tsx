@@ -29,7 +29,7 @@ import {
 } from "@/lib/utils";
 import { useAuthStore } from "@/stores/authStore";
 import {
-  createVisitDto,
+  createVisit,
   updateVisitComplaint,
   updateVisitDate,
   updateVisitStatus,
@@ -131,7 +131,7 @@ export function WeekView() {
       `Booked · ${fmtDate(day, { weekday: "short", day: "numeric", month: "short" })}, ${hour}:00`,
     );
 
-    createVisitDto({
+    createVisit({
       patient_id: patientId,
       examine_by: staffUser?.id ?? "",
       status: "scheduled",

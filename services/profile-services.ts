@@ -1,5 +1,5 @@
 import { apiFetch } from "./http";
-import type { ProfileResponse, UpdateProfileRequest } from "@/types/api-types";
+import type { ProfileResponse, UpdateProfileRequest } from "@/types/profile-types";
 
 /** GET /profile/getme — the current authenticated user's profile. */
 export function getMyProfile(): Promise<ProfileResponse> {

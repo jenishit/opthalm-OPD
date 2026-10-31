@@ -1,37 +1,37 @@
 import { apiFetch } from "./http";
 import type {
   CreateInvoiceRequest,
-  InvoiceDTO,
+  Invoice,
   InvoiceResponse,
   RecordPaymentRequest,
-  PaymentDTO,
+  Payment,
   UpdateInvoiceStatusRequest,
-  WhatsAppLinkDTO,
-} from "@/types/api-types";
+  WhatsAppLink,
+} from "@/types/billing-types";
 
 /** POST /billing/invoice */
-export function createInvoice(body: CreateInvoiceRequest): Promise<InvoiceDTO> {
-  return apiFetch<InvoiceDTO>("/billing/invoice", {
+export function createInvoice(body: CreateInvoiceRequest): Promise<Invoice> {
+  return apiFetch<Invoice>("/billing/invoice", {
     method: "POST",
     body: JSON.stringify(body),
   });
 }
 
 /** GET /billing/invoice?limit&offset */
-export function listInvoices(limit = 50, offset = 0): Promise<InvoiceDTO[]> {
+export function listInvoices(limit = 50, offset = 0): Promise<Invoice[]> {
   const params = new URLSearchParams({ limit: String(limit), offset: String(offset) });
-  return apiFetch<InvoiceDTO[]>(`/billing/invoice?${params.toString()}`);
+  return apiFetch<Invoice[]>(`/billing/invoice?${params.toString()}`);
 }
 
 /** GET /billing/invoice/search?query&limit */
-export function searchInvoices(query: string, limit = 50): Promise<InvoiceDTO[]> {
+export function searchInvoices(query: string, limit = 50): Promise<Invoice[]> {
   const params = new URLSearchParams({ query, limit: String(limit) });
-  return apiFetch<InvoiceDTO[]>(`/billing/invoice/search?${params.toString()}`);
+  return apiFetch<Invoice[]>(`/billing/invoice/search?${params.toString()}`);
 }
 
 /** GET /billing/invoice/:id */
-export function getInvoice(id: string): Promise<InvoiceDTO> {
-  return apiFetch<InvoiceDTO>(`/billing/invoice/${id}`);
+export function getInvoice(id: string): Promise<Invoice> {
+  return apiFetch<Invoice>(`/billing/invoice/${id}`);
 }
 
 /** PATCH /billing/invoice/:id/status */
@@ -49,8 +49,8 @@ export function updateInvoiceStatus(
 export function recordPayment(
   id: string,
   body: RecordPaymentRequest
-): Promise<PaymentDTO> {
-  return apiFetch<PaymentDTO>(`/billing/invoice/${id}/payments`, {
+): Promise<Payment> {
+  return apiFetch<Payment>(`/billing/invoice/${id}/payments`, {
     method: "POST",
     body: JSON.stringify(body),
   });
@@ -74,6 +74,6 @@ export async function downloadInvoiceQr(id: string): Promise<Blob> {
 }
 
 /** GET /billing/invoice/:id/whatsapp-link */
-export function getInvoiceWhatsappLink(id: string): Promise<WhatsAppLinkDTO> {
-  return apiFetch<WhatsAppLinkDTO>(`/billing/invoice/${id}/whatsapp-link`);
+export function getInvoiceWhatsAppLink(id: string): Promise<WhatsAppLink> {
+  return apiFetch<WhatsAppLink>(`/billing/invoice/${id}/whatsapp-link`);
 }

@@ -1,5 +1,7 @@
 import { loginSchema } from "@/schemas/login-schema";
-import type { ApiEnvelope, LoginResponse, ProfileResponse } from "@/types/api-types";
+import type { ApiEnvelope } from "@/types/http-types";
+import type { LoginResponse } from "@/types/auth-types";
+import type { ProfileResponse } from "@/types/profile-types";
 import type { NextAuthConfig } from "next-auth";
 import { staffRole } from "@/schemas/shared-schema";
 import type { Staff } from "@/schemas/shared-schema";

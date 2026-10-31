@@ -16,7 +16,7 @@ import {
 } from "@/components/shadcn/select";
 import { createInventoryItem } from "@/services/inventory-services";
 import { ApiError } from "@/services/http";
-import type { InventoryCategory } from "@/types/api-types";
+import type { InventoryCategory } from "@/types/inventory-types";
 import { CATEGORY_LABEL } from "@/lib/inventory-category";
 
 const EMPTY = {

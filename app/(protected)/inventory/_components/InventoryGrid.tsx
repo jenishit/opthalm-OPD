@@ -12,7 +12,7 @@ import {
   expiryTone,
   stockStatus,
 } from "@/lib/inventory-category";
-import type { InventoryCategory, InventoryItemDTO } from "@/types/api-types";
+import type { InventoryCategory, InventoryItem } from "@/types/inventory-types";
 
 const EXPIRY_PILL: Record<"bad" | "warn" | "mute", string> = {
   bad: "pill-bad",
@@ -21,7 +21,7 @@ const EXPIRY_PILL: Record<"bad" | "warn" | "mute", string> = {
 };
 
 /** Target the stock bar fills against — items without a meaningful threshold just show relative fullness. */
-function barTarget(item: InventoryItemDTO) {
+function barTarget(item: InventoryItem) {
   return Math.max(item.reorder_threshold * 3, item.quantity_on_hand, 1);
 }
 
@@ -36,11 +36,11 @@ export function InventoryGrid({
   onAddStock,
   onSetExpiry,
 }: {
-  items: InventoryItemDTO[];
+  items: InventoryItem[];
   loading: boolean;
   search: string;
-  onAddStock: (item: InventoryItemDTO) => void;
-  onSetExpiry: (item: InventoryItemDTO) => void;
+  onAddStock: (item: InventoryItem) => void;
+  onSetExpiry: (item: InventoryItem) => void;
 }) {
   if (loading) {
     return (
@@ -63,10 +63,15 @@ export function InventoryGrid({
     <div className="grid grid-cols-2 gap-3 md:grid-cols-3 2xl:grid-cols-4">
       {items.map((item) => {
         const status = stockStatus(item);
-        const Icon = CATEGORY_ICON[item.category as InventoryCategory] ?? CATEGORY_ICON.other;
+        const Icon =
+          CATEGORY_ICON[item.category as InventoryCategory] ??
+          CATEGORY_ICON.other;
         const days = daysUntilExpiry(item);
         const tone = expiryTone(days);
-        const ratio = Math.min(100, Math.max(2, (item.quantity_on_hand / barTarget(item)) * 100));
+        const ratio = Math.min(
+          100,
+          Math.max(2, (item.quantity_on_hand / barTarget(item)) * 100),
+        );
 
         return (
           <div
@@ -77,11 +82,16 @@ export function InventoryGrid({
               <span className="grid size-10 shrink-0 place-items-center rounded-md bg-sage-soft text-sage">
                 <Icon size={18} />
               </span>
-              <span className="pill pill-mute">{CATEGORY_LABEL[item.category as InventoryCategory] ?? item.category}</span>
+              <span className="pill pill-mute">
+                {CATEGORY_LABEL[item.category as InventoryCategory] ??
+                  item.category}
+              </span>
             </div>
 
             <div className="min-h-[2.4em]">
-              <div className="truncate text-sm font-semibold text-foreground">{item.name}</div>
+              <div className="truncate text-sm font-semibold text-foreground">
+                {item.name}
+              </div>
               <div className="truncate text-xs text-muted-foreground">
                 {item.brand ?? "—"}
                 {item.model ? ` · ${item.model}` : ""}
@@ -90,18 +100,26 @@ export function InventoryGrid({
 
             <div>
               <div className="h-2 overflow-hidden rounded-full border border-line bg-app">
-                <div className={cn("h-full", barTone(status))} style={{ width: `${ratio}%` }} />
+                <div
+                  className={cn("h-full", barTone(status))}
+                  style={{ width: `${ratio}%` }}
+                />
               </div>
               <div className="mt-1 flex items-center justify-between font-mono text-xs">
                 <span className="font-semibold text-foreground">
-                  {item.quantity_on_hand} <span className="font-sans font-normal text-muted-foreground">{item.unit ?? "units"}</span>
+                  {item.quantity_on_hand}{" "}
+                  <span className="font-sans font-normal text-muted-foreground">
+                    {item.unit ?? "units"}
+                  </span>
                 </span>
                 <span className="text-muted-foreground">{item.sku}</span>
               </div>
             </div>
 
             <div className="flex flex-wrap gap-1">
-              <span className={cn("pill", STOCK_STATUS_PILL[status])}>{STOCK_STATUS_LABEL[status]}</span>
+              <span className={cn("pill", STOCK_STATUS_PILL[status])}>
+                {STOCK_STATUS_LABEL[status]}
+              </span>
               {days != null && tone && (
                 <span className={cn("pill", EXPIRY_PILL[tone])}>
                   <CalendarClock size={11} />

@@ -8,8 +8,7 @@ import type {
   ConfirmPasswordResetRequest,
   ConfirmEmailVerificationRequest,
   SignupRequest,
-  ProfileResponse,
-} from "@/types/api-types";
+} from "@/types/auth-types";
 
 /** POST /auth/login — public. */
 export function login(body: LoginRequest): Promise<LoginResponse> {

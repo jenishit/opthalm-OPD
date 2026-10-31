@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { listInventoryItems, searchInventoryItems } from "@/services/inventory-services";
-import type { InventoryItemDTO } from "@/types/api-types";
+import type { InventoryItem } from "@/types/inventory-types";
 import { MOCK_INVENTORY } from "@/lib/mock/inventory";
 
 /**
@@ -12,7 +12,7 @@ import { MOCK_INVENTORY } from "@/lib/mock/inventory";
  * with no search in effect — a fresh clinic has nothing stocked yet otherwise.
  */
 export function useInventoryItems(search: string) {
-  const [items, setItems] = useState<InventoryItemDTO[]>([]);
+  const [items, setItems] = useState<InventoryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [reloadKey, setReloadKey] = useState(0);
 

@@ -7,7 +7,7 @@ import type {
   TranspositionRequest,
   TranspositionResult,
   VertexDistanceRequest,
-} from "@/types/api-types";
+} from "@/types/calculator-types";
 
 /** POST /calculators/transposition → { sphere, cylinder, axis } */
 export function transposition(body: TranspositionRequest): Promise<TranspositionResult> {

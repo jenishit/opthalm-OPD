@@ -1,6 +1,10 @@
 import { apiFetch, ApiError } from "./http";
 import type { Patient, PatientFormData } from "@/schemas/patient-schema";
-import type { CreatePatientRequest, PatientDTO, UpdatePatientRequest } from "@/types/api-types";
+import type {
+  CreatePatientRequest,
+  Patient as PatientRecord,
+  UpdatePatientRequest,
+} from "@/types/patient-types";
 
 const SEX_OPTIONS = ["Male", "Female", "Other"] as const;
 
@@ -25,19 +29,19 @@ function dobFromAge(age: number): string {
   return `${new Date().getFullYear() - age}-01-01`;
 }
 
-export function toUiPatient(dto: PatientDTO): Patient {
+export function toUiPatient(record: PatientRecord): Patient {
   const sex =
-    SEX_OPTIONS.find((s) => s.toLowerCase() === dto.gender.toLowerCase()) ?? "Other";
+    SEX_OPTIONS.find((s) => s.toLowerCase() === record.gender.toLowerCase()) ?? "Other";
   return {
-    id: dto.patient_id,
-    ...splitName(dto.full_name),
-    phone: dto.phone,
-    date_of_birth: dto.dob,
-    age: ageFromDob(dto.dob),
+    id: record.patient_id,
+    ...splitName(record.full_name),
+    phone: record.phone,
+    date_of_birth: record.dob,
+    age: ageFromDob(record.dob),
     sex,
-    occupation: dto.occupation ?? undefined,
-    address_street: dto.address ?? undefined,
-    created_at: dto.created_at,
+    occupation: record.occupation ?? undefined,
+    address_street: record.address ?? undefined,
+    created_at: record.created_at,
   };
 }
 
@@ -57,7 +61,7 @@ export function toCreateRequest(form: PatientFormData): CreatePatientRequest {
   };
 }
 
-// Builds a partial update; services.updatePatientDto merges it over the
+// Builds a partial update; the UI-facing updatePatient merges it over the
 // stored patient before PATCHing (the endpoint requires the full body).
 export function toUpdateRequest(form: Partial<PatientFormData>): Partial<CreatePatientRequest> {
   const body: Partial<CreatePatientRequest> = {};
@@ -71,38 +75,40 @@ export function toUpdateRequest(form: Partial<PatientFormData>): Partial<CreateP
   if (form.occupation !== undefined) body.occupation = form.occupation;
   if (form.address_street !== undefined) {
     // Preserve other address parts the caller already knows about by leaving
-    // them to the merge in updatePatientDto.
+    // them to the merge in updatePatient.
     body.address = form.address_street;
   }
   return body;
 }
 
-export function listPatientDtos(): Promise<PatientDTO[]> {
-  return apiFetch<PatientDTO[]>("/patient");
+// ── Raw records (wire shape) ─────────────────────────────────────────────────
+//
+// Private to this file — everything else in the app talks to the UI-facing
+// functions below, which convert to/from schemas/patient-schema.ts's Patient.
+
+function listPatientRecords(): Promise<PatientRecord[]> {
+  return apiFetch<PatientRecord[]>("/patient");
 }
 
-export function searchPatientDtos(query: string, limit = 50): Promise<PatientDTO[]> {
+function searchPatientRecords(query: string, limit = 50): Promise<PatientRecord[]> {
   const params = new URLSearchParams({ query, limit: String(limit) });
-  return apiFetch<PatientDTO[]>(`/patient/search?${params.toString()}`);
+  return apiFetch<PatientRecord[]>(`/patient/search?${params.toString()}`);
 }
 
-export function getPatientDto(id: string): Promise<PatientDTO> {
-  return apiFetch<PatientDTO>(`/patient/${id}`);
+function fetchPatientRecord(id: string): Promise<PatientRecord> {
+  return apiFetch<PatientRecord>(`/patient/${id}`);
 }
 
-export function createPatientDto(body: CreatePatientRequest): Promise<PatientDTO> {
-  return apiFetch<PatientDTO>("/patient", { method: "POST", body: JSON.stringify(body) });
+function createPatientRecord(body: CreatePatientRequest): Promise<PatientRecord> {
+  return apiFetch<PatientRecord>("/patient", { method: "POST", body: JSON.stringify(body) });
 }
 
 /**
  * PATCH /patient/:id reuses the create body (full_name, dob and phone are
  * required). Merge a partial update over the stored patient first.
  */
-export async function updatePatientDto(
-  id: string,
-  partial: Partial<CreatePatientRequest>
-): Promise<void> {
-  const current = await getPatientDto(id);
+async function patchPatientRecord(id: string, partial: Partial<CreatePatientRequest>): Promise<void> {
+  const current = await fetchPatientRecord(id);
   const body: UpdatePatientRequest = {
     full_name: partial.full_name ?? current.full_name,
     dob: partial.dob ?? current.dob,
@@ -116,20 +122,20 @@ export async function updatePatientDto(
 }
 
 /** PATCH /patient/:id/delete — soft delete, returns a message. */
-export function deletePatientDto(id: string): Promise<void> {
+export function deletePatient(id: string): Promise<void> {
   return apiFetch<void>(`/patient/${id}/delete`, { method: "PATCH" });
 }
 
 // ── UI-facing patient API ────────────────────────────────────────────────────
 
 export async function getPatients(search?: string): Promise<Patient[]> {
-  const dtos = search ? await searchPatientDtos(search) : await listPatientDtos();
-  return dtos.map(toUiPatient);
+  const records = search ? await searchPatientRecords(search) : await listPatientRecords();
+  return records.map(toUiPatient);
 }
 
 export async function getPatient(id: string): Promise<Patient | null> {
   try {
-    return toUiPatient(await getPatientDto(id));
+    return toUiPatient(await fetchPatientRecord(id));
   } catch (error) {
     if (error instanceof ApiError && error.status === 404) return null;
     throw error;
@@ -137,26 +143,23 @@ export async function getPatient(id: string): Promise<Patient | null> {
 }
 
 export async function getPatientByPhone(phone: string): Promise<Patient | null> {
-  const matches = await searchPatientDtos(phone, 5);
+  const matches = await searchPatientRecords(phone, 5);
   const exact = matches.find((p) => p.phone === phone);
   return exact ? toUiPatient(exact) : null;
 }
 
 export async function createPatient(data: PatientFormData): Promise<Patient> {
-  return toUiPatient(await createPatientDto(toCreateRequest(data)));
+  return toUiPatient(await createPatientRecord(toCreateRequest(data)));
 }
 
-export async function updatePatient(
-  id: string,
-  data: Partial<PatientFormData>
-): Promise<Patient> {
+export async function updatePatient(id: string, data: Partial<PatientFormData>): Promise<Patient> {
   // The endpoint requires the full body; merge this partial over the stored
   // patient before PATCHing, then refetch.
-  await updatePatientDto(id, toUpdateRequest(data));
-  return toUiPatient(await getPatientDto(id));
+  await patchPatientRecord(id, toUpdateRequest(data));
+  return toUiPatient(await fetchPatientRecord(id));
 }
 
 export async function checkPhoneUnique(phone: string, excludeId?: string): Promise<boolean> {
-  const matches = await searchPatientDtos(phone, 5);
+  const matches = await searchPatientRecords(phone, 5);
   return !matches.some((p) => p.phone === phone && p.patient_id !== excludeId);
 }

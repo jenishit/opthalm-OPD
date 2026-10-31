@@ -1,18 +1,18 @@
 import { apiFetch } from "./http";
+import type { InventoryItem } from "@/types/inventory-types";
 import type {
-  InventoryItemDTO,
-  InventoryValuationDTO,
-  PatientDueDTO,
-  SalesSummaryDTO,
-  VendorDueDTO,
-  VisitsSummaryDTO,
-} from "@/types/api-types";
+  InventoryValuation,
+  PatientDue,
+  SalesSummary,
+  VendorDue,
+  VisitsSummary,
+} from "@/types/reports-types";
 
 /** GET /reports/sales/daily?date=YYYY-MM-DD&format=csv|pdf */
-export function getDailySales(date: string, format?: "csv" | "pdf"): Promise<SalesSummaryDTO> {
+export function getDailySales(date: string, format?: "csv" | "pdf"): Promise<SalesSummary> {
   const params = new URLSearchParams({ date });
   if (format) params.set("format", format);
-  return apiFetch<SalesSummaryDTO>(`/reports/sales/daily?${params.toString()}`);
+  return apiFetch<SalesSummary>(`/reports/sales/daily?${params.toString()}`);
 }
 
 /** GET /reports/sales/monthly?year&month&format=csv|pdf */
@@ -20,13 +20,13 @@ export function getMonthlySales(
   year: number,
   month: number,
   format?: "csv" | "pdf"
-): Promise<SalesSummaryDTO> {
+): Promise<SalesSummary> {
   const params = new URLSearchParams({
     year: String(year),
     month: String(month),
   });
   if (format) params.set("format", format);
-  return apiFetch<SalesSummaryDTO>(`/reports/sales/monthly?${params.toString()}`);
+  return apiFetch<SalesSummary>(`/reports/sales/monthly?${params.toString()}`);
 }
 
 /** GET /reports/sales/range?from=YYYY-MM-DD&to=YYYY-MM-DD&format=csv|pdf */
@@ -34,36 +34,36 @@ export function getSalesRange(
   from: string,
   to: string,
   format?: "csv" | "pdf"
-): Promise<SalesSummaryDTO[]> {
+): Promise<SalesSummary[]> {
   const params = new URLSearchParams({ from, to });
   if (format) params.set("format", format);
-  return apiFetch<SalesSummaryDTO[]>(`/reports/sales/range?${params.toString()}`);
+  return apiFetch<SalesSummary[]>(`/reports/sales/range?${params.toString()}`);
 }
 
 /** GET /reports/dues&format=csv|pdf */
-export function getDuesReport(format?: "csv" | "pdf"): Promise<PatientDueDTO[]> {
+export function getDuesReport(format?: "csv" | "pdf"): Promise<PatientDue[]> {
   const params = format ? "?format=" + format : "";
-  return apiFetch<PatientDueDTO[]>(`/reports/dues${params}`);
+  return apiFetch<PatientDue[]>(`/reports/dues${params}`);
 }
 
 /** GET /reports/vendor-dues&format=csv|pdf */
-export function getVendorDuesReport(format?: "csv" | "pdf"): Promise<VendorDueDTO[]> {
+export function getVendorDuesReport(format?: "csv" | "pdf"): Promise<VendorDue[]> {
   const params = format ? "?format=" + format : "";
-  return apiFetch<VendorDueDTO[]>(`/reports/vendor-dues${params}`);
+  return apiFetch<VendorDue[]>(`/reports/vendor-dues${params}`);
 }
 
 /** GET /reports/inventory/low-stock&format=csv|pdf */
-export function getLowStockReport(format?: "csv" | "pdf"): Promise<InventoryItemDTO[]> {
+export function getLowStockReport(format?: "csv" | "pdf"): Promise<InventoryItem[]> {
   const params = format ? "?format=" + format : "";
-  return apiFetch<InventoryItemDTO[]>(`/reports/inventory/low-stock${params}`);
+  return apiFetch<InventoryItem[]>(`/reports/inventory/low-stock${params}`);
 }
 
 /** GET /reports/inventory/valuation&format=csv|pdf */
 export function getInventoryValuation(
   format?: "csv" | "pdf"
-): Promise<InventoryValuationDTO> {
+): Promise<InventoryValuation> {
   const params = format ? "?format=" + format : "";
-  return apiFetch<InventoryValuationDTO>(`/reports/inventory/valuation${params}`);
+  return apiFetch<InventoryValuation>(`/reports/inventory/valuation${params}`);
 }
 
 /** GET /reports/visits/summary?from=YYYY-MM-DD&to=YYYY-MM-DD&group_by&format=csv|pdf */
@@ -72,9 +72,9 @@ export function getVisitsSummary(
   to: string,
   groupBy?: "day" | "week" | "month" | string,
   format?: "csv" | "pdf"
-): Promise<VisitsSummaryDTO[]> {
+): Promise<VisitsSummary[]> {
   const params = new URLSearchParams({ from, to });
   if (groupBy) params.set("group_by", groupBy);
   if (format) params.set("format", format);
-  return apiFetch<VisitsSummaryDTO[]>(`/reports/visits/summary?${params.toString()}`);
+  return apiFetch<VisitsSummary[]>(`/reports/visits/summary?${params.toString()}`);
 }

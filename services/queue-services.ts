@@ -1,11 +1,19 @@
 import type { Visit, VisitStatus } from "@/schemas/visit-schema";
 import type { Patient } from "@/schemas/patient-schema";
-import { listPatientDtos, toUiPatient } from "@/services/patients-services";
-import { getPatientVisitDtos, toUiVisit } from "@/services/visits-services";
+import { getPatients } from "@/services/patients-services";
+import { getVisits } from "@/services/visits-services";
 
 export interface QueueItem {
   visit: Visit;
   patient: Patient;
+}
+
+function sortByCreatedAt(items: QueueItem[]): QueueItem[] {
+  return items.sort((a, b) => {
+    const dateA = a.visit.created_at ? new Date(a.visit.created_at).getTime() : 0;
+    const dateB = b.visit.created_at ? new Date(b.visit.created_at).getTime() : 0;
+    return dateA - dateB;
+  });
 }
 
 /**
@@ -18,31 +26,21 @@ export interface QueueItem {
 export async function getTodayQueue(status?: VisitStatus): Promise<QueueItem[]> {
   const today = new Date().toISOString().split("T")[0];
 
-  const patients = await listPatientDtos();
-  const visitLists = await Promise.all(
-    patients.map((patient) => getPatientVisitDtos(patient.patient_id))
-  );
+  const patients = await getPatients();
+  const visitLists = await Promise.all(patients.map((patient) => getVisits({ patient_id: patient.id })));
 
   const queueItems: QueueItem[] = [];
-  patients.forEach((patientDto, index) => {
-    for (const dto of visitLists[index]?.visits ?? []) {
+  patients.forEach((patient, index) => {
+    for (const visit of visitLists[index] ?? []) {
       // The backend returns visit_date with a time portion
       // ("2026-10-25T00:00:00Z"); compare on the date part only.
-      if (String(dto.visit_date).slice(0, 10) !== today) continue;
-      if (status && dto.status !== status) continue;
-      queueItems.push({
-        visit: toUiVisit(dto, patientDto.patient_id),
-        patient: toUiPatient(patientDto),
-      });
+      if (String(visit.visit_date).slice(0, 10) !== today) continue;
+      if (status && visit.status !== status) continue;
+      queueItems.push({ visit, patient });
     }
   });
 
-  // Sort by created_at ascending (oldest first in queue)
-  return queueItems.sort((a, b) => {
-    const dateA = a.visit.created_at ? new Date(a.visit.created_at).getTime() : 0;
-    const dateB = b.visit.created_at ? new Date(b.visit.created_at).getTime() : 0;
-    return dateA - dateB;
-  });
+  return sortByCreatedAt(queueItems);
 }
 
 /**
@@ -54,26 +52,17 @@ export async function getTodayQueue(status?: VisitStatus): Promise<QueueItem[]> 
  * filter client-side.
  */
 export async function getQueueForRange(startDate: string, endDate: string): Promise<QueueItem[]> {
-  const patients = await listPatientDtos();
-  const visitLists = await Promise.all(
-    patients.map((patient) => getPatientVisitDtos(patient.patient_id))
-  );
+  const patients = await getPatients();
+  const visitLists = await Promise.all(patients.map((patient) => getVisits({ patient_id: patient.id })));
 
   const queueItems: QueueItem[] = [];
-  patients.forEach((patientDto, index) => {
-    for (const dto of visitLists[index]?.visits ?? []) {
-      const date = String(dto.visit_date).slice(0, 10);
+  patients.forEach((patient, index) => {
+    for (const visit of visitLists[index] ?? []) {
+      const date = String(visit.visit_date).slice(0, 10);
       if (date < startDate || date > endDate) continue;
-      queueItems.push({
-        visit: toUiVisit(dto, patientDto.patient_id),
-        patient: toUiPatient(patientDto),
-      });
+      queueItems.push({ visit, patient });
     }
   });
 
-  return queueItems.sort((a, b) => {
-    const dateA = a.visit.created_at ? new Date(a.visit.created_at).getTime() : 0;
-    const dateB = b.visit.created_at ? new Date(b.visit.created_at).getTime() : 0;
-    return dateA - dateB;
-  });
+  return sortByCreatedAt(queueItems);
 }

@@ -1,9 +1,10 @@
 import { create } from "zustand";
-import type { InventoryItemDTO, PaymentMethod } from "@/types/api-types";
+import type { InventoryItem } from "@/types/inventory-types";
+import type { PaymentMethod } from "@/types/billing-types";
 import type { Patient } from "@/schemas/patient-schema";
 
 export interface CartLine {
-  item: InventoryItemDTO;
+  item: InventoryItem;
   qty: number;
 }
 
@@ -22,7 +23,7 @@ interface PosState {
   paymentMethod: PaymentMethod;
   heldSales: HeldSale[];
 
-  addItem: (item: InventoryItemDTO) => void;
+  addItem: (item: InventoryItem) => void;
   incrementQty: (itemId: string) => void;
   decrementQty: (itemId: string) => void;
   removeItem: (itemId: string) => void;

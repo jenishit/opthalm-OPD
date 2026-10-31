@@ -1,7 +1,8 @@
 import { Box, Droplet, Eye, Glasses, Layers, Package } from "lucide-react";
 import type { ElementType } from "react";
 import { today0 } from "@/lib/utils";
-import type { InventoryCategory, InventoryItemDTO, InvoiceItemType } from "@/types/api-types";
+import type { InventoryCategory, InventoryItem } from "@/types/inventory-types";
+import type { InvoiceItemType } from "@/types/billing-types";
 
 /** Icon shown for each category in the inventory grid view and expiry tracker. */
 export const CATEGORY_ICON: Record<InventoryCategory, ElementType> = {
@@ -35,7 +36,7 @@ export const CATEGORY_TABS: InventoryCategory[] = [
 
 export type StockStatus = "out" | "low" | "ok";
 
-export function stockStatus(item: InventoryItemDTO): StockStatus {
+export function stockStatus(item: InventoryItem): StockStatus {
   if (item.quantity_on_hand <= 0) return "out";
   if (item.quantity_on_hand <= item.reorder_threshold) return "low";
   return "ok";
@@ -56,7 +57,7 @@ export const STOCK_STATUS_PILL: Record<StockStatus, string> = {
 export type ExpiryTone = "bad" | "warn" | "mute";
 
 /** Days from today until the item's current stock expires; negative once past due. Null when it has no shelf life. */
-export function daysUntilExpiry(item: Pick<InventoryItemDTO, "expiry_date">): number | null {
+export function daysUntilExpiry(item: Pick<InventoryItem, "expiry_date">): number | null {
   if (!item.expiry_date) return null;
   const expiry = new Date(`${item.expiry_date}T00:00:00`);
   return Math.round((expiry.getTime() - today0().getTime()) / 86_400_000);

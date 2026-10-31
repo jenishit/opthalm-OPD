@@ -3,11 +3,16 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { Loader2, ScanBarcode } from "lucide-react";
-import { Dialog, DialogContent, DialogFooter, DialogTitle } from "@/components/shadcn/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogTitle,
+} from "@/components/shadcn/dialog";
 import { Button } from "@/components/shadcn/button";
 import { Input } from "@/components/shadcn/input";
 import { getItemByBarcode } from "@/services/inventory-services";
-import type { InventoryItemDTO } from "@/types/api-types";
+import type { InventoryItem } from "@/types/inventory-types";
 
 export function ScanBarcodeDialog({
   open,
@@ -16,7 +21,7 @@ export function ScanBarcodeDialog({
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onFound: (item: InventoryItemDTO) => void;
+  onFound: (item: InventoryItem) => void;
 }) {
   const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
@@ -62,11 +67,19 @@ export function ScanBarcodeDialog({
             placeholder="Scan or enter SKU / barcode…"
           />
           <DialogFooter>
-            <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => onOpenChange(false)}
+            >
               Cancel
             </Button>
             <Button type="submit" disabled={loading || !code.trim()}>
-              {loading ? <Loader2 className="size-4 animate-spin" /> : <ScanBarcode className="size-4" />}
+              {loading ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                <ScanBarcode className="size-4" />
+              )}
               Find product
             </Button>
           </DialogFooter>

@@ -8,7 +8,7 @@ import { ScanBarcodeDialog } from "@/components/ui/ScanBarcodeDialog";
 import { useInventoryItems } from "@/lib/hooks/use-inventory-items";
 import { cn, formatCurrency } from "@/lib/utils";
 import { CATEGORY_LABEL, CATEGORY_TABS } from "@/lib/inventory-category";
-import type { InventoryCategory, InventoryItemDTO } from "@/types/api-types";
+import type { InventoryCategory, InventoryItem } from "@/types/inventory-types";
 import { usePosStore } from "./store";
 
 export function ProductGrid() {
@@ -20,9 +20,10 @@ export function ProductGrid() {
   const addItem = usePosStore((s) => s.addItem);
   const cart = usePosStore((s) => s.cart);
 
-  const filtered = category === "all" ? items : items.filter((i) => i.category === category);
+  const filtered =
+    category === "all" ? items : items.filter((i) => i.category === category);
 
-  function handleAdd(item: InventoryItemDTO) {
+  function handleAdd(item: InventoryItem) {
     const line = cart.find((l) => l.item.id === item.id);
     const cap = item.quantity_on_hand > 0 ? item.quantity_on_hand : 0;
     if (!item.is_active || cap <= 0) {
@@ -64,7 +65,9 @@ export function ProductGrid() {
             onClick={() => setCategory(c)}
             className={cn(
               "rounded-md px-3 py-1.5 text-xs font-semibold whitespace-nowrap transition-colors",
-              category === c ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+              category === c
+                ? "bg-card text-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground",
             )}
           >
             {c === "all" ? "All" : CATEGORY_LABEL[c]}
@@ -84,7 +87,9 @@ export function ProductGrid() {
             <Loader2 className="size-4 animate-spin" /> Loading products…
           </div>
         ) : filtered.length === 0 ? (
-          <div className="py-16 text-center text-sm text-muted-foreground">No products found.</div>
+          <div className="py-16 text-center text-sm text-muted-foreground">
+            No products found.
+          </div>
         ) : (
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
             {filtered.map((item) => {
@@ -104,13 +109,22 @@ export function ProductGrid() {
                       </span>
                     )}
                     {outOfStock && (
-                      <span className="pill pill-bad absolute top-2 right-2">Out of stock</span>
+                      <span className="pill pill-bad absolute top-2 right-2">
+                        Out of stock
+                      </span>
                     )}
                   </span>
                   <span className="flex flex-col gap-0.5 p-2.5">
-                    <b className="text-xs text-foreground">{item.brand ?? CATEGORY_LABEL[item.category as InventoryCategory]}</b>
-                    <small className="min-h-[2.2em] text-[11px] text-muted-foreground">{item.name}</small>
-                    <strong className="font-display text-sm text-foreground">{formatCurrency(item.selling_price)}</strong>
+                    <b className="text-xs text-foreground">
+                      {item.brand ??
+                        CATEGORY_LABEL[item.category as InventoryCategory]}
+                    </b>
+                    <small className="min-h-[2.2em] text-[11px] text-muted-foreground">
+                      {item.name}
+                    </small>
+                    <strong className="font-display text-sm text-foreground">
+                      {formatCurrency(item.selling_price)}
+                    </strong>
                   </span>
                 </button>
               );
@@ -120,7 +134,8 @@ export function ProductGrid() {
       </div>
 
       <p className="flex items-start gap-2 text-xs text-muted-foreground">
-        Prices reflect current stock. Prescription lenses can be attached to an active patient order.
+        Prices reflect current stock. Prescription lenses can be attached to an
+        active patient order.
       </p>
 
       <ScanBarcodeDialog

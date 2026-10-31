@@ -2,15 +2,25 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-import { AlertCircle, Box, Package, Plus, ScanBarcode, Wallet } from "lucide-react";
+import {
+  AlertCircle,
+  Box,
+  Package,
+  Plus,
+  ScanBarcode,
+  Wallet,
+} from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import StatCard from "@/components/ui/StatCard";
 import { ScanBarcodeDialog } from "@/components/ui/ScanBarcodeDialog";
 import SectionHeading from "../dashboard/_components/SectionHeading";
 import { useInventoryItems } from "@/lib/hooks/use-inventory-items";
 import { formatCurrency } from "@/lib/utils";
-import type { InventoryCategory, InventoryItemDTO } from "@/types/api-types";
-import { InventoryTable, type InventoryView } from "./_components/InventoryTable";
+import type { InventoryCategory, InventoryItem } from "@/types/inventory-types";
+import {
+  InventoryTable,
+  type InventoryView,
+} from "./_components/InventoryTable";
 import { AddProductDialog } from "./_components/AddProductDialog";
 import { AddStockDialog } from "./_components/AddStockDialog";
 import { EditExpiryDialog } from "./_components/EditExpiryDialog";
@@ -22,15 +32,21 @@ export default function InventoryPage() {
   const [view, setView] = useState<InventoryView>("list");
   const [addOpen, setAddOpen] = useState(false);
   const [scanOpen, setScanOpen] = useState(false);
-  const [stockItem, setStockItem] = useState<InventoryItemDTO | null>(null);
-  const [expiryItem, setExpiryItem] = useState<InventoryItemDTO | null>(null);
+  const [stockItem, setStockItem] = useState<InventoryItem | null>(null);
+  const [expiryItem, setExpiryItem] = useState<InventoryItem | null>(null);
 
   const { items, loading, usingMock, refresh } = useInventoryItems(search);
-  const filtered = category === "all" ? items : items.filter((i) => i.category === category);
+  const filtered =
+    category === "all" ? items : items.filter((i) => i.category === category);
 
   const activeCount = items.filter((i) => i.is_active).length;
-  const inventoryValue = items.reduce((sum, i) => sum + i.selling_price * i.quantity_on_hand, 0);
-  const lowStockCount = items.filter((i) => i.quantity_on_hand > 0 && i.quantity_on_hand <= i.reorder_threshold).length;
+  const inventoryValue = items.reduce(
+    (sum, i) => sum + i.selling_price * i.quantity_on_hand,
+    0,
+  );
+  const lowStockCount = items.filter(
+    (i) => i.quantity_on_hand > 0 && i.quantity_on_hand <= i.reorder_threshold,
+  ).length;
   const outOfStockCount = items.filter((i) => i.quantity_on_hand <= 0).length;
 
   return (
@@ -105,9 +121,21 @@ export default function InventoryPage() {
         <ExpiryTracker items={items} />
       </div>
 
-      <AddProductDialog open={addOpen} onOpenChange={setAddOpen} onCreated={refresh} />
-      <AddStockDialog item={stockItem} onOpenChange={(open) => !open && setStockItem(null)} onUpdated={refresh} />
-      <EditExpiryDialog item={expiryItem} onOpenChange={(open) => !open && setExpiryItem(null)} onUpdated={refresh} />
+      <AddProductDialog
+        open={addOpen}
+        onOpenChange={setAddOpen}
+        onCreated={refresh}
+      />
+      <AddStockDialog
+        item={stockItem}
+        onOpenChange={(open) => !open && setStockItem(null)}
+        onUpdated={refresh}
+      />
+      <EditExpiryDialog
+        item={expiryItem}
+        onOpenChange={(open) => !open && setExpiryItem(null)}
+        onUpdated={refresh}
+      />
       <ScanBarcodeDialog
         open={scanOpen}
         onOpenChange={setScanOpen}

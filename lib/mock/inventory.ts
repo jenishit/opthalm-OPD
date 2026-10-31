@@ -1,4 +1,4 @@
-import type { InventoryItemDTO } from "@/types/api-types";
+import type { InventoryItem } from "@/types/inventory-types";
 
 const now = new Date().toISOString();
 
@@ -15,7 +15,7 @@ function inDays(n: number): string {
   return d.toISOString().slice(0, 10);
 }
 
-export const MOCK_INVENTORY: InventoryItemDTO[] = [
+export const MOCK_INVENTORY: InventoryItem[] = [
   {
     id: "mock-inv-1", category: "frame", sku: "FRM-RB-2140", name: "Wayfarer Classic",
     brand: "Ray-Ban", model: "RB2140", color: "Tortoise", size: "54mm", unit: "pc",

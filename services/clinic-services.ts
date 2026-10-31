@@ -1,5 +1,5 @@
 import { apiFetch } from "./http";
-import type { ClinicRequest, ClinicResponse } from "@/types/api-types";
+import type { ClinicRequest, ClinicResponse } from "@/types/clinic-types";
 
 /** GET /admin/clinic — the admin's own clinic settings. */
 export function getClinic(): Promise<ClinicResponse> {

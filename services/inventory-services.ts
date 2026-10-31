@@ -4,35 +4,35 @@ import type {
   CreateInventoryItemRequest,
   CreatePurchaseRequest,
   CreateVendorRequest,
-  InventoryItemDTO,
-  PurchaseDTO,
-  StockMovementDTO,
+  InventoryItem,
+  Purchase,
+  StockMovement,
   UpdateInventoryItemRequest,
   UpdateVendorRequest,
-  VendorDTO,
-} from "@/types/api-types";
+  Vendor,
+} from "@/types/inventory-types";
 
 // ── Items ───────────────────────────────────────────────────────────────────
 
-export function createInventoryItem(body: CreateInventoryItemRequest): Promise<InventoryItemDTO> {
-  return apiFetch<InventoryItemDTO>("/inventory/items", {
+export function createInventoryItem(body: CreateInventoryItemRequest): Promise<InventoryItem> {
+  return apiFetch<InventoryItem>("/inventory/items", {
     method: "POST",
     body: JSON.stringify(body),
   });
 }
 
-export function listInventoryItems(limit = 100, offset = 0): Promise<InventoryItemDTO[]> {
+export function listInventoryItems(limit = 100, offset = 0): Promise<InventoryItem[]> {
   const params = new URLSearchParams({ limit: String(limit), offset: String(offset) });
-  return apiFetch<InventoryItemDTO[]>(`/inventory/items?${params.toString()}`);
+  return apiFetch<InventoryItem[]>(`/inventory/items?${params.toString()}`);
 }
 
-export function searchInventoryItems(query: string, limit = 50): Promise<InventoryItemDTO[]> {
+export function searchInventoryItems(query: string, limit = 50): Promise<InventoryItem[]> {
   const params = new URLSearchParams({ query, limit: String(limit) });
-  return apiFetch<InventoryItemDTO[]>(`/inventory/items/search?${params.toString()}`);
+  return apiFetch<InventoryItem[]>(`/inventory/items/search?${params.toString()}`);
 }
 
-export function getInventoryItem(id: string): Promise<InventoryItemDTO> {
-  return apiFetch<InventoryItemDTO>(`/inventory/items/${id}`);
+export function getInventoryItem(id: string): Promise<InventoryItem> {
+  return apiFetch<InventoryItem>(`/inventory/items/${id}`);
 }
 
 export function updateInventoryItem(
@@ -58,42 +58,42 @@ export function addItemStock(id: string, body: AddStockRequest): Promise<void> {
 }
 
 /** GET /inventory/items/:id/movements?limit&offset */
-export function getItemMovements(id: string, limit = 50, offset = 0): Promise<StockMovementDTO[]> {
+export function getItemMovements(id: string, limit = 50, offset = 0): Promise<StockMovement[]> {
   const params = new URLSearchParams({ limit: String(limit), offset: String(offset) });
-  return apiFetch<StockMovementDTO[]>(`/inventory/items/${id}/movements?${params.toString()}`);
+  return apiFetch<StockMovement[]>(`/inventory/items/${id}/movements?${params.toString()}`);
 }
 
 /** GET /inventory/items/barcode/:sku */
-export function getItemByBarcode(sku: string): Promise<InventoryItemDTO> {
-  return apiFetch<InventoryItemDTO>(`/inventory/items/barcode/${encodeURIComponent(sku)}`);
+export function getItemByBarcode(sku: string): Promise<InventoryItem> {
+  return apiFetch<InventoryItem>(`/inventory/items/barcode/${encodeURIComponent(sku)}`);
 }
 
 /** GET /inventory/low-stock */
-export function listLowStock(): Promise<InventoryItemDTO[]> {
-  return apiFetch<InventoryItemDTO[]>("/inventory/low-stock");
+export function listLowStock(): Promise<InventoryItem[]> {
+  return apiFetch<InventoryItem[]>("/inventory/low-stock");
 }
 
 // ── Vendors ─────────────────────────────────────────────────────────────────
 
-export function createVendor(body: CreateVendorRequest): Promise<VendorDTO> {
-  return apiFetch<VendorDTO>("/inventory/vendors", {
+export function createVendor(body: CreateVendorRequest): Promise<Vendor> {
+  return apiFetch<Vendor>("/inventory/vendors", {
     method: "POST",
     body: JSON.stringify(body),
   });
 }
 
-export function listVendors(limit = 100, offset = 0): Promise<VendorDTO[]> {
+export function listVendors(limit = 100, offset = 0): Promise<Vendor[]> {
   const params = new URLSearchParams({ limit: String(limit), offset: String(offset) });
-  return apiFetch<VendorDTO[]>(`/inventory/vendors?${params.toString()}`);
+  return apiFetch<Vendor[]>(`/inventory/vendors?${params.toString()}`);
 }
 
-export function searchVendors(query: string, limit = 50): Promise<VendorDTO[]> {
+export function searchVendors(query: string, limit = 50): Promise<Vendor[]> {
   const params = new URLSearchParams({ query, limit: String(limit) });
-  return apiFetch<VendorDTO[]>(`/inventory/vendors/search?${params.toString()}`);
+  return apiFetch<Vendor[]>(`/inventory/vendors/search?${params.toString()}`);
 }
 
-export function getVendor(id: string): Promise<VendorDTO> {
-  return apiFetch<VendorDTO>(`/inventory/vendors/${id}`);
+export function getVendor(id: string): Promise<Vendor> {
+  return apiFetch<Vendor>(`/inventory/vendors/${id}`);
 }
 
 export function updateVendor(id: string, body: UpdateVendorRequest): Promise<void> {
@@ -109,18 +109,18 @@ export function deleteVendor(id: string): Promise<void> {
 
 // ── Purchases ───────────────────────────────────────────────────────────────
 
-export function createPurchase(body: CreatePurchaseRequest): Promise<PurchaseDTO> {
-  return apiFetch<PurchaseDTO>("/inventory/purchases", {
+export function createPurchase(body: CreatePurchaseRequest): Promise<Purchase> {
+  return apiFetch<Purchase>("/inventory/purchases", {
     method: "POST",
     body: JSON.stringify(body),
   });
 }
 
-export function listPurchases(limit = 100, offset = 0): Promise<PurchaseDTO[]> {
+export function listPurchases(limit = 100, offset = 0): Promise<Purchase[]> {
   const params = new URLSearchParams({ limit: String(limit), offset: String(offset) });
-  return apiFetch<PurchaseDTO[]>(`/inventory/purchases?${params.toString()}`);
+  return apiFetch<Purchase[]>(`/inventory/purchases?${params.toString()}`);
 }
 
-export function getPurchase(id: string): Promise<PurchaseDTO> {
-  return apiFetch<PurchaseDTO>(`/inventory/purchases/${id}`);
+export function getPurchase(id: string): Promise<Purchase> {
+  return apiFetch<Purchase>(`/inventory/purchases/${id}`);
 }
