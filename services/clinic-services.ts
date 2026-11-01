@@ -10,6 +10,7 @@ import type {
   ClinicPrivacyConfig,
   ClinicRequest,
   ClinicResponse,
+  ClinicSubscription,
   CreateClinicLocationRequest,
   UpdateClinicNotificationsRequest,
   UpdateClinicPaymentConfigRequest,
@@ -175,4 +176,15 @@ export function connectIntegration(provider: ClinicIntegrationProvider): Promise
 
 export function disconnectIntegration(provider: ClinicIntegrationProvider): Promise<void> {
   return apiFetch<void>(`/admin/clinic/integrations/${provider}`, { method: "DELETE" });
+}
+
+// ── Billing — GET /admin/clinic/billing/subscription ────────────────────────
+//
+// Clinic-admin-facing view of the clinic's own subscription — plan, status,
+// limits, and live-computed usage. There's no invoices endpoint, billing
+// portal link, or plan self-service upsert for clinic admins; those stay
+// unbuilt (plan changes go through the platform operator).
+
+export function getClinicSubscription(): Promise<ClinicSubscription> {
+  return apiFetch<ClinicSubscription>("/admin/clinic/billing/subscription");
 }

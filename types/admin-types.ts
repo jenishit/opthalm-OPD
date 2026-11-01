@@ -34,6 +34,12 @@ export interface UpsertSubscriptionRequest {
   plan_name?: string;
   status: SubscriptionStatus;
   current_period_end: string; // "YYYY-MM-DD"
+  /** null = unlimited. */
+  seats_limit?: number | null;
+  /** null = unlimited. */
+  patient_records_limit?: number | null;
+  /** null = unlimited. */
+  locations_limit?: number | null;
 }
 
 export interface Subscription {
@@ -42,6 +48,12 @@ export interface Subscription {
   plan_name: string | null;
   status: SubscriptionStatus | string;
   current_period_end: string;
+  /** null = unlimited. */
+  seats_limit: number | null;
+  /** null = unlimited. */
+  patient_records_limit: number | null;
+  /** null = unlimited. */
+  locations_limit: number | null;
   created_at: string;
   updated_at: string;
 }

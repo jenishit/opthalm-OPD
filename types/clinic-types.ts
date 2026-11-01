@@ -1,9 +1,11 @@
 // Shapes for the /admin/clinic endpoints (and its sub-resources — locations,
-// notifications, payment/pos/privacy config, audit log, integrations).
-// Mirrors the Go backend contract served at ${BACKEND_URL}/swagger/doc.json.
-// Routing note: every endpoint below lives under /admin/clinic/..., gated by
-// adminMiddleware() + subscriptionMiddleware() — same as the base clinic
-// profile endpoints.
+// notifications, payment/pos/privacy config, audit log, integrations,
+// billing). Mirrors the Go backend contract served at
+// ${BACKEND_URL}/swagger/doc.json. Routing note: every endpoint below lives
+// under /admin/clinic/..., gated by adminMiddleware() + subscriptionMiddleware()
+// — same as the base clinic profile endpoints.
+
+import type { SubscriptionStatus } from "@/types/admin-types";
 
 export interface ClinicRequest {
   clinic_name: string;
@@ -144,4 +146,30 @@ export interface ClinicIntegration {
   provider: ClinicIntegrationProvider;
   connected: boolean;
   connected_at?: string;
+}
+
+// ── Billing — GET /admin/clinic/billing/subscription ────────────────────────
+//
+// Clinic-admin-facing read of the clinic's own subscription (the plan/status/
+// limits are only ever set by the platform operator via the superadmin-only
+// PUT /platform/subscriptions/:clinicId — see types/admin-types.ts). The
+// *_used counts are computed live on every call (COUNT against
+// users/patients/clinic_locations) — never cached or stored, so they can't
+// drift from reality. A null *_limit means unlimited.
+//
+// No invoices endpoint, no billing-portal link, no PSP integration exist
+// yet — payment_method_label is reserved for whichever PSP gets wired up
+// later and always comes back null today.
+
+export interface ClinicSubscription {
+  plan_name: string | null;
+  status: SubscriptionStatus | string;
+  current_period_end: string;
+  seats_limit: number | null;
+  seats_used: number;
+  patient_records_limit: number | null;
+  patient_records_used: number;
+  locations_limit: number | null;
+  locations_used: number;
+  payment_method_label: string | null;
 }
