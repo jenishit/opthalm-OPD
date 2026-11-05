@@ -1,8 +1,10 @@
 import { apiFetch } from "./http";
 import type { InventoryItem } from "@/types/inventory-types";
 import type {
+  ClinicalActivity,
   InventoryValuation,
   PatientDue,
+  SalesByCategory,
   SalesSummary,
   VendorDue,
   VisitsSummary,
@@ -77,4 +79,18 @@ export function getVisitsSummary(
   if (groupBy) params.set("group_by", groupBy);
   if (format) params.set("format", format);
   return apiFetch<VisitsSummary[]>(`/reports/visits/summary?${params.toString()}`);
+}
+
+/** GET /reports/sales/by-category?from=YYYY-MM-DD&to=YYYY-MM-DD&format=csv */
+export function getSalesByCategory(from: string, to: string, format?: "csv"): Promise<SalesByCategory[]> {
+  const params = new URLSearchParams({ from, to });
+  if (format) params.set("format", format);
+  return apiFetch<SalesByCategory[]>(`/reports/sales/by-category?${params.toString()}`);
+}
+
+/** GET /reports/clinical-activity?from=YYYY-MM-DD&to=YYYY-MM-DD&format=csv */
+export function getClinicalActivity(from: string, to: string, format?: "csv"): Promise<ClinicalActivity> {
+  const params = new URLSearchParams({ from, to });
+  if (format) params.set("format", format);
+  return apiFetch<ClinicalActivity>(`/reports/clinical-activity?${params.toString()}`);
 }

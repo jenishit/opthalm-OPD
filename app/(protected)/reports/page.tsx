@@ -1,11 +1,18 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Download, CalendarDays, Wallet, HeartPulse, TrendingUp, CreditCard, ArrowUpRight } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { RevenueChart } from "./_components/RevenueChart";
 import { RevenueBreakdown } from "./_components/RevenueBreakdown";
 import { MetricListPanel } from "./_components/MetricListPanel";
+import { getClinicalActivity } from "@/services/reports-services";
+import { addDays, iso, today0 } from "@/lib/utils";
+import type { ClinicalActivity } from "@/types/reports-types";
+
+const TO = iso(today0());
+const FROM = iso(addDays(today0(), -29));
 
 function StatCard({
   label,
@@ -45,6 +52,36 @@ function StatCard({
 }
 
 export default function ReportsPage() {
+  const [clinicalActivity, setClinicalActivity] = useState<ClinicalActivity | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    getClinicalActivity(FROM, TO)
+      .then((data) => {
+        if (active) setClinicalActivity(data);
+      })
+      .catch((error) => {
+        console.error("Failed to load clinical activity", error);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const clinicalMetrics: [string, string][] = clinicalActivity
+    ? [
+        ["New patients", clinicalActivity.new_patients.toLocaleString()],
+        ["Comprehensive exams", clinicalActivity.comprehensive_exams.toLocaleString()],
+        ["Refraction visits", clinicalActivity.refraction_visits.toLocaleString()],
+        ["Follow-ups due", clinicalActivity.follow_up_visits.toLocaleString()],
+      ]
+    : [
+        ["New patients", "—"],
+        ["Comprehensive exams", "—"],
+        ["Refraction visits", "—"],
+        ["Follow-ups due", "—"],
+      ];
+
   return (
     <div className="font-['DM_Sans',sans-serif] text-[13px] text-[#23342c]">
       <link
@@ -117,19 +154,14 @@ export default function ReportsPage() {
 
       <div className="mb-4 grid grid-cols-1 gap-4 lg:grid-cols-[1.2fr_0.8fr]">
         <RevenueChart />
-        <RevenueBreakdown />
+        <RevenueBreakdown from={FROM} to={TO} />
       </div>
 
       <div className="mb-5 grid grid-cols-1 gap-4 md:grid-cols-2">
         <MetricListPanel
           title="Clinical activity"
-          description="Patient care this month"
-          metrics={[
-            ["New patients", "148"],
-            ["Comprehensive exams", "212"],
-            ["Refraction visits", "174"],
-            ["Follow-up visits", "96"],
-          ]}
+          description="Patient care over the last 30 days"
+          metrics={clinicalMetrics}
         />
         <MetricListPanel
           title="Inventory health"
