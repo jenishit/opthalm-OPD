@@ -1,22 +1,27 @@
 "use client";
 
 import React, { useState } from "react";
-import { useFormContext } from "react-hook-form";
-import type { IntakeExamFormData } from "@/schemas/shared-schema";
+import type { Condition, DiagnosisCatalog, Medicine } from "@/schemas/catalog-schema";
 import { Search, Plus, Check, Loader2 } from "lucide-react";
 import { getConditions, createCondition, getDiagnoses, createDiagnosis, getMedicines, createMedicine } from "@/services/catalog-services";
+
+export type CatalogItem = Condition | DiagnosisCatalog | Medicine;
+
+export const isMedicine = (i: CatalogItem): i is Medicine => "generic_name" in i;
+export const isDiagnosis = (i: CatalogItem): i is DiagnosisCatalog => "icd10_code" in i;
+const itemName = (i: CatalogItem) => (isMedicine(i) ? `${i.generic_name} (${i.brand}) ${i.strength}` : i.name);
 
 interface CatalogComboboxProps {
   catalogType: "conditions" | "diagnoses" | "medicines";
   placeholder: string;
-  onSelect: (id: string, name: string, fullItem: any) => void;
+  onSelect: (id: string, name: string, fullItem: CatalogItem) => void;
 }
 
 // A simplified custom combobox since shadcn command/popover isn't fully installed yet
 export function CatalogCombobox({ catalogType, placeholder, onSelect }: CatalogComboboxProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState("");
-  const [items, setItems] = useState<any[]>([]);
+  const [items, setItems] = useState<CatalogItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
 
@@ -24,32 +29,37 @@ export function CatalogCombobox({ catalogType, placeholder, onSelect }: CatalogC
   const [createName, setCreateName] = useState("");
   const [createCode, setCreateCode] = useState(""); // for ICD-10
 
-  const searchCatalog = async (q: string) => {
-    setLoading(true);
-    try {
-      if (catalogType === "conditions") setItems(await getConditions(q));
-      else if (catalogType === "diagnoses") setItems(await getDiagnoses(q));
-      else if (catalogType === "medicines") setItems(await getMedicines(q));
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Run search on open and when typing
+  // Run search on open and when typing (debounced).
   React.useEffect(() => {
-    if (isOpen) {
-      const timer = setTimeout(() => searchCatalog(search), 300);
-      return () => clearTimeout(timer);
-    }
+    if (!isOpen) return;
+    let active = true;
+    const timer = setTimeout(async () => {
+      setLoading(true);
+      try {
+        const found =
+          catalogType === "conditions"
+            ? await getConditions(search)
+            : catalogType === "diagnoses"
+              ? await getDiagnoses(search)
+              : await getMedicines(search);
+        if (active) setItems(found);
+      } catch (e) {
+        console.error(e);
+      } finally {
+        if (active) setLoading(false);
+      }
+    }, 300);
+    return () => {
+      active = false;
+      clearTimeout(timer);
+    };
   }, [isOpen, search, catalogType]);
 
   const handleCreate = async () => {
     if (!createName) return;
     setLoading(true);
     try {
-      let newItem;
+      let newItem: CatalogItem | undefined;
       if (catalogType === "conditions") {
         newItem = await createCondition(createName);
       } else if (catalogType === "diagnoses") {
@@ -59,7 +69,7 @@ export function CatalogCombobox({ catalogType, placeholder, onSelect }: CatalogC
       }
 
       if (newItem) {
-        onSelect(newItem.id, catalogType === "medicines" ? (newItem as any).generic_name : (newItem as any).name, newItem);
+        onSelect(newItem.id, isMedicine(newItem) ? newItem.generic_name : newItem.name, newItem);
         setIsOpen(false);
         setIsCreating(false);
         setSearch("");
@@ -111,9 +121,7 @@ export function CatalogCombobox({ catalogType, placeholder, onSelect }: CatalogC
             )}
 
             {!loading && !isCreating && items.map((item) => {
-              const name = catalogType === "medicines"
-                ? `${item.generic_name} (${item.brand}) ${item.strength}`
-                : item.name;
+              const name = itemName(item);
 
               return (
                 <div
@@ -126,7 +134,7 @@ export function CatalogCombobox({ catalogType, placeholder, onSelect }: CatalogC
                   }}
                 >
                   <span>{name}</span>
-                  {catalogType === "diagnoses" && <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">{item.icd10_code}</span>}
+                  {isDiagnosis(item) && <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">{item.icd10_code}</span>}
                 </div>
               );
             })}

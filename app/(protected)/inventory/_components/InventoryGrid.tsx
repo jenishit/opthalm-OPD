@@ -3,16 +3,16 @@
 import { CalendarClock, Loader2, PackagePlus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
-  CATEGORY_ICON,
   CATEGORY_LABEL,
   STOCK_STATUS_LABEL,
   STOCK_STATUS_PILL,
-  daysUntilExpiry,
   expiryLabel,
   expiryTone,
   stockStatus,
 } from "@/lib/inventory-category";
 import type { InventoryCategory, InventoryItem } from "@/types/inventory-types";
+import type { ExpiryEntry } from "./expiry-data";
+import { ProductThumb } from "./ProductThumb";
 
 const EXPIRY_PILL: Record<"bad" | "warn" | "mute", string> = {
   bad: "pill-bad",
@@ -34,13 +34,14 @@ export function InventoryGrid({
   loading,
   search,
   onAddStock,
-  onSetExpiry,
+  expiry,
 }: {
   items: InventoryItem[];
   loading: boolean;
   search: string;
   onAddStock: (item: InventoryItem) => void;
-  onSetExpiry: (item: InventoryItem) => void;
+  /** Soonest lot expiry per item id. */
+  expiry: Map<string, ExpiryEntry>;
 }) {
   if (loading) {
     return (
@@ -63,10 +64,7 @@ export function InventoryGrid({
     <div className="grid grid-cols-2 gap-3 md:grid-cols-3 2xl:grid-cols-4">
       {items.map((item) => {
         const status = stockStatus(item);
-        const Icon =
-          CATEGORY_ICON[item.category as InventoryCategory] ??
-          CATEGORY_ICON.other;
-        const days = daysUntilExpiry(item);
+        const days = expiry.get(item.id)?.days ?? null;
         const tone = expiryTone(days);
         const ratio = Math.min(
           100,
@@ -79,9 +77,7 @@ export function InventoryGrid({
             className="flex min-w-0 flex-col gap-2.5 rounded-xl border border-line bg-card p-3.5 shadow-sm hover:border-sage"
           >
             <div className="flex items-start justify-between gap-2">
-              <span className="grid size-10 shrink-0 place-items-center rounded-md bg-sage-soft text-sage">
-                <Icon size={18} />
-              </span>
+              <ProductThumb item={item} />
               <span className="pill pill-mute">
                 {CATEGORY_LABEL[item.category as InventoryCategory] ??
                   item.category}
@@ -120,8 +116,8 @@ export function InventoryGrid({
               <span className={cn("pill", STOCK_STATUS_PILL[status])}>
                 {STOCK_STATUS_LABEL[status]}
               </span>
-              {days != null && tone && (
-                <span className={cn("pill", EXPIRY_PILL[tone])}>
+              {days != null && (
+                <span className={cn("pill", EXPIRY_PILL[tone ?? "mute"])}>
                   <CalendarClock size={11} />
                   {expiryLabel(days)}
                 </span>
@@ -136,15 +132,6 @@ export function InventoryGrid({
               >
                 <PackagePlus size={14} />
                 Add stock
-              </button>
-              <button
-                type="button"
-                aria-label="Set expiry date"
-                title="Set expiry date"
-                onClick={() => onSetExpiry(item)}
-                className="inline-flex size-8 shrink-0 items-center justify-center rounded-md border border-line text-muted-foreground hover:border-sage hover:text-foreground"
-              >
-                <CalendarClock size={15} />
               </button>
             </div>
           </div>

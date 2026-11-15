@@ -59,7 +59,7 @@ export function NotificationsTab() {
 
   if (loading || !notifications) {
     return (
-      <div className="flex items-center justify-center gap-2 py-16 text-[11px] text-[#92988c]">
+      <div className="flex items-center justify-center gap-2 py-16 text-[11px] text-mute">
         <Loader2 size={15} className="animate-spin" /> Loading notification preferences…
       </div>
     );
@@ -69,18 +69,18 @@ export function NotificationsTab() {
     <>
       <div className="flex items-center justify-between gap-3 pb-[14px]">
         <div>
-          <h3 className="m-0 font-['Playfair_Display',serif] text-base font-semibold text-[#2a3b30]">Notifications</h3>
-          <p className="m-0 mt-[5px] text-[10px] text-[#96998f]">Choose what your team gets notified about, and how.</p>
+          <h3 className="m-0 font-display text-base font-semibold text-ink">Notifications</h3>
+          <p className="m-0 mt-[5px] text-[10px] text-mute">Choose what your team gets notified about, and how.</p>
         </div>
-        <span className="grid size-[34px] shrink-0 place-items-center rounded-[9px] bg-[#e8f0f2] text-[#557d8b]">
+        <span className="grid size-[34px] shrink-0 place-items-center rounded-[9px] bg-t-new-soft text-t-new">
           <Bell size={18} />
         </span>
       </div>
       <div className="flex flex-col gap-4">
         <div className="flex items-center justify-between gap-[15px] py-1">
           <div>
-            <b className="text-[11px] text-[#23342c]">Email notifications</b>
-            <p className="mt-[5px] text-[10px] text-[#92988c]">Daily summary and important account updates by email.</p>
+            <b className="text-[11px] text-ink">Email notifications</b>
+            <p className="mt-[5px] text-[10px] text-mute">Daily summary and important account updates by email.</p>
           </div>
           <Toggle
             on={notifications.email_notifications}
@@ -90,8 +90,8 @@ export function NotificationsTab() {
         </div>
         <div className="flex items-center justify-between gap-[15px] py-1">
           <div>
-            <b className="text-[11px] text-[#23342c]">SMS appointment reminders</b>
-            <p className="mt-[5px] text-[10px] text-[#92988c]">Text patients 24 hours before their scheduled visit.</p>
+            <b className="text-[11px] text-ink">SMS appointment reminders</b>
+            <p className="mt-[5px] text-[10px] text-mute">Text patients 24 hours before their scheduled visit.</p>
           </div>
           <Toggle
             on={notifications.sms_appointment_reminders}
@@ -101,15 +101,15 @@ export function NotificationsTab() {
         </div>
         <div className="flex items-center justify-between gap-[15px] py-1">
           <div>
-            <b className="text-[11px] text-[#23342c]">Low-stock alerts</b>
-            <p className="mt-[5px] text-[10px] text-[#92988c]">Alert the optical manager when a product nears its reorder point.</p>
+            <b className="text-[11px] text-ink">Low-stock alerts</b>
+            <p className="mt-[5px] text-[10px] text-mute">Alert the optical manager when a product nears its reorder point.</p>
           </div>
           <Toggle on={lowStock} onToggle={setLowStock} label="Toggle low-stock alerts" />
         </div>
         <div className="flex items-center justify-between gap-[15px] py-1">
           <div>
-            <b className="text-[11px] text-[#23342c]">New order notifications</b>
-            <p className="mt-[5px] text-[10px] text-[#92988c]">Notify staff when a customer or supplier order is created.</p>
+            <b className="text-[11px] text-ink">New order notifications</b>
+            <p className="mt-[5px] text-[10px] text-mute">Notify staff when a customer or supplier order is created.</p>
           </div>
           <Toggle
             on={notifications.new_order_notifications}
@@ -119,8 +119,8 @@ export function NotificationsTab() {
         </div>
         <div className="flex items-center justify-between gap-[15px] py-1">
           <div>
-            <b className="text-[11px] text-[#23342c]">Weekly performance digest</b>
-            <p className="mt-[5px] text-[10px] text-[#92988c]">A Monday morning summary of sales and clinical activity.</p>
+            <b className="text-[11px] text-ink">Weekly performance digest</b>
+            <p className="mt-[5px] text-[10px] text-mute">A Monday morning summary of sales and clinical activity.</p>
           </div>
           <Toggle
             on={notifications.weekly_performance_digest}

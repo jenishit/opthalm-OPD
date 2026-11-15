@@ -37,13 +37,15 @@ export async function sendOtp(
     throw new Error("Phone number not registered. Please visit the clinic to register.");
   }
 
-  const code = String(Math.floor(100000 + Math.random() * 900000));
+  const code = String(100000 + (crypto.getRandomValues(new Uint32Array(1))[0] % 900000));
   const expiry = new Date(Date.now() + 5 * 60 * 1000);
   mockOtpStore[data.phone] = { code, expiry, verified: false };
 
-  console.log(`[MOCK SMS] OTP for ${data.phone} is ${code}`);
+  const isProd = process.env.NODE_ENV === "production";
+  if (!isProd) console.log(`[MOCK SMS] OTP for ${data.phone} is ${code}`);
 
-  return { success: true, message: "OTP sent successfully", code };
+  // The code is only echoed back in development; a real backend never returns it.
+  return { success: true, message: "OTP sent successfully", code: isProd ? "" : code };
 }
 
 export async function verifyOtp(

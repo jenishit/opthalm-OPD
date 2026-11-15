@@ -5,9 +5,14 @@ import { getPatientHistories } from "@/services/history-services";
 import { getConditions } from "@/services/catalog-services";
 import type { PatientHistory } from "@/schemas/history-schema";
 import type { Condition } from "@/schemas/catalog-schema";
+import type { Visit } from "@/schemas/visit-schema";
 import { Clock, Glasses, Pill, Stethoscope, FileText } from "lucide-react";
+import { VisitClinicalCard } from "./VisitClinicalCard";
 
-export function HistoryTimeline({ patientId }: { patientId: string }) {
+const FIRST_PAGE = 5;
+
+export function HistoryTimeline({ patientId, visits }: { patientId: string; visits: Visit[] }) {
+  const [showAll, setShowAll] = useState(false);
   const [histories, setHistories] = useState<PatientHistory[]>([]);
   const [allConditions, setAllConditions] = useState<Condition[]>([]);
   const [loading, setLoading] = useState(true);
@@ -36,12 +41,16 @@ export function HistoryTimeline({ patientId }: { patientId: string }) {
     return <div className="text-center text-sm text-muted-foreground py-4">Loading history...</div>;
   }
 
-  if (histories.length === 0) {
+  // Every non-cancelled visit gets a card; each one says plainly if no examination was recorded.
+  const seen = visits.filter((v) => v.status !== "cancelled");
+  const shown = showAll ? seen : seen.slice(0, FIRST_PAGE);
+
+  if (histories.length === 0 && seen.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-10 text-center text-sm text-muted-foreground">
         <FileText className="mb-3" aria-hidden />
         <p>No clinical history recorded yet.</p>
-        <p className="text-xs">History is created automatically during visits.</p>
+        <p className="text-xs">Examinations appear here once a visit is booked and examined.</p>
       </div>
     );
   }
@@ -52,9 +61,19 @@ export function HistoryTimeline({ patientId }: { patientId: string }) {
 
   return (
     <div className="relative border-l-2 border-border ml-3 md:ml-4 space-y-8 pb-4">
+      {shown.map((v, i) => (
+        <VisitClinicalCard key={v.id} visit={v} patientId={patientId} latest={i === 0} />
+      ))}
+      {seen.length > FIRST_PAGE && (
+        <div className="pl-6 md:pl-8">
+          <button type="button" onClick={() => setShowAll((x) => !x)} className="text-sm font-semibold text-primary hover:underline">
+            {showAll ? "Show fewer visits" : `Show ${seen.length - FIRST_PAGE} older visits`}
+          </button>
+        </div>
+      )}
       {histories.map((history, idx) => {
         const date = new Date(history.created_at!);
-        const isLatest = idx === 0;
+        const isLatest = seen.length === 0 && idx === 0;
 
         return (
           <div key={history.id} className="relative pl-6 md:pl-8">

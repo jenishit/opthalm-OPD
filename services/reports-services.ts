@@ -82,10 +82,13 @@ export function getVisitsSummary(
 }
 
 /** GET /reports/sales/by-category?from=YYYY-MM-DD&to=YYYY-MM-DD&format=csv */
-export function getSalesByCategory(from: string, to: string, format?: "csv"): Promise<SalesByCategory[]> {
+export async function getSalesByCategory(from: string, to: string): Promise<SalesByCategory[]> {
   const params = new URLSearchParams({ from, to });
-  if (format) params.set("format", format);
-  return apiFetch<SalesByCategory[]>(`/reports/sales/by-category?${params.toString()}`);
+  // The backend answers { period, categories: [{ category, amount }] } — not a bare array.
+  const res = await apiFetch<{ period?: string; categories?: Array<{ category: string; amount: number }> } | null>(
+    `/reports/sales/by-category?${params.toString()}`,
+  );
+  return (res?.categories ?? []).map((c) => ({ category: c.category as SalesByCategory["category"], item_count: 0, total_sales: Number(c.amount) || 0 }));
 }
 
 /** GET /reports/clinical-activity?from=YYYY-MM-DD&to=YYYY-MM-DD&format=csv */

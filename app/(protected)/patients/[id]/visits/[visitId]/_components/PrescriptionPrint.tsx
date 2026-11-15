@@ -1,19 +1,23 @@
 "use client";
 
+import { formatAgeShort } from "@/lib/age";
 import React, { forwardRef } from "react";
 import type { Prescription } from "@/schemas/prescription-schema";
 import type { FullVisitData } from "@/services/visits-services";
 import type { Patient } from "@/schemas/patient-schema";
 import { Activity } from "lucide-react";
+import type { SellerInfo } from "@/lib/pos/seller";
 
 interface PrescriptionPrintProps {
   prescription: Prescription;
   visitData: FullVisitData;
   patient: Patient;
+  /** Real clinic details for the letterhead (null while loading / not available). */
+  clinic?: SellerInfo | null;
 }
 
 export const PrescriptionPrint = forwardRef<HTMLDivElement, PrescriptionPrintProps>(
-  ({ prescription, visitData, patient }, ref) => {
+  ({ prescription, visitData, patient, clinic }, ref) => {
 
     // Helper to format date
     const formatDate = (isoString: string) => {
@@ -36,14 +40,14 @@ export const PrescriptionPrint = forwardRef<HTMLDivElement, PrescriptionPrintPro
           <div className="flex items-center gap-3">
             <Activity className="h-10 w-10 text-black" />
             <div>
-              <h1 className="text-2xl font-bold text-black tracking-tight">EyeClinic Center</h1>
-              <p className="text-sm text-neutral-700">Comprehensive Eye Care & Surgery</p>
+              <h1 className="text-2xl font-bold text-black tracking-tight">{clinic?.name ?? "Eye clinic"}</h1>
+              {clinic?.tagline && <p className="text-sm text-neutral-700">{clinic.tagline}</p>}
             </div>
           </div>
           <div className="text-right text-sm text-neutral-700">
-            <p>123 Health Avenue, Medical District</p>
-            <p>Kathmandu, Nepal 44600</p>
-            <p>Tel: +977-1-4000000 | Web: eyeclinic.com</p>
+            {clinic?.address && <p>{clinic.address}</p>}
+            {(clinic?.phone || clinic?.email) && <p>{[clinic.phone && `Tel: ${clinic.phone}`, clinic.email].filter(Boolean).join(" | ")}</p>}
+            {clinic?.registrationNo && <p>Reg. No: {clinic.registrationNo}</p>}
           </div>
         </div>
 
@@ -55,7 +59,7 @@ export const PrescriptionPrint = forwardRef<HTMLDivElement, PrescriptionPrintPro
               <span className="font-bold">{patient.first_name} {patient.last_name}</span>
 
               <span className="text-neutral-700 font-medium">Age / Sex:</span>
-              <span>{patient.age} Y / {patient.sex}</span>
+              <span>{formatAgeShort(patient.date_of_birth, patient.age)} / {patient.sex}</span>
 
               <span className="text-neutral-700 font-medium">Patient ID:</span>
               <span className="font-mono text-xs">{patient.id}</span>
@@ -64,7 +68,7 @@ export const PrescriptionPrint = forwardRef<HTMLDivElement, PrescriptionPrintPro
           <div className="text-right">
             <div className="mb-1"><span className="text-neutral-700 mr-2">Rx No:</span><span className="font-mono font-bold text-black">{prescription.prescription_number}</span></div>
             <div className="mb-1"><span className="text-neutral-700 mr-2">Date:</span><span>{formatDate(prescription.issued_at)}</span></div>
-            <div><span className="text-neutral-700 mr-2">Doctor:</span><span className="font-bold">Dr. {prescription.signed_by}</span></div>
+            <div><span className="text-neutral-700 mr-2">Doctor:</span><span className="font-bold">Dr. {prescription.signed_by.replace(/^Dr\.?\s*/i, "")}</span></div>
           </div>
         </div>
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2, ArrowLeft } from "lucide-react";
 import Link from "next/link";
@@ -14,20 +14,20 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 
 export default function PortalVerifyPage() {
   const router = useRouter();
-  const [phone, setPhone] = useState<string | null>(null);
+  // The phone entered on the previous step. sessionStorage is client-only, so the
+  // server snapshot is null (and the page renders nothing until hydrated).
+  const phone = useSyncExternalStore(
+    () => () => {},
+    () => sessionStorage.getItem("verify_phone"),
+    () => null,
+  );
   const [otp, setOtp] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const loginPortalPatient = useAuthStore((state) => state.loginPortalPatient);
 
   useEffect(() => {
-    // In a real app we might use cookies or a robust session solution
-    const storedPhone = sessionStorage.getItem("verify_phone");
-    if (!storedPhone) {
-      router.replace("/portal/login");
-    } else {
-      setPhone(storedPhone);
-    }
-  }, [router]);
+    if (!phone) router.replace("/portal/login");
+  }, [phone, router]);
 
   const handleVerify = async () => {
     if (otp.length !== 6) {
@@ -43,8 +43,8 @@ export default function PortalVerifyPage() {
       loginPortalPatient(result.patient, "otp", result.sessionToken);
       toast.success("Successfully logged in");
       router.push("/portal");
-    } catch (error: any) {
-      toast.error(error.message || "Invalid OTP code");
+    } catch (error) {
+      toast.error(error instanceof Error && error.message ? error.message : "Invalid OTP code");
       setOtp("");
     } finally {
       setIsLoading(false);

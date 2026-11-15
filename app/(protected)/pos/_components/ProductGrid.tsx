@@ -16,7 +16,7 @@ export function ProductGrid() {
   const [category, setCategory] = useState<InventoryCategory | "all">("all");
   const [scanOpen, setScanOpen] = useState(false);
 
-  const { items, loading, usingMock } = useInventoryItems(search);
+  const { items, loading, fromCache, cachedAt } = useInventoryItems(search);
   const addItem = usePosStore((s) => s.addItem);
   const cart = usePosStore((s) => s.cart);
 
@@ -75,9 +75,9 @@ export function ProductGrid() {
         ))}
       </div>
 
-      {usingMock && (
-        <div className="rounded-md bg-muted/60 px-3 py-2 text-xs text-muted-foreground">
-          Showing sample products — no inventory has been added yet.
+      {fromCache && cachedAt && (
+        <div role="status" className="rounded-md bg-warn-soft px-3 py-2 text-xs text-warn-ink">
+          Offline catalog — prices and stock as of {new Date(cachedAt).toLocaleString()}. The server re-checks prices when the sale syncs.
         </div>
       )}
 

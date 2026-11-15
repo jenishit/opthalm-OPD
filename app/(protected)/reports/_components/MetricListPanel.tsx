@@ -8,16 +8,16 @@ export function MetricListPanel({
   metrics: [string, string][];
 }) {
   return (
-    <div className="rounded-[11px] border border-[#e9e6dc] bg-[#fffefa] shadow-[0_5px_20px_rgba(42,52,41,0.035),0_1px_2px_rgba(42,52,41,0.04)]">
+    <div className="rounded-[11px] border border-line bg-card shadow-sm">
       <div className="px-5 pb-[14px] pt-[19px]">
-        <h3 className="m-0 font-['Playfair_Display',serif] text-base font-semibold text-[#2a3b30]">{title}</h3>
-        <p className="m-0 mt-[5px] text-[10px] text-[#96998f]">{description}</p>
+        <h3 className="m-0 font-display text-base font-semibold text-ink">{title}</h3>
+        <p className="m-0 mt-[5px] text-[10px] text-mute">{description}</p>
       </div>
       <div className="px-5 pb-[15px]">
         {metrics.map(([label, value]) => (
-          <div key={label} className="flex justify-between border-t border-[#efede6] py-3 text-[10px] text-[#858d81]">
+          <div key={label} className="flex justify-between border-t border-line py-3 text-[10px] text-mute">
             <span>{label}</span>
-            <b className="text-[11px] text-[#3f5443]">{value}</b>
+            <b className="text-[11px] text-ink">{value}</b>
           </div>
         ))}
       </div>

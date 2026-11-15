@@ -4,15 +4,17 @@ import type {
   Invoice,
   InvoiceResponse,
   RecordPaymentRequest,
+  RefundRequest,
   Payment,
   UpdateInvoiceStatusRequest,
   WhatsAppLink,
 } from "@/types/billing-types";
 
 /** POST /billing/invoice */
-export function createInvoice(body: CreateInvoiceRequest): Promise<Invoice> {
+export function createInvoice(body: CreateInvoiceRequest, idempotencyKey?: string): Promise<Invoice> {
   return apiFetch<Invoice>("/billing/invoice", {
     method: "POST",
+    headers: idempotencyKey ? { "Idempotency-Key": idempotencyKey } : undefined,
     body: JSON.stringify(body),
   });
 }
@@ -48,10 +50,12 @@ export function updateInvoiceStatus(
 /** POST /billing/invoice/:id/payments */
 export function recordPayment(
   id: string,
-  body: RecordPaymentRequest
+  body: RecordPaymentRequest,
+  idempotencyKey?: string
 ): Promise<Payment> {
   return apiFetch<Payment>(`/billing/invoice/${id}/payments`, {
     method: "POST",
+    headers: idempotencyKey ? { "Idempotency-Key": idempotencyKey } : undefined,
     body: JSON.stringify(body),
   });
 }
@@ -76,4 +80,13 @@ export async function downloadInvoiceQr(id: string): Promise<Blob> {
 /** GET /billing/invoice/:id/whatsapp-link */
 export function getInvoiceWhatsAppLink(id: string): Promise<WhatsAppLink> {
   return apiFetch<WhatsAppLink>(`/billing/invoice/${id}/whatsapp-link`);
+}
+
+/** POST /billing/invoice/:id/refunds — admin only. Lowers the invoice's paid amount. */
+export function refundInvoice(id: string, body: RefundRequest, idempotencyKey?: string): Promise<Payment> {
+  return apiFetch<Payment>(`/billing/invoice/${id}/refunds`, {
+    method: "POST",
+    headers: idempotencyKey ? { "Idempotency-Key": idempotencyKey } : undefined,
+    body: JSON.stringify(body),
+  });
 }

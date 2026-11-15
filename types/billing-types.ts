@@ -16,7 +16,8 @@ export interface CreateInvoiceItemRequest {
 }
 
 export interface CreateInvoiceRequest {
-  patient_id: string;
+  /** Omitted for a walk-in sale. */
+  patient_id?: string;
   visit_id?: string;
   discount_amount?: number;
   tax_amount?: number;
@@ -65,6 +66,12 @@ export interface RecordPaymentRequest {
   amount: number; // > 0
   method: PaymentMethod;
   reference_no?: string;
+}
+
+export interface RefundRequest {
+  amount: number; // > 0, at most what is currently paid
+  method: PaymentMethod;
+  notes?: string;
 }
 
 export interface Payment {

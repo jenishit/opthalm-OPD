@@ -9,10 +9,10 @@ import { ApiError } from "@/services/http";
 import type { ClinicSubscription } from "@/types/clinic-types";
 
 const STATUS_STYLE: Record<string, string> = {
-  active: "bg-[#e9f0e8] text-[#214c3a]",
-  trialing: "bg-[#e8f0f2] text-[#557d8b]",
-  past_due: "bg-[#f7efdf] text-[#a47a35]",
-  cancelled: "bg-[#f1e1dd] text-[#9c625b]",
+  active: "bg-sage-soft text-sage",
+  trialing: "bg-t-new-soft text-t-new",
+  past_due: "bg-warn-soft text-warn-ink",
+  cancelled: "bg-bad-soft text-bad-ink",
 };
 
 const STATUS_LABEL: Record<string, string> = {
@@ -28,16 +28,16 @@ function UsageBar({ label, used, limit }: { label: string; used: number; limit: 
   return (
     <div>
       <div className="mb-[9px] flex items-center justify-between">
-        <span className="text-[10px] text-[#7f887c]">{label}</span>
-        <b className="text-[11px] text-[#23342c]">
+        <span className="text-[10px] text-mute">{label}</span>
+        <b className="text-[11px] text-ink">
           {used.toLocaleString()}{" "}
-          <span className="font-normal text-[#92988c]">/ {unlimited ? "Unlimited" : limit.toLocaleString()}</span>
+          <span className="font-normal text-mute">/ {unlimited ? "Unlimited" : limit.toLocaleString()}</span>
         </b>
       </div>
-      <div className="h-1.5 overflow-hidden rounded-[5px] bg-[#eeece4]">
+      <div className="h-1.5 overflow-hidden rounded-[5px] bg-line">
         <span
           className="block h-full rounded-[5px]"
-          style={{ width: `${pct}%`, backgroundColor: unlimited ? "#c7cec2" : "#3c7652" }}
+          style={{ width: `${pct}%`, backgroundColor: unlimited ? "var(--c-strong)" : "var(--c-ok)" }}
         />
       </div>
     </div>
@@ -68,7 +68,7 @@ export function BillingTab() {
 
   if (loading || !subscription) {
     return (
-      <div className="flex items-center justify-center gap-2 py-16 text-[11px] text-[#92988c]">
+      <div className="flex items-center justify-center gap-2 py-16 text-[11px] text-mute">
         <Loader2 size={15} className="animate-spin" /> Loading billing details…
       </div>
     );
@@ -85,17 +85,17 @@ export function BillingTab() {
     <>
       <div className="flex items-center justify-between gap-3 pb-[14px]">
         <div>
-          <h3 className="m-0 font-['Playfair_Display',serif] text-base font-semibold text-[#2a3b30]">Billing & subscription</h3>
-          <p className="m-0 mt-[5px] text-[10px] text-[#96998f]">
+          <h3 className="m-0 font-display text-base font-semibold text-ink">Billing & subscription</h3>
+          <p className="m-0 mt-[5px] text-[10px] text-mute">
             Your ClearView plan, usage, and payment details.
           </p>
         </div>
-        <span className="grid size-[34px] shrink-0 place-items-center rounded-[9px] bg-[#e9f0e8] text-[#214c3a]">
+        <span className="grid size-[34px] shrink-0 place-items-center rounded-[9px] bg-sage-soft text-sage">
           <Wallet size={18} />
         </span>
       </div>
 
-      <div className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-[9px] border border-[#e9e6dc] bg-[#fbfaf6] p-[15px]">
+      <div className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-[9px] border border-line bg-app p-[15px]">
         <div>
           <span
             className={
@@ -105,21 +105,21 @@ export function BillingTab() {
           >
             {STATUS_LABEL[statusKey] ?? subscription.status}
           </span>
-          <div className="mt-2 font-['Manrope',sans-serif] text-[20px] font-semibold text-[#23342c]">
+          <div className="mt-2 font-sans text-[20px] font-semibold text-ink">
             {subscription.plan_name ?? "No plan assigned"}
           </div>
-          <p className="mt-1 text-[10px] text-[#92988c]">Current period ends {periodEnd}</p>
+          <p className="mt-1 text-[10px] text-mute">Current period ends {periodEnd}</p>
         </div>
         <Button
           onClick={() => toast.info("Contact your account manager to change plans")}
-          className="min-h-9 rounded-[7px] border border-[#214c3a] bg-[#214c3a] px-3.5 text-[11px] font-semibold text-white hover:border-[#173d2c] hover:bg-[#173d2c]"
+          className="min-h-9 rounded-[7px] border border-sage bg-sage px-3.5 text-[11px] font-semibold text-primary-foreground hover:border-sagehover hover:bg-sagehover"
         >
           Change plan
         </Button>
       </div>
 
       <div className="mb-5 flex flex-col gap-4">
-        <span className="text-[10px] font-semibold text-[#687468]">Plan usage</span>
+        <span className="text-[10px] font-semibold text-mute">Plan usage</span>
         <UsageBar label="Staff seats" used={subscription.seats_used} limit={subscription.seats_limit} />
         <UsageBar
           label="Patient records"
@@ -129,16 +129,16 @@ export function BillingTab() {
         <UsageBar label="Locations" used={subscription.locations_used} limit={subscription.locations_limit} />
       </div>
 
-      <div className="my-1 h-px bg-[#eeece4]" />
+      <div className="my-1 h-px bg-line" />
 
       <div className="flex items-center justify-between gap-[15px] py-3">
         <div className="flex items-center gap-2.5">
-          <span className="grid size-[34px] shrink-0 place-items-center rounded-[9px] bg-[#e8f0f2] text-[#557d8b]">
+          <span className="grid size-[34px] shrink-0 place-items-center rounded-[9px] bg-t-new-soft text-t-new">
             <CreditCard size={16} />
           </span>
           <div>
-            <b className="text-[11px] text-[#23342c]">{subscription.payment_method_label ?? "No payment method on file"}</b>
-            <p className="mt-[5px] text-[10px] text-[#92988c]">
+            <b className="text-[11px] text-ink">{subscription.payment_method_label ?? "No payment method on file"}</b>
+            <p className="mt-[5px] text-[10px] text-mute">
               {subscription.payment_method_label
                 ? "Used for your OpthalmOK subscription"
                 : "Add one so your subscription keeps renewing without interruption"}
@@ -147,17 +147,17 @@ export function BillingTab() {
         </div>
         <Button
           onClick={() => toast.info("Payment method management isn't wired up yet")}
-          className="min-h-[30px] rounded-[7px] border border-[#e2dfd5] bg-[#fffefa] px-2.5 text-[11px] font-semibold text-[#48564a] hover:border-[#cbd5c8] hover:bg-[#f3f4ec]"
+          className="min-h-[30px] rounded-[7px] border border-line bg-card px-2.5 text-[11px] font-semibold text-ink hover:border-strong hover:bg-app"
         >
           {subscription.payment_method_label ? "Update" : "Add"}
         </Button>
       </div>
 
-      <div className="mt-1.5 flex flex-wrap items-center justify-between gap-2 border-t border-[#eeece4] pt-[17px]">
-        <span className="text-[9px] text-[#a0a399]">Questions about your plan? Contact billing support.</span>
+      <div className="mt-1.5 flex flex-wrap items-center justify-between gap-2 border-t border-line pt-[17px]">
+        <span className="text-[9px] text-mute">Questions about your plan? Contact billing support.</span>
         <Button
           onClick={() => toast.info("Contact support to cancel your subscription")}
-          className="min-h-9 rounded-[7px] border border-[#f0d9d3] bg-[#fffefa] px-3.5 text-[11px] font-semibold text-[#a66b62] hover:border-[#e3b8ae] hover:bg-[#f5e7e3]"
+          className="min-h-9 rounded-[7px] border border-bad-soft bg-card px-3.5 text-[11px] font-semibold text-bad-ink hover:border-bad hover:bg-bad-soft"
         >
           Cancel subscription
         </Button>

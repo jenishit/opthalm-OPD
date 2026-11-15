@@ -1,96 +1,71 @@
 "use client";
 
-import { Plus, Truck, Activity, Clock3, Wallet, ArrowUpRight } from "lucide-react";
+import { useMemo, useState } from "react";
+import { Plus, Truck, Receipt, Wallet, Building2 } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
+import { OpsStat } from "@/components/ui/OpsStat";
+import { formatCurrency } from "@/lib/utils";
+import { useAsync } from "@/lib/hooks/use-async";
+import { listLowStock, listPurchases } from "@/services/inventory-services";
+import { fetchAll } from "@/lib/pagination";
 import { PurchasesTable } from "./_components/PurchasesTable";
 import { SupplierLowerGrid } from "./_components/SupplierLowerGrid";
+import { RecordPurchaseDialog } from "./_components/RecordPurchaseDialog";
 
-function StatCard({
-  label,
-  value,
-  change,
-  foot,
-  icon: Icon,
-  bg,
-  text,
-}: {
-  label: string;
-  value: string;
-  change: string;
-  foot: string;
-  icon: React.ElementType;
-  bg: string;
-  text: string;
-}) {
+export default function SupplierPurchasesPage() {
+  const purchases = useAsync(async () => (await fetchAll(listPurchases)).items);
+  const lowStock = useAsync(listLowStock);
+  const [open, setOpen] = useState(false);
+
+  const list = useMemo(() => purchases.data ?? [], [purchases.data]);
+  const stats = useMemo(() => {
+    const now = new Date();
+    let month = 0;
+    let due = 0;
+    const dueVendors = new Set<string>();
+    for (const p of list) {
+      const d = new Date(p.purchase_date);
+      if (d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth()) month += p.total_amount;
+      if (p.due_amount > 0) {
+        due += p.due_amount;
+        dueVendors.add(p.vendor_id);
+      }
+    }
+    return { month, due, dueVendors: dueVendors.size };
+  }, [list]);
+  const l = purchases.loading;
+
   return (
-    <div className="min-w-0 rounded-[11px] border border-[#e9e6dc] bg-[#fffefa] p-[17px_18px_15px] shadow-[0_5px_20px_rgba(42,52,41,0.035),0_1px_2px_rgba(42,52,41,0.04)]">
-      <div className="flex items-center justify-between gap-2.5 text-[11px] text-[#727a70]">
-        <span>{label}</span>
-        <span className={"grid size-[34px] shrink-0 place-items-center rounded-[9px] " + bg + " " + text}>
-          <Icon size={16} />
-        </span>
-      </div>
-      <div className="my-3 font-['Manrope',sans-serif] text-[27px] font-semibold tracking-[-1px] text-[#293a30]">{value}</div>
-      <div className="flex flex-wrap items-center gap-[7px] text-[10px] text-[#9a9e95]">
-        <span className="inline-flex items-center gap-px font-bold text-[#3b805e]">
-          <ArrowUpRight size={13} />
-          {change}
-        </span>
-        <span>{foot}</span>
-      </div>
-    </div>
-  );
-}
-
-export default function SupplierOrdersPage() {
-  return (
-    <div className="font-['DM_Sans',sans-serif] text-[13px] text-[#23342c]">
-      <link
-        rel="stylesheet"
-        href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&family=Playfair+Display:wght@500;600;700&display=swap"
-      />
-
+    <div className="font-sans text-[13px] text-ink">
       <div className="mb-6 flex flex-wrap items-end justify-between gap-[18px]">
         <div>
-          <div className="mb-[7px] text-[9px] font-bold tracking-[1.5px] text-[#8d927f]">PURCHASING & LAB COORDINATION</div>
-          <h1 className="m-0 font-['Playfair_Display',serif] text-[29px] font-semibold tracking-[-0.5px] text-[#26392e]">
-            Supplier lens orders
+          <div className="mb-[7px] text-[9px] font-bold tracking-[1.5px] text-mute">PURCHASING & VENDORS</div>
+          <h1 className="m-0 font-display text-[29px] font-semibold tracking-[-0.5px] text-ink">
+            Supplier purchases
           </h1>
-          <p className="m-0 mt-[7px] text-[12px] text-[#82877e]">
-            Coordinate external optical labs, supplier lead times, incoming stock, and invoice reconciliation.
+          <p className="m-0 mt-[7px] text-[12px] text-mute">
+            Stock received from vendors, what you paid and what is still due. Recording a purchase adds the stock.
           </p>
         </div>
-        <Button className="min-h-9 gap-2 rounded-[7px] border border-[#214c3a] bg-[#214c3a] px-3.5 text-[11px] font-semibold text-white hover:border-[#173d2c] hover:bg-[#173d2c]">
+        <Button
+          onClick={() => setOpen(true)}
+          className="min-h-9 gap-2 rounded-[7px] border border-sage bg-sage px-3.5 text-[11px] font-semibold text-primary-foreground hover:border-sagehover hover:bg-sagehover"
+        >
           <Plus size={14} />
-          New supplier order
+          Record purchase
         </Button>
       </div>
 
       <div className="mb-5 grid grid-cols-2 gap-[14px] md:grid-cols-4">
-        <StatCard label="Open purchase orders" value="12" change="3 due soon" foot="next 7 days" icon={Truck} bg="bg-[#e9f0e8]" text="text-[#214c3a]" />
-        <StatCard
-          label="In transit"
-          value="04"
-          change="On schedule"
-          foot="incoming deliveries"
-          icon={Activity}
-          bg="bg-[#e8f0f2]"
-          text="text-[#557d8b]"
-        />
-        <StatCard
-          label="Awaiting confirmation"
-          value="03"
-          change="Follow up"
-          foot="supplier response"
-          icon={Clock3}
-          bg="bg-[#f7efdf]"
-          text="text-[#a47a35]"
-        />
-        <StatCard label="This month" value="$18,420" change="8.1%" foot="purchases placed" icon={Wallet} bg="bg-[#f0edf6]" text="text-[#8477a3]" />
+        <OpsStat label="Purchases" value={l ? "…" : String(list.length)} foot="recorded" icon={Truck} bg="bg-sage-soft" text="text-sage" />
+        <OpsStat label="This month" value={l ? "…" : formatCurrency(stats.month)} foot="purchased" icon={Receipt} bg="bg-t-new-soft" text="text-t-new" />
+        <OpsStat label="Outstanding dues" value={l ? "…" : formatCurrency(stats.due)} foot="owed to vendors" icon={Wallet} bg="bg-warn-soft" text="text-warn-ink" />
+        <OpsStat label="Vendors owed" value={l ? "…" : String(stats.dueVendors)} foot="with an unpaid balance" icon={Building2} bg="bg-t-surg-soft" text="text-t-surg" />
       </div>
 
-      <PurchasesTable />
-      <SupplierLowerGrid />
+      <PurchasesTable purchases={list} loading={l} error={purchases.error} onRetry={purchases.reload} />
+      <SupplierLowerGrid purchases={list} lowStockCount={lowStock.data?.length ?? null} />
+      <RecordPurchaseDialog open={open} onOpenChange={setOpen} onCreated={() => { purchases.reload(); lowStock.reload(); }} />
     </div>
   );
 }

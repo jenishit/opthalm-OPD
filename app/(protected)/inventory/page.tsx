@@ -1,6 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { usePagination } from "@/lib/hooks/use-pagination";
+import { Pager } from "@/components/ui/Pager";
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import {
   AlertCircle,
@@ -23,8 +25,10 @@ import {
 } from "./_components/InventoryTable";
 import { AddProductDialog } from "./_components/AddProductDialog";
 import { AddStockDialog } from "./_components/AddStockDialog";
-import { EditExpiryDialog } from "./_components/EditExpiryDialog";
 import { ExpiryTracker } from "./_components/ExpiryTracker";
+import { EXPIRY_WINDOW_DAYS, buildExpiryEntries, nextExpiryByItem } from "./_components/expiry-data";
+import { useAsync } from "@/lib/hooks/use-async";
+import { getExpiringLots } from "@/services/inventory-services";
 
 export default function InventoryPage() {
   const [search, setSearch] = useState("");
@@ -33,11 +37,20 @@ export default function InventoryPage() {
   const [addOpen, setAddOpen] = useState(false);
   const [scanOpen, setScanOpen] = useState(false);
   const [stockItem, setStockItem] = useState<InventoryItem | null>(null);
-  const [expiryItem, setExpiryItem] = useState<InventoryItem | null>(null);
 
-  const { items, loading, usingMock, refresh } = useInventoryItems(search);
+  const { items, loading, error, refresh: refreshItems, truncated } = useInventoryItems(search);
+  // One lot query feeds both the per-product Expiry column and the tracker below.
+  const lots = useAsync(() => getExpiringLots(EXPIRY_WINDOW_DAYS));
+  const entries = useMemo(() => buildExpiryEntries(lots.data ?? [], items), [lots.data, items]);
+  const expiry = useMemo(() => nextExpiryByItem(entries, items), [entries, items]);
+  const refresh = () => {
+    refreshItems();
+    lots.reload();
+  };
   const filtered =
     category === "all" ? items : items.filter((i) => i.category === category);
+
+  const pg = usePagination(filtered, `${category}|${search}`, 25);
 
   const activeCount = items.filter((i) => i.is_active).length;
   const inventoryValue = items.reduce(
@@ -103,22 +116,35 @@ export default function InventoryPage() {
         />
       </div>
 
+      {error && (
+        <div role="alert" className="flex items-center justify-between rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+          <span>Couldn&apos;t load inventory. Figures below may be incomplete.</span>
+          <button type="button" onClick={refresh} className="font-semibold underline">Retry</button>
+        </div>
+      )}
+
+      {truncated && (
+        <div role="status" className="rounded-md bg-warn-soft px-3 py-2 text-xs text-warn-ink">
+          Only the first 5,000 products are loaded. Use search to find the rest.
+        </div>
+      )}
+
       <InventoryTable
-        items={filtered}
+        pager={<Pager page={pg.page} pageCount={pg.pageCount} pageSize={pg.pageSize} total={pg.total} onPage={pg.setPage} onPageSize={pg.setPageSize} noun="products" />}
+        items={pg.pageItems}
         loading={loading}
-        usingMock={usingMock}
         category={category}
         onCategoryChange={setCategory}
         search={search}
         onSearchChange={setSearch}
         onAddStock={setStockItem}
-        onSetExpiry={setExpiryItem}
+        expiry={expiry}
         view={view}
         onViewChange={setView}
       />
 
       <div className="mt-4">
-        <ExpiryTracker items={items} />
+        <ExpiryTracker entries={entries} loading={lots.loading} error={lots.error} onRetry={lots.reload} />
       </div>
 
       <AddProductDialog
@@ -129,11 +155,6 @@ export default function InventoryPage() {
       <AddStockDialog
         item={stockItem}
         onOpenChange={(open) => !open && setStockItem(null)}
-        onUpdated={refresh}
-      />
-      <EditExpiryDialog
-        item={expiryItem}
-        onOpenChange={(open) => !open && setExpiryItem(null)}
         onUpdated={refresh}
       />
       <ScanBarcodeDialog

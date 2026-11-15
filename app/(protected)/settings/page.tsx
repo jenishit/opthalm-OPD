@@ -30,16 +30,12 @@ export default function SettingsPage() {
   const ActiveContent = TABS.find((t) => t.label === activeTab)!.content;
 
   return (
-    <div className="font-['DM_Sans',sans-serif] text-[13px] text-[#23342c]">
-      <link
-        rel="stylesheet"
-        href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&family=Playfair+Display:wght@500;600;700&display=swap"
-      />
+    <div className="font-sans text-[13px] text-ink">
 
       <div className="mb-6">
-        <div className="mb-[7px] text-[9px] font-bold tracking-[1.5px] text-[#8d927f]">PRACTICE CONFIGURATION</div>
-        <h1 className="m-0 font-['Playfair_Display',serif] text-[29px] font-semibold tracking-[-0.5px] text-[#26392e]">Settings</h1>
-        <p className="m-0 mt-[7px] text-[12px] text-[#82877e]">
+        <div className="mb-[7px] text-[9px] font-bold tracking-[1.5px] text-mute">PRACTICE CONFIGURATION</div>
+        <h1 className="m-0 font-display text-[29px] font-semibold tracking-[-0.5px] text-ink">Settings</h1>
+        <p className="m-0 mt-[7px] text-[12px] text-mute">
           Configure how ClearView runs clinically and at the register, manage your OpthalmOK workspace, and set your own
           personal defaults.
         </p>
@@ -47,7 +43,7 @@ export default function SettingsPage() {
 
       <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-[230px_1fr]">
         <SettingsNav tabs={TABS} activeTab={activeTab} onSelect={(label) => setActiveTab(label as (typeof TABS)[number]["label"])} />
-        <div className="rounded-[11px] border border-[#e9e6dc] bg-[#fffefa] p-[20px_22px] shadow-[0_5px_20px_rgba(42,52,41,0.035),0_1px_2px_rgba(42,52,41,0.04)]">
+        <div className="rounded-[11px] border border-line bg-card p-[20px_22px] shadow-sm">
           <ActiveContent />
         </div>
       </div>

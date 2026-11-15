@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  Glasses,
   LayoutGrid,
   List,
   Loader2,
@@ -32,13 +31,14 @@ import {
   CATEGORY_TABS,
   STOCK_STATUS_LABEL,
   STOCK_STATUS_PILL,
-  daysUntilExpiry,
   expiryLabel,
   expiryTone,
   stockStatus,
 } from "@/lib/inventory-category";
 import type { InventoryCategory, InventoryItem } from "@/types/inventory-types";
 import { InventoryGrid } from "./InventoryGrid";
+import { ProductThumb } from "./ProductThumb";
+import type { ExpiryEntry } from "./expiry-data";
 
 const EXPIRY_PILL: Record<"bad" | "warn" | "mute", string> = {
   bad: "pill-bad",
@@ -50,26 +50,28 @@ export type InventoryView = "list" | "grid";
 
 export function InventoryTable({
   items,
+  pager,
   loading,
-  usingMock,
   category,
   onCategoryChange,
   search,
   onSearchChange,
   onAddStock,
-  onSetExpiry,
+  expiry,
   view,
   onViewChange,
 }: {
   items: InventoryItem[];
+  /** Pagination footer, rendered by the page that owns the paging state. */
+  pager?: React.ReactNode;
   loading: boolean;
-  usingMock: boolean;
   category: InventoryCategory | "all";
   onCategoryChange: (category: InventoryCategory | "all") => void;
   search: string;
   onSearchChange: (search: string) => void;
   onAddStock: (item: InventoryItem) => void;
-  onSetExpiry: (item: InventoryItem) => void;
+  /** Soonest lot expiry per item id. */
+  expiry: Map<string, ExpiryEntry>;
   view: InventoryView;
   onViewChange: (view: InventoryView) => void;
 }) {
@@ -139,12 +141,6 @@ export function InventoryTable({
         </div>
       </div>
 
-      {usingMock && (
-        <div className="mx-4 mt-3 rounded-md bg-muted/60 px-3 py-2 text-xs text-muted-foreground">
-          Showing sample products — no inventory has been added yet.
-        </div>
-      )}
-
       {view === "grid" ? (
         <div className="p-4">
           <InventoryGrid
@@ -152,7 +148,7 @@ export function InventoryTable({
             loading={loading}
             search={search}
             onAddStock={onAddStock}
-            onSetExpiry={onSetExpiry}
+            expiry={expiry}
           />
         </div>
       ) : (
@@ -164,6 +160,7 @@ export function InventoryTable({
               <TableHead>Category</TableHead>
               <TableHead>Stock</TableHead>
               <TableHead>Unit price</TableHead>
+              <TableHead>Next expiry</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="w-10" />
             </TableRow>
@@ -172,7 +169,7 @@ export function InventoryTable({
             {loading ? (
               <TableRow>
                 <TableCell
-                  colSpan={7}
+                  colSpan={8}
                   className="py-10 text-center text-sm text-muted-foreground"
                 >
                   <Loader2 className="mr-2 inline size-4 animate-spin" />
@@ -182,7 +179,7 @@ export function InventoryTable({
             ) : items.length === 0 ? (
               <TableRow>
                 <TableCell
-                  colSpan={7}
+                  colSpan={8}
                   className="py-10 text-center text-sm text-muted-foreground"
                 >
                   No products found{search && ` for "${search}"`}.
@@ -191,15 +188,14 @@ export function InventoryTable({
             ) : (
               items.map((item) => {
                 const status = stockStatus(item);
-                const days = daysUntilExpiry(item);
-                const tone = expiryTone(days);
+                const lot = expiry.get(item.id);
+                const days = lot?.days ?? null;
+                const tone = expiryTone(days) ?? "mute";
                 return (
                   <TableRow key={item.id}>
                     <TableCell>
                       <div className="flex items-center gap-2.5">
-                        <span className="grid size-10 shrink-0 place-items-center rounded-md bg-sage-soft text-sage">
-                          <Glasses size={18} />
-                        </span>
+                        <ProductThumb item={item} />
                         <div className="flex flex-col gap-0.5">
                           <span className="font-medium text-foreground">
                             {item.name}
@@ -229,17 +225,27 @@ export function InventoryTable({
                     <TableCell className="font-semibold text-foreground">
                       {formatCurrency(item.selling_price)}
                     </TableCell>
+                    <TableCell className="text-sm">
+                      {lot ? (
+                        <div className="flex flex-col gap-0.5">
+                          <span className="font-medium text-foreground">{lot.expiry}</span>
+                          <span className="flex flex-wrap items-center gap-1 text-xs text-muted-foreground">
+                            <span className={cn("pill", EXPIRY_PILL[tone])}>
+                              <CalendarClock size={11} />
+                              {expiryLabel(lot.days)}
+                            </span>
+                            {lot.lotNo ? `Lot ${lot.lotNo}` : ""}
+                          </span>
+                        </div>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">{item.tracks_lots ? "No batch due soon" : "—"}</span>
+                      )}
+                    </TableCell>
                     <TableCell>
                       <div className="flex flex-wrap gap-1">
                         <span className={cn("pill", STOCK_STATUS_PILL[status])}>
                           {STOCK_STATUS_LABEL[status]}
                         </span>
-                        {days != null && tone && (
-                          <span className={cn("pill", EXPIRY_PILL[tone])}>
-                            <CalendarClock size={11} />
-                            {expiryLabel(days)}
-                          </span>
-                        )}
                       </div>
                     </TableCell>
                     <TableCell>
@@ -252,10 +258,6 @@ export function InventoryTable({
                             <PackagePlus className="size-4" />
                             Add stock
                           </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => onSetExpiry(item)}>
-                            <CalendarClock className="size-4" />
-                            Set expiry date
-                          </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </TableCell>
@@ -267,13 +269,7 @@ export function InventoryTable({
         </Table>
       )}
 
-      {items.length > 0 && (
-        <div className="flex items-center justify-between border-t border-line/70 px-4 py-2.5 text-xs text-muted-foreground">
-          <span>
-            Showing {items.length} {items.length === 1 ? "product" : "products"}
-          </span>
-        </div>
-      )}
+      {pager}
     </div>
   );
 }

@@ -9,18 +9,18 @@ import type { Staff } from "@/schemas/shared-schema";
 const backendBaseUrl = process.env.BACKEND_URL ?? "http://localhost:8082";
 
 /**
- * Map the backend's free-form role_name (e.g. "role_doctor") onto the app's
- * staff role union. Unknown roles fall back to receptionist — the least
- * privileged surface.
+ * Map the backend's role_name (e.g. "ROLE_DOCTOR") onto the app's staff role
+ * union by EXACT match. Unknown roles return null and the login is rejected —
+ * never silently downgraded/upgraded to some default role.
  */
-function toStaffRole(roleName: string): Staff["role"] {
-  const normalized = roleName.toLowerCase().replace(/^role_/, "");
-  return staffRole.find((r) => normalized.includes(r)) ?? "receptionist";
+function toStaffRole(roleName: string): Staff["role"] | null {
+  const normalized = roleName.trim().toLowerCase().replace(/^role_/, "");
+  return staffRole.find((r) => r === normalized) ?? null;
 }
 
 export const authConfig: NextAuthConfig = {
   // Required when the app runs behind a proxy or on a non-standard host.
-  trustHost: true,
+  trustHost: process.env.AUTH_TRUST_HOST === "true" || process.env.NODE_ENV !== "production",
 
   // Matches the catch-all route location (app/api/nextauth/[...nextauth]) —
   // must stay in sync with <SessionProvider basePath> in app/layout.tsx.
@@ -101,11 +101,17 @@ export const authConfig: NextAuthConfig = {
 
           const p = profile.data;
 
+          const role = toStaffRole(p.role_name);
+          if (!role) {
+            console.warn("[next-auth] unrecognised backend role, login denied", { role_name: p.role_name });
+            return null;
+          }
+
           return {
             id: tokens.user_id,
             name: `${p.first_name} ${p.last_name}`.trim(),
             email: p.email,
-            role: toStaffRole(p.role_name),
+            role,
             phone: p.phone ?? undefined,
             accessToken: tokens.access_token,
             refreshToken: tokens.refresh_token,
@@ -135,7 +141,7 @@ export const authConfig: NextAuthConfig = {
         token.staff = {
           id: user.id ?? "",
           name: user.name ?? "",
-          role: user.role ?? "receptionist",
+          role: user.role ?? "lab",
           phone: user.phone ?? undefined,
           email: user.email ?? undefined,
         };

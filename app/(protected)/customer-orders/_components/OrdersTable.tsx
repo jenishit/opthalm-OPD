@@ -1,166 +1,158 @@
 "use client";
 
-import { useState } from "react";
+import { usePagination } from "@/lib/hooks/use-pagination";
+import { Pager } from "@/components/ui/Pager";
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import { Search, Filter, ChevronLeft, ChevronRight } from "lucide-react";
-import { Button } from "@/components/shadcn/button";
-import { MOCK_ORDERS } from "./mock-data";
+import { Search } from "lucide-react";
+import { OpsNotice, fmtDate, opsCard, shortId } from "@/components/ui/OpsStat";
+import { formatCurrency } from "@/lib/utils";
+import { ApiError } from "@/services/http";
+import { updateLabJobStatus } from "@/services/lab-services";
+import type { LabJob, LabJobStatus } from "@/types/lab-types";
+import { NEXT_STATUSES, STATUS_LABEL, STATUS_STYLE, isActive, type StatusTab } from "./status";
 
-function notify(message: string) {
-  toast.info(message);
-}
+const TABS: { id: StatusTab; label: string }[] = [
+  { id: "active", label: "Active" },
+  { id: "in_fitting", label: "In fitting" },
+  { id: "ready_to_deliver", label: "Ready" },
+  { id: "delivered", label: "Delivered" },
+  { id: "cancelled", label: "Cancelled" },
+];
 
-const STATUS_STYLE: Record<string, string> = {
-  Delivered: "bg-[#e7efe6] text-[#3e7350]",
-  "Ready for pickup": "bg-[#e6eff2] text-[#527d8a]",
-  Fitting: "bg-[#eee9f4] text-[#7e6d98]",
-};
-const STATUS_FALLBACK = "bg-[#f7efd9] text-[#9d7832]";
+export function OrdersTable({
+  jobs,
+  loading,
+  error,
+  onRetry,
+  onChanged,
+  tab,
+  onTabChange,
+}: {
+  jobs: LabJob[];
+  loading: boolean;
+  error: string | null;
+  onRetry: () => void;
+  onChanged: () => void;
+  tab: StatusTab;
+  onTabChange: (t: StatusTab) => void;
+}) {
+  const [query, setQuery] = useState("");
+  const [busyId, setBusyId] = useState<string | null>(null);
 
-const TABS = ["All orders", "Spectacles", "Lens orders", "Sunglasses"];
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return jobs.filter((j) => {
+      if (tab === "active" ? !isActive(j) : j.status !== tab) return false;
+      return !q || `${j.patient_name} ${j.job_type} ${j.vendor_name ?? ""} ${shortId(j.id)}`.toLowerCase().includes(q);
+    });
+  }, [jobs, tab, query]);
 
-export function OrdersTable() {
-  const [orderTab, setOrderTab] = useState("All orders");
+  const pg = usePagination(filtered, `${tab}|${query}`);
 
-  const filtered = MOCK_ORDERS.filter(
-    (o) =>
-      orderTab === "All orders" ||
-      (orderTab === "Spectacles"
-        ? o.item.toLowerCase().includes("spectacle")
-        : orderTab === "Lens orders"
-          ? o.item.toLowerCase().includes("lens")
-          : o.item.toLowerCase().includes("sunglasses"))
-  );
+  async function move(job: LabJob, status: LabJobStatus) {
+    if (busyId) return;
+    setBusyId(job.id);
+    try {
+      await updateLabJobStatus(job.id, { status });
+      toast.success(`Order marked ${STATUS_LABEL[status].toLowerCase()}`);
+      onChanged();
+    } catch (e) {
+      toast.error(e instanceof ApiError ? e.message : "Failed to update the order");
+    } finally {
+      setBusyId(null);
+    }
+  }
 
   return (
-    <div className="overflow-hidden rounded-[11px] border border-[#e9e6dc] bg-[#fffefa] shadow-[0_5px_20px_rgba(42,52,41,0.035),0_1px_2px_rgba(42,52,41,0.04)]">
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#eeece4] px-[18px] py-4">
-        <div className="flex flex-wrap gap-[3px] rounded-lg bg-[#f3f2eb] p-[3px]">
+    <div className={`overflow-hidden ${opsCard}`}>
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line px-[18px] py-4">
+        <div role="tablist" className="flex flex-wrap gap-[3px] rounded-lg bg-app p-[3px]">
           {TABS.map((t) => (
             <button
-              key={t}
-              onClick={() => setOrderTab(t)}
+              key={t.id}
+              role="tab"
+              aria-selected={tab === t.id}
+              onClick={() => onTabChange(t.id)}
               className={
                 "whitespace-nowrap rounded-md px-3 py-2 text-[10px] " +
-                (orderTab === t
-                  ? "bg-[#fffefa] font-bold text-[#2d5b40] shadow-[0_1px_3px_#dfded4]"
-                  : "text-[#82887e]")
+                (tab === t.id ? "bg-card font-bold text-sage shadow-sm" : "text-mute")
               }
             >
-              {t}
+              {t.label}
             </button>
           ))}
         </div>
-        <div className="flex items-center gap-2">
-          <div className="flex h-9 min-w-[215px] items-center gap-2 rounded-lg border border-[#e9e6dc] bg-[#fffefa] px-2.5 text-[#9a9d94]">
-            <Search size={14} />
-            <input
-              placeholder="Search order, patient or frame…"
-              className="w-full bg-transparent text-[11px] text-[#23342c] outline-none placeholder:text-[#a4a69e]"
-            />
-          </div>
-          <Button
-            onClick={() => notify("Order filters opened")}
-            className="min-h-9 rounded-[7px] border border-[#e2dfd5] bg-[#fffefa] px-3.5 text-[11px] font-semibold text-[#48564a] hover:border-[#cbd5c8] hover:bg-[#f3f4ec]"
-          >
-            <Filter size={14} />
-            Filter
-          </Button>
-        </div>
+        <label className="flex h-9 min-w-[215px] items-center gap-2 rounded-lg border border-line bg-card px-2.5 text-mute">
+          <Search size={14} aria-hidden />
+          <input
+            aria-label="Search orders"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search order, patient or type…"
+            className="w-full bg-transparent text-[11px] text-ink outline-none placeholder:text-mute"
+          />
+        </label>
       </div>
 
-      <div className="overflow-x-auto">
-        <table className="w-full border-collapse whitespace-nowrap text-left">
-          <thead className="bg-[#faf9f4]">
-            <tr>
-              {["ORDER", "PATIENT", "ORDER TYPE", "STATUS", "EXPECTED DATE", "TOTAL", ""].map((h) => (
-                <th key={h} className="px-[17px] py-3 text-[9px] font-bold tracking-[0.7px] text-[#969a90]">
-                  {h}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.map((o) => (
-              <tr key={o.id} className="hover:bg-[#fcfbf7]">
-                <td className="border-t border-[#f0eee7] px-[17px] py-3 font-mono text-[10px] text-[#6c786b]">{o.id}</td>
-                <td className="border-t border-[#f0eee7] px-[17px] py-3">
-                  <div className="flex items-center gap-[9px]">
-                    <span className="grid size-8 shrink-0 place-items-center rounded-full bg-[#e2ece2] text-[10px] font-bold text-[#37674a]">
-                      {o.patient
-                        .split(" ")
-                        .map((x) => x[0])
-                        .join("")}
-                    </span>
-                    <b className="text-[10px] text-[#23342c]">{o.patient}</b>
-                  </div>
-                </td>
-                <td className="border-t border-[#f0eee7] px-[17px] py-3 text-[10px] text-[#697368]">{o.item}</td>
-                <td className="border-t border-[#f0eee7] px-[17px] py-3">
-                  <span
-                    className={
-                      "inline-flex items-center gap-[5px] rounded-[5px] px-[7px] py-1 text-[9px] font-semibold leading-none " +
-                      (STATUS_STYLE[o.status] ?? STATUS_FALLBACK)
-                    }
-                  >
-                    <i className="size-[5px] rounded-full bg-current opacity-80" />
-                    {o.status}
-                  </span>
-                </td>
-                <td className="border-t border-[#f0eee7] px-[17px] py-3 text-[10px] text-[#697368]">{o.date}</td>
-                <td className="border-t border-[#f0eee7] px-[17px] py-3 text-[10px] font-bold text-[#3f5544]">{o.total}</td>
-                <td className="border-t border-[#f0eee7] px-[17px] py-3">
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    onClick={() => notify("Order details")}
-                    className="size-[31px] rounded-lg text-[#858b82] hover:bg-[#f1f0e9] hover:text-[#214c3a]"
-                  >
-                    <ChevronRight size={16} />
-                  </Button>
-                </td>
+      {loading ? (
+        <OpsNotice kind="loading" text="Loading orders…" />
+      ) : error ? (
+        <OpsNotice kind="error" text={error} onRetry={onRetry} />
+      ) : filtered.length === 0 ? (
+        <OpsNotice kind="empty" text="No orders in this view." />
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="w-full border-collapse whitespace-nowrap text-left">
+            <thead className="bg-app">
+              <tr>
+                {["ORDER", "PATIENT", "ORDER TYPE", "LAB / VENDOR", "STATUS", "EXPECTED", "ADVANCE", ""].map((h) => (
+                  <th key={h} className="px-[17px] py-3 text-[9px] font-bold tracking-[0.7px] text-mute">{h}</th>
+                ))}
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      <div className="flex flex-wrap items-center justify-between gap-2 border-t border-[#eeece4] px-[18px] py-[13px] text-[10px] text-[#969a90]">
-        <span>Showing 4 of 28 active orders</span>
-        <div className="flex items-center gap-1">
-          <Button
-            size="icon"
-            variant="outline"
-            className="size-[27px] rounded-md border-[#e9e6dc] bg-[#fffefa] text-[#788076]"
-          >
-            <ChevronLeft size={15} />
-          </Button>
-          <Button size="icon" className="size-[27px] rounded-md border-[#214c3a] bg-[#214c3a] text-white">
-            1
-          </Button>
-          <Button
-            size="icon"
-            variant="outline"
-            className="size-[27px] rounded-md border-[#e9e6dc] bg-[#fffefa] text-[#788076]"
-          >
-            2
-          </Button>
-          <Button
-            size="icon"
-            variant="outline"
-            className="size-[27px] rounded-md border-[#e9e6dc] bg-[#fffefa] text-[#788076]"
-          >
-            3
-          </Button>
-          <Button
-            size="icon"
-            variant="outline"
-            className="size-[27px] rounded-md border-[#e9e6dc] bg-[#fffefa] text-[#788076]"
-          >
-            <ChevronRight size={15} />
-          </Button>
+            </thead>
+            <tbody>
+              {pg.pageItems.map((j) => {
+                const status = j.status as LabJobStatus;
+                const next = NEXT_STATUSES[status] ?? [];
+                return (
+                  <tr key={j.id} className="hover:bg-app">
+                    <td className="border-t border-line px-[17px] py-3 font-mono text-[10px] text-mute">{shortId(j.id)}</td>
+                    <td className="border-t border-line px-[17px] py-3 text-[10px] font-bold text-ink">{j.patient_name}</td>
+                    <td className="border-t border-line px-[17px] py-3 text-[10px] text-mute">{j.job_type}</td>
+                    <td className="border-t border-line px-[17px] py-3 text-[10px] text-mute">{j.vendor_name ?? "—"}</td>
+                    <td className="border-t border-line px-[17px] py-3">
+                      <span className={"inline-flex items-center gap-[5px] rounded-[5px] px-[7px] py-1 text-[9px] font-semibold leading-none " + (STATUS_STYLE[status] ?? "bg-warn-soft text-warn-ink")}>
+                        <i className="size-[5px] rounded-full bg-current opacity-80" />
+                        {STATUS_LABEL[status] ?? j.status}
+                      </span>
+                    </td>
+                    <td className="border-t border-line px-[17px] py-3 text-[10px] text-mute">{fmtDate(j.expected_delivery_date)}</td>
+                    <td className="border-t border-line px-[17px] py-3 text-[10px] font-bold text-ink">{formatCurrency(j.advance_payment)}</td>
+                    <td className="border-t border-line px-[17px] py-3">
+                      {next.length > 0 && (
+                        <select
+                          aria-label={`Update status for ${j.patient_name}`}
+                          disabled={busyId === j.id}
+                          value=""
+                          onChange={(e) => e.target.value && move(j, e.target.value as LabJobStatus)}
+                          className="h-8 rounded-md border border-line bg-card px-2 text-[10px] text-ink"
+                        >
+                          <option value="">Move to…</option>
+                          {next.map((s) => (
+                            <option key={s} value={s}>{STATUS_LABEL[s]}</option>
+                          ))}
+                        </select>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
-      </div>
+      )}
+      {!loading && !error && <Pager page={pg.page} pageCount={pg.pageCount} pageSize={pg.pageSize} total={pg.total} onPage={pg.setPage} onPageSize={pg.setPageSize} noun="orders" />}
     </div>
   );
 }

@@ -4,10 +4,10 @@ import { useState } from "react";
 import { EYE } from "@/types/eye-types";
 import { Chip } from "@/components/ui/ChartUi";
 import { SLIT } from "./data";
+import { SlitDiagram } from "./SlitDiagram";
 import type { SlitFindings } from "./types";
 
 type Region = keyof typeof SLIT;
-type Status = "unset" | "ok" | "abn";
 
 /** Interactive slit-lamp drawing — tap a structure, then tap a finding. Every tap writes into the exam state. */
 export function SlitEye({
@@ -20,96 +20,11 @@ export function SlitEye({
   set: (path: Array<string | number>, value: unknown) => void;
 }) {
   const [act, setAct] = useState<Region>("k");
-  const st = (r: Region): Status => (!v[r] ? "unset" : v[r] === SLIT[r].norm ? "ok" : "abn");
-  const sc = (r: Region) =>
-    ({
-      unset: "var(--color-strong)",
-      ok: "var(--color-sage)",
-      abn: "var(--color-clay)",
-    })[st(r)];
-  const fl = (r: Region) =>
-    ({
-      unset: "var(--color-card)",
-      ok: "var(--color-sage-soft)",
-      abn: "var(--color-clay-soft)",
-    })[st(r)];
-  const sw = (r: Region) => (act === r ? 4 : 2);
-  const alm = "M8 70 Q120 -14 232 70 Q120 154 8 70Z";
   const regions = Object.keys(SLIT) as Region[];
   return (
     <div className="flex flex-col gap-3 items-start w-full">
       <div className="mono-label">{EYE[eye]}</div>
-      <svg viewBox="0 0 240 140" className="w-full max-w-[310px]" role="group" aria-label={`Slit lamp ${EYE[eye]}`}>
-        <defs>
-          <clipPath id={"cl" + eye}>
-            <path d={alm} />
-          </clipPath>
-        </defs>
-        <path d={alm} fill={fl("conj")} className="cursor-pointer" onClick={() => setAct("conj")}>
-          <title>Conjunctiva</title>
-        </path>
-        <g clipPath={`url(#cl${eye})`}>
-          <circle
-            cx="120"
-            cy="70"
-            r="50"
-            fill={fl("ac")}
-            stroke={sc("ac")}
-            strokeWidth={sw("ac")}
-            className="cursor-pointer"
-            onClick={() => setAct("ac")}
-          >
-            <title>Iris and anterior chamber</title>
-          </circle>
-          <circle
-            cx="120"
-            cy="70"
-            r="53"
-            fill="none"
-            stroke={sc("k")}
-            strokeWidth={act === "k" ? 7 : 5}
-            className="cursor-pointer"
-            onClick={() => setAct("k")}
-          >
-            <title>Cornea</title>
-          </circle>
-          <circle
-            cx="120"
-            cy="70"
-            r="24"
-            fill="var(--color-ink)"
-            stroke={sc("p")}
-            strokeWidth={sw("p")}
-            className="cursor-pointer"
-            onClick={() => setAct("p")}
-          >
-            <title>Pupil</title>
-          </circle>
-          <circle
-            cx="120"
-            cy="70"
-            r="11"
-            fill={st("l") === "abn" ? "var(--color-clay-soft)" : "var(--color-card)"}
-            stroke={sc("l")}
-            strokeWidth={sw("l")}
-            strokeDasharray="3 2"
-            className="cursor-pointer"
-            onClick={() => setAct("l")}
-          >
-            <title>Lens</title>
-          </circle>
-        </g>
-        <path
-          d={alm}
-          fill="none"
-          stroke="transparent"
-          strokeWidth="12"
-          style={{ pointerEvents: "stroke" }}
-          className="cursor-pointer"
-          onClick={() => setAct("lids")}
-        />
-        <path d={alm} fill="none" stroke={sc("lids")} strokeWidth={sw("lids")} style={{ pointerEvents: "none" }} />
-      </svg>
+      <SlitDiagram eye={eye} v={v} active={act} onRegion={setAct} />
       <div className="flex flex-wrap gap-1.5">
         {regions.map((r) => (
           <Chip key={r} on={act === r} onClick={() => setAct(r)} className="!py-1 !px-2.5 !text-xs">

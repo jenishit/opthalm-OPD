@@ -1,26 +1,22 @@
 "use client";
 
-import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { Loader2, Plus } from "lucide-react";
 import { Dialog, DialogContent, DialogFooter, DialogTitle } from "@/components/shadcn/dialog";
 import { Button } from "@/components/shadcn/button";
 import { Input } from "@/components/shadcn/input";
-import { Field, FieldLabel } from "@/components/shadcn/field";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/shadcn/select";
+import { Checkbox } from "@/components/shadcn/checkbox";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/shadcn/select";
+import { FormField } from "@/components/forms";
+import { addProductSchema, type AddProductForm } from "@/schemas/inventory-schema";
 import { createInventoryItem } from "@/services/inventory-services";
 import { ApiError } from "@/services/http";
-import type { InventoryCategory } from "@/types/inventory-types";
 import { CATEGORY_LABEL } from "@/lib/inventory-category";
 
-const EMPTY = {
-  category: "frame" as InventoryCategory,
+const EMPTY: AddProductForm = {
+  category: "frame",
   sku: "",
   name: "",
   brand: "",
@@ -32,8 +28,11 @@ const EMPTY = {
   selling_price: "",
   quantity_on_hand: "",
   reorder_threshold: "",
-  expiry_date: "",
+  tracks_lots: false,
+  image_url: "",
 };
+
+const num = (v: string) => (v ? Number(v) : undefined);
 
 export function AddProductDialog({
   open,
@@ -44,163 +43,104 @@ export function AddProductDialog({
   onOpenChange: (open: boolean) => void;
   onCreated: () => void;
 }) {
-  const [form, setForm] = useState(EMPTY);
-  const [saving, setSaving] = useState(false);
+  const { control, handleSubmit, reset, formState } = useForm<AddProductForm>({
+    resolver: zodResolver(addProductSchema),
+    defaultValues: EMPTY,
+    mode: "onTouched",
+  });
 
-  function set<K extends keyof typeof EMPTY>(key: K, value: string) {
-    setForm((f) => ({ ...f, [key]: value }));
-  }
+  const close = (next: boolean) => {
+    if (!next) reset(EMPTY);
+    onOpenChange(next);
+  };
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!form.sku.trim() || !form.name.trim()) {
-      toast.error("SKU and product name are required");
-      return;
-    }
-    setSaving(true);
+  async function onSubmit(v: AddProductForm) {
     try {
       await createInventoryItem({
-        category: form.category,
-        sku: form.sku.trim(),
-        name: form.name.trim(),
-        brand: form.brand.trim() || undefined,
-        model: form.model.trim() || undefined,
-        color: form.color.trim() || undefined,
-        size: form.size.trim() || undefined,
-        unit: form.unit.trim() || undefined,
-        cost_price: form.cost_price ? Number(form.cost_price) : undefined,
-        selling_price: form.selling_price ? Number(form.selling_price) : undefined,
-        quantity_on_hand: form.quantity_on_hand ? Number(form.quantity_on_hand) : undefined,
-        reorder_threshold: form.reorder_threshold ? Number(form.reorder_threshold) : undefined,
-        expiry_date: form.expiry_date || undefined,
+        category: v.category,
+        sku: v.sku,
+        name: v.name,
+        brand: v.brand || undefined,
+        model: v.model || undefined,
+        color: v.color || undefined,
+        size: v.size || undefined,
+        unit: v.unit || undefined,
+        cost_price: num(v.cost_price),
+        selling_price: num(v.selling_price),
+        quantity_on_hand: num(v.quantity_on_hand),
+        reorder_threshold: num(v.reorder_threshold),
+        tracks_lots: v.tracks_lots || undefined,
+        image_url: v.image_url || undefined,
       });
-      toast.success(`${form.name} added to inventory`);
-      setForm(EMPTY);
-      onOpenChange(false);
+      toast.success(`${v.name} added to inventory`);
+      close(false);
       onCreated();
     } catch (error) {
       toast.error(error instanceof ApiError ? error.message : "Failed to add product");
-    } finally {
-      setSaving(false);
     }
   }
 
+  const text = (name: "sku" | "name" | "brand" | "model" | "color" | "size", label: string) => (
+    <FormField control={control} name={name} label={label}>
+      {({ field, id, invalid }) => <Input {...field} id={id} aria-invalid={invalid} />}
+    </FormField>
+  );
+  const number = (name: "cost_price" | "selling_price" | "quantity_on_hand" | "reorder_threshold", label: string, step?: string) => (
+    <FormField control={control} name={name} label={label}>
+      {({ field, id, invalid }) => <Input {...field} id={id} type="number" min={0} step={step} aria-invalid={invalid} />}
+    </FormField>
+  );
+
   return (
-    <Dialog
-      open={open}
-      onOpenChange={(next) => {
-        onOpenChange(next);
-        if (!next) setForm(EMPTY);
-      }}
-    >
+    <Dialog open={open} onOpenChange={close}>
       <DialogContent className="sm:max-w-lg">
         <DialogTitle>Add product</DialogTitle>
-        <form onSubmit={handleSubmit} className="flex flex-col gap-3.5">
+        <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex flex-col gap-3.5">
           <div className="grid grid-cols-2 gap-3">
-            <Field>
-              <FieldLabel>Category</FieldLabel>
-              <Select
-                value={form.category}
-                onValueChange={(v) => set("category", v as InventoryCategory)}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {Object.entries(CATEGORY_LABEL).map(([value, label]) => (
-                    <SelectItem key={value} value={value}>
-                      {label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </Field>
-            <Field>
-              <FieldLabel>SKU / barcode</FieldLabel>
-              <Input value={form.sku} onChange={(e) => set("sku", e.target.value)} required />
-            </Field>
+            <FormField control={control} name="category" label="Category">
+              {({ field, id }) => (
+                <Select value={field.value} onValueChange={field.onChange}>
+                  <SelectTrigger id={id} className="w-full" onBlur={field.onBlur}>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Object.entries(CATEGORY_LABEL).map(([value, label]) => (
+                      <SelectItem key={value} value={value}>{label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            </FormField>
+            {text("sku", "SKU / barcode")}
           </div>
-
-          <Field>
-            <FieldLabel>Product name</FieldLabel>
-            <Input value={form.name} onChange={(e) => set("name", e.target.value)} required />
-          </Field>
-
+          {text("name", "Product name")}
           <div className="grid grid-cols-2 gap-3">
-            <Field>
-              <FieldLabel>Brand</FieldLabel>
-              <Input value={form.brand} onChange={(e) => set("brand", e.target.value)} />
-            </Field>
-            <Field>
-              <FieldLabel>Model</FieldLabel>
-              <Input value={form.model} onChange={(e) => set("model", e.target.value)} />
-            </Field>
-            <Field>
-              <FieldLabel>Color</FieldLabel>
-              <Input value={form.color} onChange={(e) => set("color", e.target.value)} />
-            </Field>
-            <Field>
-              <FieldLabel>Size</FieldLabel>
-              <Input value={form.size} onChange={(e) => set("size", e.target.value)} />
-            </Field>
+            {text("brand", "Brand")}
+            {text("model", "Model")}
+            {text("color", "Color")}
+            {text("size", "Size")}
           </div>
-
           <div className="grid grid-cols-2 gap-3">
-            <Field>
-              <FieldLabel>Cost price (Rs.)</FieldLabel>
-              <Input
-                type="number"
-                min={0}
-                step="0.01"
-                value={form.cost_price}
-                onChange={(e) => set("cost_price", e.target.value)}
-              />
-            </Field>
-            <Field>
-              <FieldLabel>Selling price (Rs.)</FieldLabel>
-              <Input
-                type="number"
-                min={0}
-                step="0.01"
-                value={form.selling_price}
-                onChange={(e) => set("selling_price", e.target.value)}
-              />
-            </Field>
-            <Field>
-              <FieldLabel>Opening stock</FieldLabel>
-              <Input
-                type="number"
-                min={0}
-                value={form.quantity_on_hand}
-                onChange={(e) => set("quantity_on_hand", e.target.value)}
-              />
-            </Field>
-            <Field>
-              <FieldLabel>Reorder threshold</FieldLabel>
-              <Input
-                type="number"
-                min={0}
-                value={form.reorder_threshold}
-                onChange={(e) => set("reorder_threshold", e.target.value)}
-              />
-            </Field>
+            {number("cost_price", "Cost price (Rs.)", "0.01")}
+            {number("selling_price", "Selling price (Rs.)", "0.01")}
+            {number("quantity_on_hand", "Opening stock")}
+            {number("reorder_threshold", "Reorder threshold")}
           </div>
-
-          <Field>
-            <FieldLabel>Expiry date (optional)</FieldLabel>
-            <Input
-              type="date"
-              value={form.expiry_date}
-              onChange={(e) => set("expiry_date", e.target.value)}
-            />
-          </Field>
-
+          <FormField control={control} name="image_url" label="Product image link (optional)" description="A public https:// link to a photo of the product.">
+            {({ field, id, invalid }) => <Input {...field} id={id} type="url" inputMode="url" placeholder="https://…" aria-invalid={invalid} />}
+          </FormField>
+          <FormField control={control} name="tracks_lots" label="Batches & expiry" description="For contact lenses, solutions and drops. Batch number and expiry date are entered when you record the purchase.">
+            {({ field, id }) => (
+              <label htmlFor={id} className="flex items-center gap-2 text-sm text-foreground">
+                <Checkbox id={id} checked={field.value} onCheckedChange={(c) => field.onChange(c === true)} />
+                Track this product by batch and expiry
+              </label>
+            )}
+          </FormField>
           <DialogFooter>
-            <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
-              Cancel
-            </Button>
-            <Button type="submit" disabled={saving}>
-              {saving ? <Loader2 className="size-4 animate-spin" /> : <Plus className="size-4" />}
+            <Button type="button" variant="ghost" onClick={() => close(false)}>Cancel</Button>
+            <Button type="submit" disabled={formState.isSubmitting}>
+              {formState.isSubmitting ? <Loader2 className="size-4 animate-spin" /> : <Plus className="size-4" />}
               Add product
             </Button>
           </DialogFooter>

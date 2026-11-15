@@ -24,8 +24,10 @@ export interface CreateInventoryItemRequest {
   quantity_on_hand?: number;
   reorder_threshold?: number;
   unit?: string;
-  /** ISO date (YYYY-MM-DD) the current stock expires on, e.g. for contacts, coatings, meds. */
-  expiry_date?: string;
+  /** Track stock in batches (lot number + expiry) — for contacts, solutions, drops. Expiry is entered when stock is received. */
+  tracks_lots?: boolean;
+  /** Public https URL of the product photo. */
+  image_url?: string;
 }
 
 export interface UpdateInventoryItemRequest {
@@ -38,8 +40,7 @@ export interface UpdateInventoryItemRequest {
   cost_price?: number;
   selling_price?: number;
   reorder_threshold?: number;
-  /** ISO date (YYYY-MM-DD), or null to clear it. */
-  expiry_date?: string | null;
+  image_url?: string | null;
 }
 
 export interface InventoryItem {
@@ -56,8 +57,12 @@ export interface InventoryItem {
   selling_price: number;
   quantity_on_hand: number;
   reorder_threshold: number;
-  /** ISO date (YYYY-MM-DD) the current stock expires on; null when the item has no shelf life. */
-  expiry_date: string | null;
+  /** Legacy single expiry date — the backend now tracks expiry per batch, so this is normally absent. */
+  expiry_date?: string | null;
+  tracks_lots?: boolean;
+  image_url?: string | null;
+  /** Earliest expiry among batches still in stock (YYYY-MM-DD); can be in the past. Null when none. */
+  next_expiry_date?: string | null;
   is_active: boolean;
   created_at: string;
   updated_at: string;
@@ -66,6 +71,20 @@ export interface InventoryItem {
 export interface AddStockRequest {
   quantity: number;
   notes?: string;
+  /** Required for batch-tracked items. */
+  lot_no?: string;
+  /** YYYY-MM-DD — required when the lot is new; omit (or match) when adding to an existing lot. */
+  expiry_date?: string;
+  location_id?: string;
+}
+
+/** GET /inventory/items/:id/lots */
+export interface ItemLot {
+  lot_id?: string;
+  lot_no: string;
+  expiry_date: string;
+  days_to_expiry: number;
+  quantity: number;
 }
 
 export interface StockMovement {
@@ -110,6 +129,10 @@ export interface CreatePurchaseItemRequest {
   inventory_item_id: string;
   quantity: number;
   unit_cost: number;
+  /** Batch / lot number (max 60). */
+  lot_no?: string;
+  /** ISO date (YYYY-MM-DD) this batch expires. */
+  expiry_date?: string;
 }
 
 export interface CreatePurchaseRequest {
@@ -138,4 +161,17 @@ export interface Purchase {
   due_amount: number;
   items: PurchaseItem[];
   created_at: string;
+}
+
+/** One lot of stock with an expiry date — GET /inventory/reports/expiring. */
+export interface ExpiringLot {
+  inventory_item_id: string;
+  item_name: string;
+  sku: string;
+  lot_no: string;
+  quantity: number;
+  /** ISO date (YYYY-MM-DD). */
+  expiry_date: string;
+  /** Negative when already expired. */
+  days_to_expiry: number;
 }

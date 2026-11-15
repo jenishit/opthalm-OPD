@@ -1,7 +1,8 @@
 import { z } from "zod";
 
 // ── Staff ───────────────────────────────────────────────────────────────────
-export const staffRole = ["doctor", "optometrist", "optician", "receptionist", "manager"] as const;
+/** Mirrors the backend role_name values (ROLE_<NAME>) — the single role vocabulary. */
+export const staffRole = ["superadmin", "admin", "doctor", "optometrist", "billing", "inventory", "lab"] as const;
 
 export const staffSchema = z.object({
   id: z.string(),
@@ -24,8 +25,10 @@ export const investigationType = [
 export const investigationSchema = z.object({
   id: z.string().optional(),
   visit_id: z.string().optional(),
-  type: z.enum(investigationType),
+  // The backend stores the test name as free text (max 50), so any test can be recorded.
+  type: z.string().min(1).max(50),
   investigation_name: z.string().optional(),
+  eye: z.enum(["OD", "OS", "OU"]).optional(),
   status: z.enum(["ordered", "completed", "reviewed"]).optional(),
   result: z.string().optional(),
   notes: z.string().optional(),

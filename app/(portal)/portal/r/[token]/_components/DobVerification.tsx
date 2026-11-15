@@ -49,8 +49,8 @@ export function DobVerification({ token }: DobVerificationProps) {
       loginPortalPatient(result.patient, "qr", token);
       toast.success("Identity verified successfully");
       router.push("/portal");
-    } catch (error: any) {
-      toast.error(error.message || "Verification failed. Please check the date of birth.");
+    } catch (error) {
+      toast.error(error instanceof Error && error.message ? error.message : "Verification failed. Please check the date of birth.");
     } finally {
       setIsLoading(false);
     }

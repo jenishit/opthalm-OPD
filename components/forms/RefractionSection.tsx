@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Controller, useFormContext, useFieldArray } from "react-hook-form";
+import { Controller, useFormContext, useFieldArray, useWatch } from "react-hook-form";
 import type { IntakeExamFormData } from "@/schemas/shared-schema";
 import { Plus, Trash2, Eye } from "lucide-react";
 import { NumericCell, chartShell } from "@/components/ui/ChartUi";
@@ -22,13 +22,13 @@ const cellBorder =
   "w-full rounded-xl border-[1.5px] border-dashed border-border/80 bg-card px-2 py-2.5 text-center text-sm font-medium tabular-nums text-foreground outline-none transition-colors hover:border-primary/50 focus:border-solid focus:border-primary";
 
 export function RefractionSection() {
-  const { register, control, watch } = useFormContext<IntakeExamFormData>();
+  const { register, control } = useFormContext<IntakeExamFormData>();
   const { fields, append, remove } = useFieldArray({
     control,
     name: "readings",
   });
 
-  const usesSpectacles = watch("history.uses_spectacles");
+  const usesSpectacles = useWatch({ control, name: "history.uses_spectacles" });
   const visibleStages = stages.filter((stage) => stage.id !== "old_rx" || usesSpectacles);
 
   const addReadingPair = (stage: StageId) => {

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { useForm, type FieldPath } from "react-hook-form";
+import { useForm, useWatch, type FieldPath } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import {
@@ -56,7 +56,7 @@ export function PatientRegistrationForm() {
   const {
     register,
     handleSubmit,
-    watch,
+    control,
     setValue,
     setError,
     clearErrors,
@@ -72,7 +72,7 @@ export function PatientRegistrationForm() {
     },
   });
 
-  const values = watch();
+  const values = useWatch({ control });
   const sex = values.sex;
 
   const goNext = async () => {

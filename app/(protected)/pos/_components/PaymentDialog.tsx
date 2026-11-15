@@ -1,15 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Banknote, CreditCard, Landmark, Loader2, Smartphone } from "lucide-react";
+import { Banknote, CreditCard, Landmark, Loader2, Smartphone, WifiOff } from "lucide-react";
 import { Dialog, DialogContent, DialogFooter, DialogTitle } from "@/components/shadcn/dialog";
 import { Button } from "@/components/shadcn/button";
 import { cn, formatCurrency } from "@/lib/utils";
-import { CATEGORY_TO_INVOICE_ITEM_TYPE } from "@/lib/inventory-category";
-import { createInvoice, recordPayment } from "@/services/billing-services";
-import { ApiError } from "@/services/http";
-import type { InventoryCategory } from "@/types/inventory-types";
+import { idbAvailable } from "@/lib/offline/idb";
+import { discardQueuedSale, enqueueSale, processSale, type QueuedSale } from "@/lib/offline/outbox";
+import { useOnline } from "@/lib/offline/use-online";
+import { useOpenShift } from "@/lib/pos/use-shift";
 import type { PaymentMethod } from "@/types/billing-types";
 import { usePosStore } from "./store";
 import { computeTotals, VAT_RATE } from "./totals";
@@ -22,6 +23,9 @@ const PAYMENT_METHODS: { value: PaymentMethod; label: string; icon: typeof Bankn
 ];
 
 export function PaymentDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
+  const router = useRouter();
+  const online = useOnline();
+  const { shift } = useOpenShift();
   const cart = usePosStore((s) => s.cart);
   const customer = usePosStore((s) => s.customer);
   const discount = usePosStore((s) => s.discount);
@@ -29,35 +33,94 @@ export function PaymentDialog({ open, onOpenChange }: { open: boolean; onOpenCha
   const setPaymentMethod = usePosStore((s) => s.setPaymentMethod);
   const clearSale = usePosStore((s) => s.clearSale);
   const [saving, setSaving] = useState(false);
+  // Synchronous lock: `saving` state updates too late to stop a fast double-click.
+  const inFlight = useRef(false);
+  // One attempt id per distinct sale, kept across retries so the server-side
+  // idempotency key and the outbox progress are reused instead of duplicated.
+  const attempt = useRef<{ signature: string; id: string } | null>(null);
 
   const { subtotal, vat, total } = computeTotals(cart, discount);
 
   async function handleConfirm() {
-    if (!customer) {
-      toast.error("Select a patient before processing payment");
-      return;
-    }
+    if (!shift) return void toast.error("Open a shift before taking payment");
+    if (!idbAvailable()) return void toast.error("This browser can't store sales safely. Use a current browser.");
+    if (inFlight.current) return;
+    inFlight.current = true;
     setSaving(true);
     try {
-      const invoice = await createInvoice({
-        patient_id: customer.id,
-        discount_amount: discount || undefined,
-        tax_amount: vat,
-        items: cart.map((line) => ({
-          item_type: CATEGORY_TO_INVOICE_ITEM_TYPE[line.item.category as InventoryCategory],
-          description: [line.item.brand, line.item.name].filter(Boolean).join(" "),
-          inventory_item_id: line.item.id,
-          quantity: line.qty,
-          unit_price: line.item.selling_price,
-        })),
-      });
-      await recordPayment(invoice.id, { amount: invoice.total_amount, method: paymentMethod });
-      toast.success(`Sale ${invoice.invoice_no} completed`);
-      clearSale();
-      onOpenChange(false);
-    } catch (error) {
-      toast.error(error instanceof ApiError ? error.message : "Failed to process payment");
+      const signature = JSON.stringify([customer?.id ?? null, discount, paymentMethod, cart.map((l) => [l.item.id, l.qty])]);
+      if (!attempt.current || attempt.current.signature !== signature) {
+        attempt.current = { signature, id: crypto.randomUUID() };
+      }
+      const id = attempt.current.id;
+
+      const queued: QueuedSale = {
+        id,
+        createdAt: new Date().toISOString(),
+        shiftId: shift.id,
+        status: "pending",
+        attempts: 0,
+        progress: {},
+        sale: {
+          patientId: customer?.id ?? null,
+          patientName: customer ? `${customer.first_name} ${customer.last_name}`.trim() : "Walk-in customer",
+          discount,
+          vat,
+          subtotal,
+          total,
+          method: paymentMethod,
+          lines: cart.map((l) => ({
+            itemId: l.item.id,
+            category: l.item.category,
+            description: [l.item.brand, l.item.name].filter(Boolean).join(" "),
+            qty: l.qty,
+            unitPrice: l.item.selling_price,
+          })),
+        },
+      };
+
+      // Write-ahead: the sale is durable on this device before any network call.
+      await enqueueSale(queued);
+      const result = await processSale(id);
+
+      const finish = () => {
+        attempt.current = null;
+        clearSale();
+        onOpenChange(false);
+      };
+
+      switch (result.kind) {
+        case "done":
+          toast.success(`Sale ${result.invoiceNo} completed`, {
+            action: { label: "Print invoice", onClick: () => router.push(`/pos/invoice/${result.invoiceId}`) },
+            duration: 10000,
+          });
+          finish();
+          break;
+        case "offline":
+          toast.info("Saved offline — it will sync automatically when the connection is back.");
+          finish();
+          break;
+        case "retry":
+          toast.warning(`${result.message}. The sale is saved and will retry automatically.`);
+          finish();
+          break;
+        case "rejected":
+          if (!result.invoiceCreated) {
+            // Nothing reached the server: remove it so the cashier can fix the cart.
+            await discardQueuedSale(id);
+            attempt.current = null;
+            toast.error(result.message);
+          } else {
+            toast.error(`Invoice created but payment failed: ${result.message}. See the sync queue.`);
+            finish();
+          }
+          break;
+      }
+    } catch {
+      toast.error("Could not save the sale on this device. Nothing was charged.");
     } finally {
+      inFlight.current = false;
       setSaving(false);
     }
   }
@@ -67,11 +130,23 @@ export function PaymentDialog({ open, onOpenChange }: { open: boolean; onOpenCha
       <DialogContent>
         <DialogTitle>Process payment</DialogTitle>
 
+        {!online && (
+          <div role="status" className="flex items-center gap-2 rounded-md bg-warn-soft px-3 py-2 text-xs text-warn-ink">
+            <WifiOff className="size-4 shrink-0" />
+            You&apos;re offline. The sale will be saved on this device and synced automatically.
+          </div>
+        )}
+        {!shift && (
+          <div role="alert" className="rounded-md bg-bad-soft px-3 py-2 text-xs text-bad-ink">
+            No shift is open on this terminal. Open a shift from the POS header first.
+          </div>
+        )}
+
         <div className="rounded-md border border-line bg-app p-3.5">
           <div className="flex items-center justify-between text-sm text-muted-foreground">
             <span>Customer</span>
             <span className="font-medium text-foreground">
-              {customer ? `${customer.first_name} ${customer.last_name}` : "No patient selected"}
+              {customer ? `${customer.first_name} ${customer.last_name}` : "Walk-in customer"}
             </span>
           </div>
           <div className="mt-2 flex items-center justify-between text-sm text-muted-foreground">
@@ -99,16 +174,19 @@ export function PaymentDialog({ open, onOpenChange }: { open: boolean; onOpenCha
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-2">
+        <div role="radiogroup" aria-label="Payment method" className="grid grid-cols-2 gap-2">
           {PAYMENT_METHODS.map(({ value, label, icon: Icon }) => (
             <button
               key={value}
+              type="button"
+              role="radio"
+              aria-checked={paymentMethod === value}
               onClick={() => setPaymentMethod(value)}
               className={cn(
                 "flex items-center justify-center gap-2 rounded-md border px-3 py-2.5 text-sm font-semibold transition-colors",
                 paymentMethod === value
                   ? "border-sage bg-sage-soft text-sage"
-                  : "border-line bg-card text-muted-foreground hover:border-sage/50"
+                  : "border-line bg-card text-muted-foreground hover:border-strong",
               )}
             >
               <Icon className="size-4" />
@@ -121,9 +199,9 @@ export function PaymentDialog({ open, onOpenChange }: { open: boolean; onOpenCha
           <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
-          <Button onClick={handleConfirm} disabled={saving || cart.length === 0}>
+          <Button onClick={handleConfirm} disabled={saving || cart.length === 0 || !shift}>
             {saving ? <Loader2 className="size-4 animate-spin" /> : <CreditCard className="size-4" />}
-            Confirm {formatCurrency(total)}
+            {online ? "Confirm" : "Save offline"} {formatCurrency(total)}
           </Button>
         </DialogFooter>
       </DialogContent>

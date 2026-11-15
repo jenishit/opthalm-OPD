@@ -40,10 +40,14 @@ export default function PortalLoginPage() {
       // so the verify page knows what number we're verifying.
       // For this mock we can pass it as a query param or use a session store
       sessionStorage.setItem("verify_phone", data.phone);
-      toast.success(`Your OTP is ${code}`, { description: "Shown here until SMS is connected", duration: 20000 });
+      if (process.env.NODE_ENV !== "production" && code) {
+        toast.success(`Your OTP is ${code}`, { description: "Dev only — shown until SMS is connected", duration: 20000 });
+      } else {
+        toast.success("OTP sent");
+      }
       router.push("/portal/verify");
-    } catch (error: any) {
-      toast.error(error.message || "Failed to send OTP");
+    } catch (error) {
+      toast.error(error instanceof Error && error.message ? error.message : "Failed to send OTP");
     } finally {
       setIsLoading(false);
     }

@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { useFormContext } from "react-hook-form";
+import { useFormContext, type FieldPath } from "react-hook-form";
 import type { IntakeExamFormData } from "@/schemas/shared-schema";
 import { AlertCircle } from "lucide-react";
 
@@ -57,7 +57,7 @@ export function SymptomsSection() {
                         <input
                           type="radio"
                           value={opt}
-                          {...register(`symptoms.${symptom.id}` as any)}
+                          {...register(`symptoms.${symptom.id}` as FieldPath<IntakeExamFormData>)}
                           className="h-3.5 w-3.5 accent-primary"
                         />
                         <span>{opt}</span>
@@ -80,7 +80,7 @@ export function SymptomsSection() {
                 >
                   <input
                     type="checkbox"
-                    {...register(`symptoms.${symptom.id}` as any)}
+                    {...register(`symptoms.${symptom.id}` as FieldPath<IntakeExamFormData>)}
                     className="h-4 w-4 rounded accent-primary"
                   />
                   <span className="select-none">{symptom.label}</span>

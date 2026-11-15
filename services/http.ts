@@ -113,7 +113,7 @@ export async function refreshAccessToken(): Promise<boolean> {
   return refreshInFlight;
 }
 
-export async function apiFetch<T>(path: string, init: RequestInit = {}, retried = false): Promise<T> {
+async function request<T>(path: string, init: RequestInit = {}, retried = false): Promise<{ data: T; headers: Headers }> {
   const token = useAuthStore.getState().accessToken;
   const headers = new Headers(init.headers);
   headers.set("Accept", "application/json");
@@ -147,11 +147,11 @@ export async function apiFetch<T>(path: string, init: RequestInit = {}, retried 
         // possibly consumed refresh-token pair.
         const current = useAuthStore.getState().accessToken;
         if (current && current !== token && Date.now() - lastRefreshAt < 15000) {
-          return apiFetch<T>(path, init, true);
+          return request<T>(path, init, true);
         }
         const refreshed = await refreshAccessToken();
         if (refreshed) {
-          return apiFetch<T>(path, init, true);
+          return request<T>(path, init, true);
         }
       }
       // Session unrecoverable: the redirect to /login is already in
@@ -162,5 +162,21 @@ export async function apiFetch<T>(path: string, init: RequestInit = {}, retried 
     throw new ApiError(res.status, extractMessages(body as ApiErrorBody, res));
   }
 
-  return (body as ApiEnvelope<T>).data;
+  return { data: (body as ApiEnvelope<T>).data, headers: res.headers };
+}
+
+export async function apiFetch<T>(path: string, init: RequestInit = {}, retried = false): Promise<T> {
+  return (await request<T>(path, init, retried)).data;
+}
+
+/**
+ * Like apiFetch, but also reads the `X-Total-Count` header that paginated list
+ * endpoints send (the body stays a plain array). `total` is null when the
+ * server didn't send it (e.g. an older backend).
+ */
+export async function apiFetchPaged<T>(path: string, init: RequestInit = {}): Promise<{ data: T; total: number | null }> {
+  const { data, headers } = await request<T>(path, init);
+  const raw = headers.get("X-Total-Count");
+  const total = raw == null ? null : Number(raw);
+  return { data, total: total != null && Number.isFinite(total) ? total : null };
 }

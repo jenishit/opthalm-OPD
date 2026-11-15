@@ -1,8 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { formatAge } from "@/lib/age";
 import { getTodayQueue } from "@/services/queue-services";
-import { MOCK_QUEUE } from "./mock-data";
 import type { ExamPatient } from "./types";
 
 function genderOf(sex: string | undefined): ExamPatient["g"] {
@@ -11,7 +11,7 @@ function genderOf(sex: string | undefined): ExamPatient["g"] {
   return "o";
 }
 
-/** Today's real exam queue, converted to ExamPatient; falls back to MOCK_QUEUE when there's nothing scheduled yet. */
+/** Today's real exam queue, converted to ExamPatient's nothing scheduled yet. */
 export function useExamQueue() {
   const [patients, setPatients] = useState<ExamPatient[]>([]);
   const [loading, setLoading] = useState(true);
@@ -28,6 +28,7 @@ export function useExamQueue() {
               id: item.patient.id,
               name: `${item.patient.first_name} ${item.patient.last_name}`,
               age: item.patient.age ?? 0,
+              ageLabel: formatAge(item.patient.date_of_birth, item.patient.age),
               g: genderOf(item.patient.sex),
               conds: [],
               urg: "ok",
@@ -55,6 +56,5 @@ export function useExamQueue() {
     setReloadKey((k) => k + 1);
   }, []);
 
-  const usingMock = !loading && patients.length === 0;
-  return { patients: usingMock ? MOCK_QUEUE : patients, loading, usingMock, refresh };
+  return { patients, loading, refresh };
 }

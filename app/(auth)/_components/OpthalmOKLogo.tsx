@@ -12,9 +12,9 @@ export function OpthalmOKLogo({
   variant = "dark",
   width = 40,
 }: OpthalmOKLogoProps) {
-  const main = variant === "dark" ? "#F3EFE6" : "#0B2545";
-  const accent = "#2DD4BF";
-  const muted = variant === "dark" ? "#C3CCD2" : "#5F6B73";
+  const main = variant === "dark" ? "var(--c-hero-ink)" : "var(--c-ink)";
+  const accent = "var(--c-hero-accent)";
+  const muted = variant === "dark" ? "var(--c-hero-mute)" : "var(--c-mute)";
 
   return (
     <div

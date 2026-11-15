@@ -58,3 +58,13 @@ export interface CreatePatientHistoryRequest {
   notes?: string;
   condition_ids: string[];
 }
+
+/** GET /patient/stats — counters computed in the database (clinic-timezone day/month boundaries). */
+export interface PatientStats {
+  total: number;
+  registered: { today: number; last_7_days: number; this_month: number; last_month: number };
+  gender: { male: number; female: number; other: number };
+  with_email: number;
+  seen_today: number;
+  portal_enrolled: number;
+}

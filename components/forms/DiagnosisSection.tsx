@@ -4,14 +4,14 @@ import React from "react";
 import { useFormContext, useFieldArray } from "react-hook-form";
 import type { IntakeExamFormData } from "@/schemas/shared-schema";
 import { Stethoscope, Trash2 } from "lucide-react";
-import { CatalogCombobox } from "./CatalogCombobox";
+import { CatalogCombobox, isDiagnosis } from "./CatalogCombobox";
 
 const selectClass =
   "w-full rounded-xl border border-input bg-card px-3 py-2 text-sm text-foreground outline-none transition-colors focus:border-ring focus-visible:ring-2 focus-visible:ring-ring/40";
 const microLabel = "block text-xs font-medium text-muted-foreground mb-1.5";
 
 export function DiagnosisSection() {
-  const { register, control, watch, formState: { errors } } = useFormContext<IntakeExamFormData>();
+  const { register, control, formState: { errors } } = useFormContext<IntakeExamFormData>();
   const { fields, append, remove } = useFieldArray({
     control,
     name: "diagnoses",
@@ -39,7 +39,7 @@ export function DiagnosisSection() {
                   append({
                     diagnosis_id: id,
                     diagnosis_name: name,
-                    icd10_code: fullItem.icd10_code,
+                    icd10_code: isDiagnosis(fullItem) ? fullItem.icd10_code : undefined,
                     laterality: "OU",
                     status: "provisional",
                   });

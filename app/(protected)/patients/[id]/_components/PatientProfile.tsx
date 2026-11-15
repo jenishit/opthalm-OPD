@@ -1,44 +1,46 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useMemo } from "react";
 import { getPatient } from "@/services/patients-services";
 import { getVisits } from "@/services/visits-services";
-import type { Patient } from "@/schemas/patient-schema";
 import type { Visit } from "@/schemas/visit-schema";
+import { useAsync } from "@/lib/hooks/use-async";
+import { formatAge } from "@/lib/age";
 import { HistoryTimeline } from "./HistoryTimeline";
 import { User, Phone, MapPin, Briefcase, Calendar, Activity, ChevronRight } from "lucide-react";
 import Link from "next/link";
 
 export function PatientProfile({ patientId }: { patientId: string }) {
-  const [patient, setPatient] = useState<Patient | null>(null);
-  const [visits, setVisits] = useState<Visit[]>([]);
-  const [loading, setLoading] = useState(true);
+  // Independent loads: a visits failure must never hide a patient that exists,
+  // and a real error must not be reported as "not found".
+  const patientQ = useAsync(() => getPatient(patientId));
+  const visitsQ = useAsync(() => getVisits({ patient_id: patientId }));
 
-  useEffect(() => {
-    const fetchPatientData = async () => {
-      setLoading(true);
-      try {
-        const [patientData, visitsData] = await Promise.all([
-          getPatient(patientId),
-          getVisits({ patient_id: patientId }),
-        ]);
-        setPatient(patientData);
-        // Sort visits descending
-        setVisits(visitsData.sort((a, b) => new Date(b.created_at!).getTime() - new Date(a.created_at!).getTime()));
-      } catch (error) {
-        console.error("Error fetching patient", error);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const patient = patientQ.data;
+  const visits = useMemo(
+    () =>
+      [...(visitsQ.data ?? [])].sort((a, b) =>
+        String(b.scheduled_at ?? b.visit_date ?? b.created_at ?? "").localeCompare(String(a.scheduled_at ?? a.visit_date ?? a.created_at ?? "")),
+      ),
+    [visitsQ.data],
+  );
 
-    fetchPatientData();
-  }, [patientId]);
-
-  if (loading) {
-    return <div className="p-8 text-center text-muted-foreground">Loading patient profile...</div>;
+  if (patientQ.loading) {
+    return <div role="status" className="p-8 text-center text-muted-foreground">Loading patient profile...</div>;
   }
 
+  if (patientQ.error) {
+    return (
+      <div role="alert" className="flex flex-col items-center gap-3 p-8 text-center">
+        <p className="text-destructive">Couldn&apos;t load this patient: {patientQ.error}</p>
+        <button type="button" onClick={patientQ.reload} className="rounded-md border border-line px-3 py-1.5 text-sm font-semibold hover:border-sage">
+          Retry
+        </button>
+      </div>
+    );
+  }
+
+  // A genuine 404 only: the patient doesn't exist (or was removed).
   if (!patient) {
     return <div className="p-8 text-center text-destructive">Patient not found</div>;
   }
@@ -73,7 +75,7 @@ export function PatientProfile({ patientId }: { patientId: string }) {
               <div className="flex items-start gap-3">
                 <User className="h-5 w-5 text-muted-foreground mt-0.5" />
                 <div>
-                  <div className="text-sm font-medium text-foreground">{patient.age} years • {patient.sex}</div>
+                  <div className="text-sm font-medium text-foreground">{formatAge(patient.date_of_birth, patient.age)} • {patient.sex}</div>
                   <div className="text-xs text-muted-foreground">DOB: {patient.date_of_birth || "Unknown"}</div>
                 </div>
               </div>
@@ -118,7 +120,14 @@ export function PatientProfile({ patientId }: { patientId: string }) {
             </span>
           </div>
           <div className="overflow-y-auto p-0 flex-1">
-            {visits.length === 0 ? (
+            {visitsQ.loading ? (
+              <div role="status" className="p-6 text-center text-sm text-muted-foreground">Loading visits…</div>
+            ) : visitsQ.error ? (
+              <div role="alert" className="flex flex-col items-center gap-2 p-6 text-center text-sm text-destructive">
+                Couldn&apos;t load visits: {visitsQ.error}
+                <button type="button" onClick={visitsQ.reload} className="rounded-md border border-line px-3 py-1 text-xs font-semibold text-foreground hover:border-sage">Retry</button>
+              </div>
+            ) : visits.length === 0 ? (
               <div className="p-6 text-center text-sm text-muted-foreground">No previous visits</div>
             ) : (
               <ul className="divide-y divide-border/60">
@@ -127,7 +136,7 @@ export function PatientProfile({ patientId }: { patientId: string }) {
                     <Link href={`/patients/${patientId}/visits/${visit.id}`} className="block p-4">
                       <div className="flex justify-between items-start mb-1">
                         <div className="font-medium text-foreground text-sm">
-                          {new Date(visit.visit_date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                          {new Date(visit.scheduled_at ?? visit.visit_date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
                         </div>
                         <VisitStatusBadge status={visit.status} />
                       </div>
@@ -155,7 +164,7 @@ export function PatientProfile({ patientId }: { patientId: string }) {
           <h3 className="font-medium text-foreground">Clinical History Timeline</h3>
         </div>
         <div className="p-6 flex flex-col min-h-0">
-          <HistoryTimeline patientId={patientId} />
+          <HistoryTimeline patientId={patientId} visits={visits} />
         </div>
       </div>
     </div>

@@ -2,6 +2,7 @@
 
 import React from "react";
 import type { FullVisitData } from "@/services/visits-services";
+import { VisitCharts } from "./VisitCharts";
 
 export function VisitDetailView({ visitData }: { visitData: FullVisitData }) {
   const { visit, symptoms, readings, examination, diagnoses, treatments, followUp } = visitData;
@@ -9,16 +10,6 @@ export function VisitDetailView({ visitData }: { visitData: FullVisitData }) {
   const formatDate = (dateString?: string) => {
     if (!dateString) return "N/A";
     return new Date(dateString).toLocaleDateString("en-US", { year: 'numeric', month: 'long', day: 'numeric' });
-  };
-
-  const renderSymptom = (label: string, val?: string | boolean) => {
-    if (!val || val === "none") return null;
-    return (
-      <div className="flex justify-between py-1 border-b border-border/40 last:border-0">
-        <span className="text-muted-foreground text-sm">{label}</span>
-        <span className="font-medium text-foreground text-sm">{val === true ? "Yes" : val}</span>
-      </div>
-    );
   };
 
   return (
@@ -44,36 +35,12 @@ export function VisitDetailView({ visitData }: { visitData: FullVisitData }) {
         </div>
       </div>
 
+      <VisitCharts data={visitData} />
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
         {/* Symptoms */}
-        {symptoms && (
-          <div className="bg-card rounded-2xl border border-border/60 overflow-hidden">
-            <div className="px-4 py-3 border-b border-border/60 bg-muted/40">
-              <h3 className="font-medium text-foreground text-sm">Reported Symptoms</h3>
-            </div>
-            <div className="p-4">
-              <div className="space-y-1">
-                {renderSymptom("Foreign Body Sensation", symptoms.foreign_body_sensation)}
-                {renderSymptom("Redness", symptoms.redness)}
-                {renderSymptom("Swelling", symptoms.swelling)}
-                {renderSymptom("Diminished Distance Vision", symptoms.diminished_distance_vision)}
-                {renderSymptom("Diminished Near Vision", symptoms.diminished_near_vision)}
-                {renderSymptom("Blurring", symptoms.blurring)}
-                {renderSymptom("Headache", symptoms.headache)}
-                {renderSymptom("Eye Pain", symptoms.eye_pain)}
-                {renderSymptom("Watery Eyes", symptoms.watery_eyes)}
-                {renderSymptom("Discharge", symptoms.discharge)}
-                {renderSymptom("Itching", symptoms.itching)}
-                {renderSymptom("Photophobia", symptoms.photophobia)}
-                {renderSymptom("Floaters", symptoms.floaters)}
-                {renderSymptom("Flashes", symptoms.flashes)}
-                {renderSymptom("Double Vision", symptoms.double_vision)}
-                {renderSymptom("Recent Fever", symptoms.recent_fever)}
-              </div>
-            </div>
-          </div>
-        )}
+        <SymptomsCard symptoms={symptoms} />
 
         {/* Examination */}
         {examination && (
@@ -253,6 +220,65 @@ export function VisitDetailView({ visitData }: { visitData: FullVisitData }) {
           </div>
         </div>
 
+      </div>
+    </div>
+  );
+}
+
+const SYMPTOM_LABELS: Array<[keyof NonNullable<FullVisitData["symptoms"]>, string]> = [
+  ["foreign_body_sensation", "Foreign body sensation"],
+  ["redness", "Redness"],
+  ["swelling", "Swelling"],
+  ["diminished_distance_vision", "Diminished distance vision"],
+  ["diminished_near_vision", "Diminished near vision"],
+  ["blurring", "Blurring"],
+  ["headache", "Headache"],
+  ["eye_pain", "Eye pain"],
+  ["watery_eyes", "Watery eyes"],
+  ["discharge", "Discharge"],
+  ["itching", "Itching"],
+  ["photophobia", "Photophobia"],
+  ["floaters", "Floaters"],
+  ["flashes", "Flashes"],
+  ["double_vision", "Double vision"],
+];
+
+const EYE_TONE: Record<string, string> = {
+  OD: "bg-sage-soft text-sage",
+  OS: "bg-clay-soft text-clay",
+  OU: "bg-warn-soft text-warn-ink",
+};
+
+/** Reported symptoms as chips tagged with the affected eye; says so plainly when none were recorded. */
+function SymptomsCard({ symptoms }: { symptoms: FullVisitData["symptoms"] }) {
+  const present = symptoms
+    ? SYMPTOM_LABELS.map(([key, label]) => ({ label, eye: String(symptoms[key] ?? "none") })).filter((s) => s.eye !== "none")
+    : [];
+  const fever = symptoms?.recent_fever === true;
+  return (
+    <div className="bg-card rounded-2xl border border-border/60 overflow-hidden">
+      <div className="px-4 py-3 border-b border-border/60 bg-muted/40 flex items-center justify-between">
+        <h3 className="font-medium text-foreground text-sm">Reported Symptoms</h3>
+        {present.length > 0 && <span className="text-xs text-muted-foreground">{present.length} reported</span>}
+      </div>
+      <div className="p-4">
+        {present.length === 0 && !fever ? (
+          <p className="text-sm text-muted-foreground">
+            {symptoms ? "No symptoms were reported for this visit." : "Symptoms weren't recorded for this visit."}
+          </p>
+        ) : (
+          <ul className="flex flex-wrap gap-2">
+            {present.map((s) => (
+              <li key={s.label} className="inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-muted/40 py-1 pl-3 pr-1 text-sm text-foreground">
+                {s.label}
+                <span className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${EYE_TONE[s.eye] ?? "bg-muted text-muted-foreground"}`}>{s.eye}</span>
+              </li>
+            ))}
+            {fever && (
+              <li className="inline-flex items-center rounded-full border border-border/60 bg-muted/40 px-3 py-1 text-sm text-foreground">Recent fever</li>
+            )}
+          </ul>
+        )}
       </div>
     </div>
   );

@@ -38,27 +38,27 @@ export function RevenueBreakdown({ from, to }: { from: string; to: string }) {
   const total = sorted.reduce((sum, r) => sum + r.total_sales, 0);
 
   return (
-    <div className="rounded-[11px] border border-[#e9e6dc] bg-[#fffefa] pb-4 shadow-[0_5px_20px_rgba(42,52,41,0.035),0_1px_2px_rgba(42,52,41,0.04)]">
+    <div className="rounded-[11px] border border-line bg-card pb-4 shadow-sm">
       <div className="px-5 pb-[14px] pt-[19px]">
-        <h3 className="m-0 font-['Playfair_Display',serif] text-base font-semibold text-[#2a3b30]">Revenue by category</h3>
-        <p className="m-0 mt-[5px] text-[10px] text-[#96998f]">Share of optical sales — excludes service-only line items</p>
+        <h3 className="m-0 font-display text-base font-semibold text-ink">Revenue by category</h3>
+        <p className="m-0 mt-[5px] text-[10px] text-mute">Share of optical sales — excludes service-only line items</p>
       </div>
       {rows === null ? (
-        <div className="flex items-center justify-center gap-2 py-10 text-[11px] text-[#92988c]">
+        <div className="flex items-center justify-center gap-2 py-10 text-[11px] text-mute">
           <Loader2 size={15} className="animate-spin" /> Loading…
         </div>
       ) : sorted.length === 0 ? (
-        <div className="px-5 py-6 text-center text-[11px] text-[#92988c]">No optical sales in this period.</div>
+        <div className="px-5 py-6 text-center text-[11px] text-mute">No optical sales in this period.</div>
       ) : (
         sorted.map((row, i) => (
           <div key={row.category} className="px-5 pb-[5px] pt-3">
             <div className="mb-[9px] flex items-center justify-between">
-              <span className="text-[10px] text-[#7f887c]">
+              <span className="text-[10px] text-mute">
                 {CATEGORY_LABEL[row.category as InventoryCategory] ?? row.category}
               </span>
-              <b className="text-[11px] text-[#23342c]">{formatCurrency(row.total_sales)}</b>
+              <b className="text-[11px] text-ink">{formatCurrency(row.total_sales)}</b>
             </div>
-            <div className="h-1.5 overflow-hidden rounded-[5px] bg-[#eeece4]">
+            <div className="h-1.5 overflow-hidden rounded-[5px] bg-line">
               <span
                 className="block h-full rounded-[5px]"
                 style={{

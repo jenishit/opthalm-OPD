@@ -16,12 +16,12 @@ export function SaveRow({
     : "Not saved yet";
 
   return (
-    <div className="mt-1.5 flex flex-wrap items-center justify-between gap-2 border-t border-[#eeece4] pt-[17px]">
-      <span className="text-[9px] text-[#a0a399]">{lastSavedLabel}</span>
+    <div className="mt-1.5 flex flex-wrap items-center justify-between gap-2 border-t border-line pt-[17px]">
+      <span className="text-[9px] text-mute">{lastSavedLabel}</span>
       <Button
         onClick={onSave}
         disabled={saving}
-        className="min-h-9 gap-1.5 rounded-[7px] border border-[#214c3a] bg-[#214c3a] px-3.5 text-[11px] font-semibold text-white hover:border-[#173d2c] hover:bg-[#173d2c] disabled:opacity-60"
+        className="min-h-9 gap-1.5 rounded-[7px] border border-sage bg-sage px-3.5 text-[11px] font-semibold text-primary-foreground hover:border-sagehover hover:bg-sagehover disabled:opacity-60"
       >
         {saving && <Loader2 size={13} className="animate-spin" />}
         {saving ? "Saving…" : "Save changes"}

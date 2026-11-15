@@ -23,8 +23,10 @@ export default function GlobalError({
           Something went wrong
         </h1>
         <p className="mt-2 text-sm text-foreground/70">
-          {error.message || "An unexpected error occurred."}
-          {error.digest ? ` (id: ${error.digest})` : ""}
+          {process.env.NODE_ENV === "production"
+            ? "An unexpected error occurred. Please try again."
+            : error.message}
+          {error.digest ? ` (ref: ${error.digest})` : ""}
         </p>
         <Button onClick={reset} className="mt-6">
           Try again

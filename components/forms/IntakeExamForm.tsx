@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { useForm, FormProvider, type SubmitErrorHandler } from "react-hook-form";
+import { useForm, useWatch, FormProvider, type SubmitErrorHandler } from "react-hook-form";
 import {
   Check,
   ChevronLeft,
@@ -77,6 +77,7 @@ export function IntakeExamForm({ patientId }: { patientId: string }) {
       treatments: [],
     },
   });
+  const examinedBy = useWatch({ control: methods.control, name: "examined_by" });
 
   // Pre-fill history from latest record
   useEffect(() => {
@@ -231,7 +232,7 @@ export function IntakeExamForm({ patientId }: { patientId: string }) {
                 {tabs.find((t) => t.id === activeIntakeTab)?.label}
               </p>
               <p className="truncate font-display text-sm font-medium text-foreground">
-                Examining doctor: {methods.watch("examined_by") || "Unassigned"}
+                Examining doctor: {examinedBy || "Unassigned"}
               </p>
             </div>
             <div className="flex items-center gap-2">

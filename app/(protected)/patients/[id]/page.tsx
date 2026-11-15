@@ -17,7 +17,7 @@ export default async function PatientPage({
       >
         <ChevronLeft size={16} /> All patients
       </Link>
-      <PatientProfile patientId={id} />
+      <PatientProfile key={id} patientId={id} />
     </div>
   );
 }

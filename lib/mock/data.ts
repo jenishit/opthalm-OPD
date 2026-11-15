@@ -13,8 +13,8 @@ export const mockStaff: Staff[] = [
   { id: "s1", name: "Dr. Anil Sharma", role: "doctor", phone: "9800000001", email: "anil@clinic.com" },
   { id: "s2", name: "Dr. Priya Gupta", role: "doctor", phone: "9800000002", email: "priya@clinic.com" },
   { id: "s3", name: "Ravi Kumar", role: "optometrist", phone: "9800000003" },
-  { id: "s4", name: "Sita Thapa", role: "receptionist", phone: "9800000004" },
-  { id: "s5", name: "Gita Maharjan", role: "receptionist", phone: "9800000005" },
+  { id: "s4", name: "Sita Thapa", role: "billing", phone: "9800000004" },
+  { id: "s5", name: "Gita Maharjan", role: "billing", phone: "9800000005" },
 ];
 
 // ═══════════════════════════════════════════════════════════════════════════

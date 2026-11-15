@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { idbAvailable, idbGet, idbPut } from "@/lib/offline/idb";
 import type { InventoryItem } from "@/types/inventory-types";
 import type { PaymentMethod } from "@/types/billing-types";
 import type { Patient } from "@/schemas/patient-schema";
@@ -101,3 +102,41 @@ export const usePosStore = create<PosState>((set, get) => ({
 
   deleteHeldSale: (id) => set((state) => ({ heldSales: state.heldSales.filter((h) => h.id !== id) })),
 }));
+
+// ── Local persistence ───────────────────────────────────────────────────────
+// The cart, selected customer and held sales are mirrored to IndexedDB so a
+// refresh, crash or lost connection doesn't throw away work in progress. The
+// draft holds patient data, so it is wiped on sign-out (lib/offline/cache.ts).
+
+const DRAFT_KEY = "pos:draft";
+let persistenceStarted = false;
+
+export async function startPosPersistence(): Promise<void> {
+  if (persistenceStarted || !idbAvailable()) return;
+  persistenceStarted = true;
+  try {
+    const row = await idbGet<{ key: string; value: Partial<PosState> }>("kv", DRAFT_KEY);
+    const s = usePosStore.getState();
+    // Only restore into a pristine store — never clobber what the cashier just did.
+    if (row?.value && s.cart.length === 0 && s.heldSales.length === 0) {
+      const { cart, customer, discount, paymentMethod, heldSales } = row.value;
+      usePosStore.setState({
+        cart: cart ?? [],
+        customer: customer ?? null,
+        discount: discount ?? 0,
+        paymentMethod: paymentMethod ?? "cash",
+        heldSales: heldSales ?? [],
+      });
+    }
+  } catch {
+    /* start empty */
+  }
+  let timer: ReturnType<typeof setTimeout>;
+  usePosStore.subscribe((s) => {
+    clearTimeout(timer);
+    timer = setTimeout(() => {
+      const { cart, customer, discount, paymentMethod, heldSales } = s;
+      idbPut("kv", { key: DRAFT_KEY, value: { cart, customer, discount, paymentMethod, heldSales } }).catch(() => {});
+    }, 250);
+  });
+}

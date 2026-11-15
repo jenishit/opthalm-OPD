@@ -1,7 +1,7 @@
 import { apiFetch, ApiError, NotImplementedError } from "./http";
-import { delay } from "@/lib/mock/delay";
-import { mockInvestigations } from "@/lib/mock/data";
 import { useAuthStore } from "@/stores/authStore";
+import { toScheduledAt } from "@/lib/clinic-time";
+import { invalidateScheduleCache } from "./schedule-cache";
 import type { Visit, VisitStatus, VisitSymptoms, VisitDiagnosis } from "@/schemas/visit-schema";
 import type { RefractionReading } from "@/schemas/refraction-schema";
 import type { ExaminationFindings } from "@/schemas/examination-schema";
@@ -23,6 +23,9 @@ export function toUiVisit(record: VisitItem, patientId: string): Visit {
     examined_by: record.examine_by.name,
     status: record.status as VisitStatus,
     visit_date: record.visit_date,
+    scheduled_at: record.scheduled_at,
+    ends_at: record.ends_at,
+    duration_minutes: record.duration_minutes,
     chief_complaint: record.chief_complaint,
     created_at: record.created_at,
     updated_at: record.updated_at,
@@ -43,13 +46,21 @@ function fetchVisitRecord(id: string): Promise<VisitRecord> {
 }
 
 /** POST /visit — returns the created visit with `examine_by` as a plain string. */
-export function createVisit(body: VisitUpsertRequest): Promise<VisitCreate> {
-  return apiFetch<VisitCreate>("/visit", { method: "POST", body: JSON.stringify(body) });
+export async function createVisit(body: VisitUpsertRequest): Promise<VisitCreate> {
+  try {
+    return await apiFetch<VisitCreate>("/visit", { method: "POST", body: JSON.stringify(body) });
+  } finally {
+    invalidateScheduleCache();
+  }
 }
 
 /** PATCH /visit/:id reuses the create body; returns a message. */
-function patchVisitRecord(id: string, body: VisitUpsertRequest): Promise<void> {
-  return apiFetch<void>(`/visit/${id}`, { method: "PATCH", body: JSON.stringify(body) });
+async function patchVisitRecord(id: string, body: VisitUpsertRequest): Promise<void> {
+  try {
+    return await apiFetch<void>(`/visit/${id}`, { method: "PATCH", body: JSON.stringify(body) });
+  } finally {
+    invalidateScheduleCache();
+  }
 }
 
 // ── UI-facing visit API ──────────────────────────────────────────────────────
@@ -79,51 +90,88 @@ export async function getVisit(id: string): Promise<Visit | null> {
   }
 }
 
-export async function updateVisitStatus(id: string, status: VisitStatus): Promise<Visit> {
-  const current = await fetchVisitRecord(id);
-  await patchVisitRecord(id, {
+/**
+ * PATCH /visit/:id reuses the create body, so every update must send the whole
+ * visit — including `scheduled_at`/`duration_minutes`, or the appointment time
+ * could be reset. This builds that body from the current record.
+ */
+function bodyFrom(current: VisitRecord, over: Partial<VisitUpsertRequest> = {}): VisitUpsertRequest {
+  return {
     patient_id: current.patient.id,
     examine_by: current.examine_by.id,
-    status,
+    status: current.status,
     visit_date: current.visit_date,
+    scheduled_at: current.scheduled_at,
+    duration_minutes: current.duration_minutes,
     chief_complaint: current.chief_complaint,
-  });
+    ...over,
+  };
+}
+
+export async function updateVisitStatus(id: string, status: VisitStatus): Promise<Visit> {
+  const current = await fetchVisitRecord(id);
+  await patchVisitRecord(id, bodyFrom(current, { status }));
   return toUiVisit({ ...current, status }, current.patient.id);
 }
 
-/** Reschedules a visit to a new date — e.g. dragging it to another day on the appointments calendar. */
-export async function updateVisitDate(id: string, visitDate: string): Promise<Visit> {
+/**
+ * Moves a visit to a new date AND time ("YYYY-MM-DD", "HH:MM", clinic-local)
+ * in one PATCH. The backend stores the appointment start as `scheduled_at`.
+ */
+export async function updateVisitSchedule(id: string, dateIso: string, time: string): Promise<Visit> {
   const current = await fetchVisitRecord(id);
-  await patchVisitRecord(id, {
-    patient_id: current.patient.id,
-    examine_by: current.examine_by.id,
-    status: current.status,
-    visit_date: visitDate,
-    chief_complaint: current.chief_complaint,
-  });
-  return toUiVisit({ ...current, visit_date: visitDate }, current.patient.id);
+  const scheduled_at = toScheduledAt(dateIso, time);
+  await patchVisitRecord(id, bodyFrom(current, { scheduled_at, visit_date: dateIso }));
+  return toUiVisit({ ...current, scheduled_at, visit_date: dateIso }, current.patient.id);
 }
 
-/** Rewrites the chief complaint — used to re-tag an appointment's type on the week board. */
+/** Rewrites the chief complaint — used to re-tag an appointment's type. */
 export async function updateVisitComplaint(id: string, chiefComplaint: string): Promise<Visit> {
   const current = await fetchVisitRecord(id);
-  await patchVisitRecord(id, {
-    patient_id: current.patient.id,
-    examine_by: current.examine_by.id,
-    status: current.status,
-    visit_date: current.visit_date,
-    chief_complaint: chiefComplaint,
-  });
+  await patchVisitRecord(id, bodyFrom(current, { chief_complaint: chiefComplaint }));
   return toUiVisit({ ...current, chief_complaint: chiefComplaint }, current.patient.id);
 }
 
 // ── Clinical sub-documents ───────────────────────────────────────────────────
 //
-// Symptoms/refraction/exam findings/diagnoses/treatments/follow-ups are now
-// backed by real endpoints under /visit/:id/*. Investigations still have no
-// endpoint, so they stay in a local store keyed by visit id.
+// Symptoms, refraction, exam findings, diagnoses, treatments, follow-ups and
+// investigations are all backed by real endpoints under /visit/:id/*.
 
-const investigationsStore: Record<string, Investigation[]> = { ...mockInvestigations };
+/** Backend shape of an investigation (GET/PUT /visit/:id/investigations). */
+interface InvestigationWire {
+  id?: string;
+  visit_id?: string;
+  type: string;
+  eye?: "OD" | "OS" | "OU";
+  result_value?: string;
+  notes?: string;
+}
+
+const RESULT_MAX = 50; // result_value is capped at 50 characters server-side
+
+function toWire(inv: Investigation): InvestigationWire {
+  const result = inv.result ?? "";
+  // Anything beyond the result field's limit is kept in the notes rather than dropped.
+  const overflow = result.length > RESULT_MAX ? result.slice(RESULT_MAX) : "";
+  const notes = [inv.notes, overflow].filter(Boolean).join(" ").slice(0, 255);
+  return {
+    type: inv.type,
+    eye: inv.eye,
+    result_value: result.slice(0, RESULT_MAX) || undefined,
+    notes: notes || undefined,
+  };
+}
+
+function fromWire(w: InvestigationWire): Investigation {
+  return {
+    id: w.id,
+    visit_id: w.visit_id,
+    type: w.type as Investigation["type"],
+    eye: w.eye,
+    result: w.result_value ?? undefined,
+    notes: w.notes ?? undefined,
+  };
+}
 
 /** GET /visit/:id/clinical — the whole chart (symptoms, readings, exam findings, diagnoses, treatments, follow-up) in one call. */
 export function getVisitClinical(visitId: string): Promise<VisitClinical> {
@@ -192,30 +240,59 @@ export function updateVisitFollowUp(visitId: string, followUp: FollowUp): Promis
  * callers that already hold a real visit id (e.g. today's queue) can save
  * clinical data without creating a duplicate visit via createFullVisit.
  *
- * Investigations have no backend endpoint yet, so they're kept locally.
  */
-export async function saveClinicalData(visitId: string, data: IntakeExamFormData): Promise<void> {
+export async function saveClinicalData(
+  visitId: string,
+  data: IntakeExamFormData,
+  /** partial: a focused chart (the exam page) that must not wipe what other forms recorded — symptoms and treatments are left alone, intake-owned exam fields are kept, and investigations are upserted rather than replaced. */
+  opts: { partial?: boolean } = {},
+): Promise<void> {
+  let examination = data.examination;
+  if (opts.partial) {
+    // PUT /examination replaces the whole document: carry over what only the intake form fills in.
+    const current = await getVisitClinical(visitId).catch(() => null);
+    const keep = current?.examination;
+    if (keep) {
+      examination = {
+        ...data.examination,
+        bp: keep.bp,
+        convergence: keep.convergence,
+        cover_test: keep.cover_test,
+        eom: keep.eom,
+        iop_time: keep.iop_time,
+      };
+    }
+  }
+
   await Promise.all([
-    updateVisitSymptoms(visitId, data.symptoms),
-    updateVisitExamination(visitId, data.examination),
+    opts.partial ? Promise.resolve() : updateVisitSymptoms(visitId, data.symptoms),
+    updateVisitExamination(visitId, examination),
     Promise.all(data.readings.map((reading) => upsertVisitReading(visitId, reading))),
     updateVisitDiagnoses(visitId, data.diagnoses),
-    updateVisitTreatments(visitId, data.treatments),
+    opts.partial ? Promise.resolve() : updateVisitTreatments(visitId, data.treatments),
     data.follow_up ? updateVisitFollowUp(visitId, data.follow_up) : Promise.resolve(),
   ]);
 
-  if (data.investigations.length > 0) {
-    investigationsStore[visitId] = data.investigations.map((inv, i) => ({
-      ...inv,
-      id: `inv${Date.now()}_${i}`,
-      visit_id: visitId,
-    }));
+  if (opts.partial) {
+    // PATCH upserts by test name + eye, so entries made on the intake form survive an exam save.
+    if (data.investigations.length > 0) {
+      await apiFetch(`/visit/${visitId}/investigations`, {
+        method: "PATCH",
+        body: JSON.stringify({ investigations: data.investigations.map(toWire) }),
+      });
+    }
+    return;
   }
+  // Replace-all semantics: saving an empty list clears investigations that were removed.
+  await apiFetch(`/visit/${visitId}/investigations`, {
+    method: "PUT",
+    body: JSON.stringify({ investigations: data.investigations.map(toWire) }),
+  });
 }
 
 export async function getVisitInvestigations(visitId: string): Promise<Investigation[]> {
-  await delay();
-  return investigationsStore[visitId] ?? [];
+  const list = await apiFetch<InvestigationWire[] | null>(`/visit/${visitId}/investigations`);
+  return (list ?? []).map(fromWire);
 }
 
 /**
@@ -227,7 +304,6 @@ export async function createFullVisit(
   data: IntakeExamFormData
 ): Promise<Visit> {
   const staffUser = useAuthStore.getState().staffUser;
-  const today = new Date().toISOString().split("T")[0];
 
   const record = await createVisit({
     patient_id: patientId,
@@ -235,7 +311,8 @@ export async function createFullVisit(
     // display ref internally.
     examine_by: staffUser?.id || data.examined_by || "",
     status: "completed",
-    visit_date: today,
+    // A full-RFC3339 start; a date-only value would be ignored and treated as "now".
+    scheduled_at: new Date().toISOString(),
     chief_complaint: data.chief_complaint,
   });
 
@@ -247,7 +324,9 @@ export async function createFullVisit(
     // Keep the display name for the UI, not the raw id the API echoes back.
     examined_by: staffUser?.name || data.examined_by || record.examine_by,
     status: record.status as VisitStatus,
-    visit_date: record.visit_date,
+    visit_date: record.visit_date ?? String(record.scheduled_at ?? "").slice(0, 10),
+    scheduled_at: record.scheduled_at,
+    duration_minutes: record.duration_minutes,
     chief_complaint: record.chief_complaint,
     created_at: record.created_at,
     updated_at: record.updated_at,

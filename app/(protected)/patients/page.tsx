@@ -1,12 +1,19 @@
 "use client";
+
 import Link from "next/link";
-import { Activity, Clock3, UserRoundPlus, Users } from "lucide-react";
+import { CalendarPlus, CalendarRange, UserRoundPlus, Users } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
+import StatCard from "@/components/ui/StatCard";
+import { useAsync } from "@/lib/hooks/use-async";
+import { getPatientStats } from "@/services/patients-services";
 import { PatientListTable } from "@/app/(protected)/patients/_components/PatientListTable";
 import SectionHeading from "../dashboard/_components/SectionHeading";
-import StatCard from "@/components/ui/StatCard";
 
 export default function PatientsPage() {
+  // Counters come from GET /patient/stats (one aggregate query) — the page never loads the whole list to count it.
+  const { data: ps, loading } = useAsync(() => getPatientStats().catch(() => null));
+  const v = (n: number | undefined) => (loading ? "…" : n == null ? "—" : n.toLocaleString());
+
   return (
     <>
       <SectionHeading
@@ -23,37 +30,10 @@ export default function PatientsPage() {
         }
       />
       <div className="mb-4 grid grid-cols-2 gap-3.5 md:grid-cols-4">
-        <StatCard
-          label="Total patients"
-          value="2,481"
-          change="8.2%"
-          foot="this month"
-          icon={Users}
-        />
-        <StatCard
-          label="New this month"
-          value="148"
-          change="14%"
-          foot="vs. last month"
-          icon={UserRoundPlus}
-          kind="blue"
-        />
-        <StatCard
-          label="Follow-ups due"
-          value="32"
-          change="8 overdue"
-          foot="need scheduling"
-          icon={Clock3}
-          kind="amber"
-        />
-        <StatCard
-          label="Records updated"
-          value="96%"
-          change="+4%"
-          foot="completion rate"
-          icon={Activity}
-          kind="violet"
-        />
+        <StatCard label="Total patients" value={v(ps?.total)} change="All time" foot="in this clinic" icon={Users} />
+        <StatCard label="New this month" value={v(ps?.registered.this_month)} change={ps ? `${ps.registered.last_month} last month` : "—"} foot="registered" icon={CalendarRange} kind="blue" />
+        <StatCard label="Last 7 days" value={v(ps?.registered.last_7_days)} change="Rolling week" foot="registered" icon={CalendarPlus} kind="amber" />
+        <StatCard label="Registered today" value={v(ps?.registered.today)} change={ps ? `${ps.seen_today} seen today` : "—"} foot="new records" icon={UserRoundPlus} kind="violet" />
       </div>
 
       <div className="flex flex-1 flex-col overflow-hidden rounded-2xl border border-border/60 bg-card">

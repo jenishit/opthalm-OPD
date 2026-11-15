@@ -68,10 +68,11 @@ export const formatCurrency = (amount: number) =>
   `Rs. ${Math.round(amount).toLocaleString("en-IN")}`;
 
 /** Sets a value at a path inside a (possibly nested) plain object/array, returning a new copy. */
-export const setIn = (o: any, p: Array<string | number>, v: any): any => {
-  if (!p.length) return v;
+export function setIn<T>(o: T, p: Array<string | number>, v: unknown): T {
+  if (!p.length) return v as T;
   const [k, ...r] = p;
-  const c = Array.isArray(o) ? [...o] : { ...o };
-  c[k as any] = setIn(o ? o[k as any] : undefined, r, v);
-  return c;
-};
+  const src = (o ?? {}) as Record<string | number, unknown>;
+  const copy: Record<string | number, unknown> | unknown[] = Array.isArray(src) ? [...src] : { ...src };
+  (copy as Record<string | number, unknown>)[k] = setIn(src[k], r, v);
+  return copy as T;
+}

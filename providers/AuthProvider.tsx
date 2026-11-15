@@ -4,6 +4,7 @@ import { useSession } from "next-auth/react";
 import { useEffect } from "react";
 
 import type { Staff } from "@/schemas/shared-schema";
+import { clearLocalPhi } from "@/lib/offline/cache";
 import { useAuthStore } from "@/stores/authStore";
 
 /**
@@ -23,6 +24,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (status === "unauthenticated" || !token) {
       // Only clear the staff half — portal sessions are independent.
       useAuthStore.getState().logoutStaff();
+      // Signed out: remove cached patient data and the POS draft from this device.
+      if (status === "unauthenticated") void clearLocalPhi();
       return;
     }
 

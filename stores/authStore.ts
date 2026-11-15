@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { createJSONStorage, persist } from "zustand/middleware";
 import type { Staff } from "@/schemas/shared-schema";
 import type { Patient } from "@/schemas/patient-schema";
 
@@ -18,6 +18,15 @@ interface AuthState {
   logoutPortal: () => void;
 }
 
+/**
+ * Staff credentials (access/refresh tokens, staff identity) are held in
+ * memory ONLY — they are re-seeded from the encrypted NextAuth cookie by
+ * AuthProvider on every load. Persisting them to localStorage would expose
+ * them to any script running on the page (XSS → account takeover).
+ *
+ * Only the patient-portal session is persisted, and to sessionStorage (cleared
+ * when the tab closes) rather than localStorage, since it holds PHI.
+ */
 export const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
@@ -50,7 +59,13 @@ export const useAuthStore = create<AuthState>()(
         }),
     }),
     {
-      name: "eye-clinic-auth-storage",
+      name: "eye-clinic-portal-session",
+      storage: createJSONStorage(() => sessionStorage),
+      partialize: (state) => ({
+        portalPatient: state.portalPatient,
+        authMethod: state.authMethod,
+        sessionToken: state.sessionToken,
+      }),
     }
   )
 );

@@ -24,6 +24,13 @@ export function snellenVA(keys: string[]): { l: string; miss: number } | null {
   return best;
 }
 
+/** The letters to mark so `snellenVA` reads back `line` (e.g. "6/12") — every letter down to that row. */
+export function keysForVA(line: string | undefined): string[] {
+  const row = SNL.indexOf(line ?? "");
+  if (row < 0) return [];
+  return SNELLEN.slice(0, row + 1).flatMap((r, i) => r.map((_, j) => `${i}-${j}`));
+}
+
 /** Uncorrected / presenting visual acuity — tap the letters the patient reads correctly. */
 export default function Snellen({ keys, onChange }: { keys: string[]; onChange: (keys: string[]) => void }) {
   const va = snellenVA(keys);

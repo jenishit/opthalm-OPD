@@ -108,25 +108,25 @@ export function bsDaysInMonth(year: number, month: number): number {
   return days;
 }
 
-/** 0 = Sunday … 6 = Saturday for a date in either calendar. */
-export function bsWeekdayIndex(bs: BSDate, iso?: string): number {
-  try {
-    const r = new DateConverter(iso ?? bsToAd(bs) ?? "").toAd();
-    return AD_DAY_NAMES.indexOf(r.day) < 0 ? 0 : AD_DAY_NAMES.indexOf(r.day);
-  } catch {
-    return 0;
-  }
+/** 0 = Sunday … 6 = Saturday for an ISO AD date (computed in UTC so the time zone can't shift the day). */
+function adWeekday(iso: string): number | null {
+  const [y, m, d] = iso.split("-").map(Number);
+  if (!y || !m || !d) return null;
+  return new Date(Date.UTC(y, m - 1, d)).getUTCDay();
 }
 
-/** Weekday names in both scripts for an ISO AD date (null when out of range). */
+/** 0 = Sunday … 6 = Saturday for a BS date (or the AD date given in `iso`). */
+export function bsWeekdayIndex(bs: BSDate, iso?: string): number {
+  // Convert the BS date to its AD equivalent first, then take that date's weekday.
+  const ad = iso ?? bsToAd(bs);
+  const w = ad ? adWeekday(ad) : null;
+  return w ?? 0;
+}
+
+/** Weekday names in both scripts for an ISO AD date (null when invalid). */
 export function weekdayName(iso: string): { en: string; np: string } | null {
-  try {
-    const r = new DateConverter(iso).toAd();
-    const i = AD_DAY_NAMES.indexOf(r.day);
-    return i < 0 ? null : { en: AD_DAY_NAMES[i], np: BS_WEEKDAYS_NP[i] };
-  } catch {
-    return null;
-  }
+  const i = adWeekday(iso);
+  return i == null ? null : { en: AD_DAY_NAMES[i], np: BS_WEEKDAYS_NP[i] };
 }
 
 /** The calendar date today in Nepal time (Asia/Kathmandu), ISO AD. */

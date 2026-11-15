@@ -19,6 +19,10 @@ export const visitSchema = z.object({
   examined_by: z.string().optional(),
   status: z.enum(visitStatus).default("scheduled"),
   visit_date: z.string(),
+  /** Appointment start (RFC3339), when the backend provides it. */
+  scheduled_at: z.string().optional(),
+  ends_at: z.string().optional(),
+  duration_minutes: z.number().optional(),
   chief_complaint: z.string().min(1, "Chief complaint is required"),
   complaint_duration: z.string().optional(),
   created_at: z.string().datetime().optional(),

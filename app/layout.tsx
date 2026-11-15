@@ -1,51 +1,62 @@
 import type { Metadata } from "next";
-import { Inconsolata, Instrument_Serif, Lora, Noto_Sans_Devanagari, Poppins, Source_Sans_3 } from "next/font/google";
+import localFont from "next/font/local";
 import { SessionProvider } from "next-auth/react";
 import { ThemeProvider } from "@/providers/ThemeProvider";
 import { AuthProvider } from "@/providers/AuthProvider";
+import { ServiceWorkerRegister } from "@/providers/ServiceWorkerRegister";
 import { AppearanceProvider } from "@/providers/AppearanceProvider";
 import { Toaster } from "@/components/shadcn/sonner";
 import "./globals.css";
 
-const sourceSans = Source_Sans_3({
+// Self-hosted (app/fonts) — no runtime or build-time dependency on Google Fonts.
+const sourceSans = localFont({
   variable: "--font-source-sans",
-  subsets: ["latin"],
-  weight: "variable",
+  src: [{ path: "./fonts/source-sans-3-latin-wght-normal.woff2", weight: "200 900", style: "normal" }],
+  display: "swap",
 });
 
-const lora = Lora({
+const lora = localFont({
   variable: "--font-lora",
-  subsets: ["latin"],
-  weight: "variable",
-  style: ["normal", "italic"],
+  src: [
+    { path: "./fonts/lora-latin-wght-normal.woff2", weight: "400 700", style: "normal" },
+    { path: "./fonts/lora-latin-wght-italic.woff2", weight: "400 700", style: "italic" },
+  ],
+  display: "swap",
 });
 
-const inconsolata = Inconsolata({
+const inconsolata = localFont({
   variable: "--font-inconsolata",
-  subsets: ["latin"],
-  weight: "variable",
+  src: [{ path: "./fonts/inconsolata-latin-wght-normal.woff2", weight: "200 900", style: "normal" }],
+  display: "swap",
 });
 
 /** Brand display serif (Instrument Serif) — login/auth surfaces. */
-const instrumentSerif = Instrument_Serif({
+const instrumentSerif = localFont({
   variable: "--font-instrument",
-  subsets: ["latin"],
-  weight: "400",
-  style: ["normal", "italic"],
+  src: [
+    { path: "./fonts/instrument-serif-latin-400-normal.woff2", weight: "400", style: "normal" },
+    { path: "./fonts/instrument-serif-latin-400-italic.woff2", weight: "400", style: "italic" },
+  ],
+  display: "swap",
 });
 
 /** Brand sans (Poppins) — login/auth surfaces. */
-const poppins = Poppins({
+const poppins = localFont({
   variable: "--font-poppins",
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
+  src: [
+    { path: "./fonts/poppins-latin-400-normal.woff2", weight: "400", style: "normal" },
+    { path: "./fonts/poppins-latin-500-normal.woff2", weight: "500", style: "normal" },
+    { path: "./fonts/poppins-latin-600-normal.woff2", weight: "600", style: "normal" },
+    { path: "./fonts/poppins-latin-700-normal.woff2", weight: "700", style: "normal" },
+  ],
+  display: "swap",
 });
 
 /** Devanagari glyph coverage (BS dates, Nepali month names) — fallback only. */
-const notoDevanagari = Noto_Sans_Devanagari({
+const notoDevanagari = localFont({
   variable: "--font-noto-dev",
-  subsets: ["devanagari"],
-  weight: "variable",
+  src: [{ path: "./fonts/noto-sans-devanagari-devanagari-wght-normal.woff2", weight: "100 900", style: "normal" }],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -78,6 +89,7 @@ export default function RootLayout({
                 <AppearanceProvider>{children}</AppearanceProvider>
               </AuthProvider>
               <Toaster />
+              <ServiceWorkerRegister />
             </SessionProvider>
           </ThemeProvider>
         </body>

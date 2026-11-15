@@ -1,12 +1,14 @@
 "use client";
 
-import React, { use, useEffect, useState, useRef } from "react";
+import React, { use, useEffect, useState } from "react";
 import { getFullVisitData, type FullVisitData } from "@/services/visits-services";
 import { getPatient } from "@/services/patients-services";
 import type { Patient } from "@/schemas/patient-schema";
 import { VisitDetailView } from "@/app/(protected)/patients/[id]/visits/[visitId]/_components/VisitDetailView";
 import { PrescriptionPrint } from "@/app/(protected)/patients/[id]/visits/[visitId]/_components/PrescriptionPrint";
-import { createPrescription } from "@/services/prescriptions-services";
+import { rxNumberFor } from "@/services/prescriptions-services";
+import { loadSellerInfo, type SellerInfo } from "@/lib/pos/seller";
+import { ApiError } from "@/services/http";
 import { useAuthStore } from "@/stores/authStore";
 import Link from "next/link";
 import { ArrowLeft, Printer, Edit } from "lucide-react";
@@ -20,14 +22,16 @@ export default function VisitPage({
   const [patient, setPatient] = useState<Patient | null>(null);
   const [visitData, setVisitData] = useState<FullVisitData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [isPrinting, setIsPrinting] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [reloadKey, setReloadKey] = useState(0);
+  const [clinic, setClinic] = useState<SellerInfo | null>(null);
 
   const { staffUser } = useAuthStore();
-  const printRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
+      setLoadError(null);
       try {
         const [pData, vData] = await Promise.all([
           getPatient(id),
@@ -37,60 +41,37 @@ export default function VisitPage({
         setVisitData(vData);
       } catch (error) {
         console.error("Error fetching visit details", error);
+        setLoadError(error instanceof ApiError ? error.message : "Something went wrong while loading this visit.");
       } finally {
         setLoading(false);
       }
     };
 
     fetchData();
-  }, [id, visitId]);
+  }, [id, visitId, reloadKey]);
 
-  const handlePrint = async () => {
-    if (!visitData || !patient || !staffUser) return;
+  // Clinic letterhead for the printout (admin-only endpoint; falls back to the copy cached on this device).
+  useEffect(() => {
+    void loadSellerInfo().then((r) => setClinic(r.info));
+  }, []);
 
-    setIsPrinting(true);
-    try {
-      // 1. Create a prescription record in the backend (mock)
-      // Determine type based on data
-      const hasFinalRx = visitData.readings.some((r) => r.stage === "final_rx");
-      const hasMeds = visitData.treatments.some((t) => t.type === "medicine");
-
-      let rxType: "spectacle" | "medication" | "combined" = "combined";
-      if (hasFinalRx && !hasMeds) rxType = "spectacle";
-      else if (!hasFinalRx && hasMeds) rxType = "medication";
-
-      const rx = await createPrescription(
-        visitData.visit.id,
-        patient.id,
-        rxType,
-        staffUser.name,
-      );
-
-      // 2. Attach prescription metadata to state if we were showing it dynamically,
-      // but for simplicity we'll just trigger the browser print dialogue.
-      // In a real app, we might use react-to-print library here.
-
-      // Temporary hack for mock printing:
-      const printContents = printRef.current?.innerHTML;
-      if (printContents) {
-        const originalContents = document.body.innerHTML;
-        document.body.innerHTML = printContents;
-        window.print();
-        document.body.innerHTML = originalContents;
-        // Need to reload window to restore React listeners after innerHTML replacement
-        window.location.reload();
-      }
-    } catch (error) {
-      console.error("Print failed", error);
-    } finally {
-      setIsPrinting(false);
-    }
-  };
+  // Print the real page via the print stylesheet — the screen content hides itself
+  // (print:hidden) and only the prescription remains.
+  const handlePrint = () => window.print();
 
   if (loading)
     return (
       <div className="p-8 text-center text-muted-foreground">
         Loading visit details...
+      </div>
+    );
+  if (loadError)
+    return (
+      <div role="alert" className="flex flex-col items-center gap-3 p-8 text-center">
+        <p className="text-destructive">Couldn&apos;t load this visit: {loadError}</p>
+        <button type="button" onClick={() => setReloadKey((k) => k + 1)} className="rounded-md border border-line px-3 py-1.5 text-sm font-semibold hover:border-sage">
+          Retry
+        </button>
       </div>
     );
   if (!patient || !visitData)
@@ -101,7 +82,8 @@ export default function VisitPage({
     );
 
   return (
-    <div className="flex flex-col gap-6 relative">
+    <div className="relative flex flex-col gap-6">
+      <div className="flex flex-col gap-6 print:hidden">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Link
@@ -122,11 +104,10 @@ export default function VisitPage({
           {visitData.visit.status === "completed" && (
             <button
               onClick={handlePrint}
-              disabled={isPrinting}
               className="flex items-center gap-2 rounded-md border border-line bg-card px-4 py-2 text-sm font-semibold text-foreground hover:border-sage focus:outline-none transition-colors"
             >
               <Printer className="h-4 w-4" />
-              {isPrinting ? "Generating..." : "Print Rx"}
+              Print Rx
             </button>
           )}
           <Link
@@ -142,24 +123,24 @@ export default function VisitPage({
       <div>
         <VisitDetailView visitData={visitData} />
       </div>
+      </div>
 
-      {/* Hidden print container */}
-      <div className="hidden">
-        <div ref={printRef}>
-          <PrescriptionPrint
-            prescription={{
-              id: "temp",
-              visit_id: visitData.visit.id,
-              patient_id: patient.id,
-              prescription_number: "PREVIEW",
-              type: "combined",
-              signed_by: staffUser?.name || "Doctor",
-              issued_at: new Date().toISOString(),
-            }}
-            visitData={visitData}
-            patient={patient}
-          />
-        </div>
+      {/* Print-only prescription */}
+      <div className="hidden print:block">
+        <PrescriptionPrint
+          prescription={{
+            id: visitData.visit.id,
+            visit_id: visitData.visit.id,
+            patient_id: patient.id,
+            prescription_number: rxNumberFor(visitData.visit.id, String(visitData.visit.visit_date).slice(0, 10)),
+            type: "combined",
+            signed_by: visitData.visit.examined_by ?? staffUser?.name ?? "Doctor",
+            issued_at: String(visitData.visit.visit_date),
+          }}
+          visitData={visitData}
+          patient={patient}
+          clinic={clinic}
+        />
       </div>
     </div>
   );

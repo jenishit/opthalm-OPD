@@ -19,6 +19,8 @@ export interface ExamPatient {
   id: string;
   name: string;
   age: number;
+  /** Display age — months/days for infants, e.g. "7 months". */
+  ageLabel?: string;
   g: Gender;
   conds: string[];
   urg: Urg;
@@ -58,6 +60,18 @@ export interface FundusFindings {
   status: string[];
 }
 
+/** One investigation the examiner entered — any test name, any eye, free result and notes. */
+export interface ExamInvestigation {
+  id: string;
+  /** Test name, e.g. "Schirmer test" (backend limit 50 characters). */
+  type: string;
+  eye: "OD" | "OS" | "OU" | "";
+  /** Backend limit 50 characters. */
+  result: string;
+  /** Backend limit 255 characters. */
+  notes: string;
+}
+
 export interface ExamState {
   /** Uncorrected / presenting visual acuity — the Snellen letters identified, before refraction. */
   va: { od: string[]; os: string[] };
@@ -69,7 +83,12 @@ export interface ExamState {
   slit: { od: SlitFindings; os: SlitFindings };
   fundus: { od: FundusFindings; os: FundusFindings };
   marks: { od: string[]; os: string[] };
+  investigations: ExamInvestigation[];
   findings: string[];
+  /** Which eye each finding applies to, keyed by finding id (checklist) or text (typed). Missing = both eyes. */
+  /** Original diagnosis_id of findings loaded from the record, so re-saving keeps catalog ids. Keyed like findingEye. */
+  findingId: Record<string, string>;
+  findingEye: Record<string, "OD" | "OS" | "OU" | "none">;
   /** Free-text findings typed in beyond the fixed checklist. */
   customFindings: string[];
   fu: number | null;

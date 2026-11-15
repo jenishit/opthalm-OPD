@@ -4,7 +4,9 @@ import type {
   CreateInventoryItemRequest,
   CreatePurchaseRequest,
   CreateVendorRequest,
+  ExpiringLot,
   InventoryItem,
+  ItemLot,
   Purchase,
   StockMovement,
   UpdateInventoryItemRequest,
@@ -123,4 +125,15 @@ export function listPurchases(limit = 100, offset = 0): Promise<Purchase[]> {
 
 export function getPurchase(id: string): Promise<Purchase> {
   return apiFetch<Purchase>(`/inventory/purchases/${id}`);
+}
+
+/** GET /inventory/reports/expiring?days — lots expiring within the window (per lot, with quantity). */
+export function getExpiringLots(days = 90): Promise<ExpiringLot[]> {
+  return apiFetch<ExpiringLot[]>(`/inventory/reports/expiring?days=${Math.min(3650, Math.max(1, days))}`);
+}
+
+/** GET /inventory/items/:id/lots — batches in stock, earliest expiry first. */
+export async function getItemLots(id: string, includeEmpty = false): Promise<ItemLot[]> {
+  const q = includeEmpty ? "?include_empty=true" : "";
+  return (await apiFetch<ItemLot[] | null>(`/inventory/items/${id}/lots${q}`)) ?? [];
 }

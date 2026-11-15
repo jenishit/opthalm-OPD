@@ -12,7 +12,7 @@ export const SLIT = {
 export const FMARKS: Array<{ id: string; n: string; c: string }> = [
   { id: "hem", n: "Haemorrhage", c: "var(--color-bad)" },
   { id: "exudate", n: "Exudate", c: "var(--color-warn)" },
-  { id: "drusen", n: "Drusen", c: "#8477A3" },
+  { id: "drusen", n: "Drusen", c: "var(--color-t-surg)" },
   { id: "tear", n: "Tear / hole", c: "var(--color-sage)" },
 ];
 

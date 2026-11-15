@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -21,11 +21,18 @@ export interface LoginPayload {
 }
 
 const inputCls =
-  "h-[3.25rem] w-full rounded-xl border border-[#CFCABD] bg-white px-4 text-[0.95rem] font-medium text-[#0B2545] " +
-  "placeholder:text-[#5F6B73] outline-none transition focus:border-[#1B6B66] focus:ring-2 focus:ring-[#1B6B66]/30";
+  "h-[3.25rem] w-full rounded-xl border border-strong bg-card px-4 text-[0.95rem] font-medium text-ink " +
+  "placeholder:text-mute outline-none transition focus:border-sage focus:ring-2 focus:ring-sage/30";
+
+/** Only ever return to a same-site path — never an external URL (open-redirect guard). */
+function safeCallback(raw: string | null): string {
+  if (!raw || !raw.startsWith("/") || raw.startsWith("//") || raw.startsWith("/\\") || raw.startsWith("/login")) return "/dashboard";
+  return raw;
+}
 
 export function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -58,17 +65,17 @@ export function LoginForm() {
       toast.error("Invalid Credentials");
       return;
     }
-    router.push("/dashboard");
+    router.push(safeCallback(searchParams.get("callbackUrl")));
 
     router.refresh();
   };
 
   return (
     <div className="w-full max-w-[25rem]">
-      <h2 className="font-brand-serif text-[2.6rem] font-normal text-[#0B2545]">
+      <h2 className="font-brand-serif text-[2.6rem] font-normal text-ink">
         Welcome back
       </h2>
-      <p className="mb-8 mt-2 text-[0.95rem] text-[#55616A]">
+      <p className="mb-8 mt-2 text-[0.95rem] text-ink">
         Sign in to your OpthalmOK workspace.
       </p>
 
@@ -82,7 +89,7 @@ export function LoginForm() {
           name="email"
           render={({ field, fieldState }) => (
             <Field className="flex flex-col gap-2">
-              <Label className="text-[0.85rem] font-semibold text-[#0B2545]">
+              <Label className="text-[0.85rem] font-semibold text-ink">
                 Email
               </Label>
               <Input
@@ -103,13 +110,13 @@ export function LoginForm() {
               <div className="flex items-baseline justify-between">
                 <label
                   htmlFor="password"
-                  className="text-[0.85rem] font-semibold text-[#0B2545]"
+                  className="text-[0.85rem] font-semibold text-ink"
                 >
                   Password
                 </label>
                 <Link
                   href="/forgot-password"
-                  className="text-[0.85rem] font-semibold text-[#1B6B66] hover:underline"
+                  className="text-[0.85rem] font-semibold text-sage hover:underline"
                 >
                   Forgot password?
                 </Link>
@@ -128,7 +135,7 @@ export function LoginForm() {
                   type="button"
                   onClick={() => setShowPassword((s) => !s)}
                   aria-label={showPassword ? "Hide password" : "Show password"}
-                  className="absolute right-1 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-lg text-[#55616A] hover:text-[#0B2545] bg-seconary border-0 hover:bg-white/10"
+                  className="absolute right-1 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-lg text-ink hover:text-ink bg-seconary border-0 hover:bg-card/10"
                 >
                   {showPassword ? <Eye /> : <EyeClosed />}
                 </Button>
@@ -141,12 +148,12 @@ export function LoginForm() {
           control={loginForm.control}
           name="remember"
           render={({ field }) => (
-            <Label className="flex min-h-11 items-center gap-3 text-[0.9rem] text-[#33404A]">
+            <Label className="flex min-h-11 items-center gap-3 text-[0.9rem] text-ink">
               <Input
                 type="checkbox"
                 checked={field.value}
                 onChange={(e) => field.onChange(e.target.checked)}
-                className="h-[1.15rem] w-[1.15rem] accent-[#134A4C] cursor-pointer"
+                className="h-[1.15rem] w-[1.15rem] accent-sage cursor-pointer"
               />
               Keep me signed in on this device
             </Label>
@@ -156,23 +163,23 @@ export function LoginForm() {
         <Button
           type="submit"
           disabled={loading}
-          className="h-[3.4rem] rounded-xl bg-[#0B2545] text-base font-bold tracking-[0.02em] text-[#F3EFE6] transition hover:bg-[#134A4C] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B6B66] disabled:cursor-not-allowed disabled:opacity-60"
+          className="h-[3.4rem] rounded-xl bg-sage text-base font-bold tracking-[0.02em] text-primary-foreground transition hover:bg-sagehover focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sage disabled:cursor-not-allowed disabled:opacity-60"
         >
           {loading ? "Signing in…" : "Sign in"}
         </Button>
       </form>
 
-      <div className="my-6 flex items-center gap-4 text-[0.8rem] text-[#55616A]">
-        <span className="h-px flex-1 bg-[#D8D3C6]" />
+      <div className="my-6 flex items-center gap-4 text-[0.8rem] text-ink">
+        <span className="h-px flex-1 bg-strong" />
         or
-        <span className="h-px flex-1 bg-[#D8D3C6]" />
+        <span className="h-px flex-1 bg-strong" />
       </div>
 
-      <p className="mt-8 text-center text-[0.9rem] text-[#55616A]">
+      <p className="mt-8 text-center text-[0.9rem] text-ink">
         New to OpthalmOK?{" "}
         <Link
           href="/request-access"
-          className="font-semibold text-[#1B6B66] hover:underline"
+          className="font-semibold text-sage hover:underline"
         >
           Request access
         </Link>

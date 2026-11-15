@@ -5,6 +5,10 @@ import { useRouter } from "next/navigation";
 import { Loader2, Search, UserRoundPlus, X } from "lucide-react";
 import { getPatients } from "@/services/patients-services";
 import type { Patient } from "@/schemas/patient-schema";
+import { cacheGet, cacheSet } from "@/lib/offline/cache";
+
+const RECENT_KEY = "patients:recent";
+const RECENT_MAX = 200;
 
 export function PatientPicker({
   customer,
@@ -27,9 +31,22 @@ export function PatientPicker({
     const timer = setTimeout(async () => {
       setLoading(true);
       try {
-        setResults(await getPatients(query || undefined));
+        const found = await getPatients(query || undefined);
+        setResults(found);
+        // Remember recent look-ups so a patient can still be picked offline.
+        // Cleared on sign-out (clearLocalPhi).
+        const prev = (await cacheGet<Patient[]>(RECENT_KEY))?.value ?? [];
+        const merged = [...found, ...prev.filter((p) => !found.some((f) => f.id === p.id))].slice(0, RECENT_MAX);
+        void cacheSet(RECENT_KEY, merged);
       } catch (error) {
         console.error("Failed to search patients", error);
+        const q = query.trim().toLowerCase();
+        const cached = (await cacheGet<Patient[]>(RECENT_KEY))?.value ?? [];
+        setResults(
+          cached
+            .filter((p) => !q || `${p.first_name} ${p.last_name} ${p.phone}`.toLowerCase().includes(q))
+            .slice(0, 20),
+        );
       } finally {
         setLoading(false);
       }

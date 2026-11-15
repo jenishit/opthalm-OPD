@@ -45,7 +45,7 @@ export function CartPanel() {
       </div>
 
       <div className="mt-3.5">
-        <PatientPicker customer={customer} onSelect={setCustomer} />
+        <PatientPicker customer={customer} onSelect={setCustomer} placeholder="Walk-in sale — or search a patient by name or phone…" />
       </div>
 
       <div className="min-h-0 flex-1 overflow-y-auto py-3">

@@ -20,6 +20,8 @@ export interface ClinicRequest {
   timezone?: string;
   require_consent_before_exam?: boolean;
   low_stock_notifications?: boolean;
+  /** Public https URL of the clinic logo (shown on invoices and reports). */
+  logo_url?: string;
 }
 
 export interface Clinic extends ClinicRequest {

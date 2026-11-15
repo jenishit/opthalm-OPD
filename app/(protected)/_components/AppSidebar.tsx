@@ -26,6 +26,7 @@ import {
 import { useUiStore } from "@/lib/store/ui";
 import { useAuthStore } from "@/stores/authStore";
 import { canAccess } from "@/lib/permissions";
+import { useNavBadges } from "@/lib/hooks/use-nav-badges";
 import { logoutStaffSession } from "@/services/auth-services";
 import { cn } from "@/lib/utils";
 import { OpthalmOKLogo } from "@/app/(auth)/_components/OpthalmOKLogo";
@@ -56,7 +57,6 @@ const NAV = [
     href: "/prescriptions",
     label: "Prescriptions",
     icon: FileText,
-    badge: "5",
   },
   { group: "Optical", href: "/inventory", label: "Inventory", icon: Package },
   { group: "Optical", href: "/pos", label: "POS & Sales", icon: ShoppingCart },
@@ -65,10 +65,8 @@ const NAV = [
     href: "/customer-orders",
     label: "Customer Orders",
     icon: ShoppingBag,
-    badge: "6",
-    badgeMuted: true,
   },
-  { group: "Optical", href: "/orders", label: "Supplier Orders", icon: Truck },
+  { group: "Optical", href: "/orders", label: "Supplier Purchases", icon: Truck },
   {
     group: "Manage",
     href: "/reports",
@@ -86,6 +84,8 @@ export function AppSidebar() {
   const { sidebarCollapsed, setSidebarCollapsed } = useUiStore();
   const { staffUser } = useAuthStore();
   // Show everything while the role hasn't resolved yet to avoid a flash of an empty sidebar.
+  const accessToken = useAuthStore((s) => s.accessToken);
+  const badges = useNavBadges(staffUser?.role, Boolean(accessToken));
   const visibleNav = staffUser ? NAV.filter((item) => canAccess(staffUser.role, item.href)) : NAV;
 
   const handleLogout = async () => {
@@ -105,12 +105,12 @@ export function AppSidebar() {
 
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-50 flex w-72 shrink-0 flex-col gap-4 overflow-y-auto bg-[#182721] px-3 py-4 text-[#E7ECE4] transition-transform duration-200 md:static md:translate-x-0",
+          "fixed inset-y-0 left-0 z-50 flex w-72 shrink-0 flex-col gap-4 overflow-y-auto bg-side px-3 py-4 text-side-ink transition-transform duration-200 md:static md:translate-x-0",
           sidebarCollapsed ? "-translate-x-full" : "translate-x-0",
         )}
       >
         <button
-          className="absolute right-3 top-3 grid size-8 place-items-center rounded-md text-[#9EAAA2] hover:bg-white/5 md:hidden"
+          className="absolute right-3 top-3 grid size-8 place-items-center rounded-md text-mute hover:bg-white/5 md:hidden"
           onClick={() => setSidebarCollapsed(true)}
           aria-label="Close menu"
         >
@@ -124,25 +124,25 @@ export function AppSidebar() {
 
         {/* Practice switcher */}
         <div className="flex items-center gap-2.5 rounded-xl border border-white/10 bg-white/5 px-3 py-2.5">
-          <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-[#D9A441] font-display text-sm font-semibold text-[#2B2008]">
+          <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-gold font-display text-sm font-semibold text-gold-ink">
             C
           </span>
           <span className="min-w-0 flex-1">
             <b className="block truncate text-sm font-semibold text-white">
               ClearView Clinic
             </b>
-            <small className="block truncate text-xs text-[#9EAAA2]">
+            <small className="block truncate text-xs text-mute">
               Melbourne · Main practice
             </small>
           </span>
-          <ChevronDown size={15} className="shrink-0 text-[#9EAAA2]" />
+          <ChevronDown size={15} className="shrink-0 text-mute" />
         </div>
 
         {/* Nav */}
         <nav className="flex flex-1 flex-col gap-4">
           {GROUPS.filter((group) => visibleNav.some((item) => item.group === group)).map((group) => (
             <div key={group} className="flex flex-col gap-0.5">
-              <span className="px-3 pb-1 font-mono text-[10px] font-semibold uppercase tracking-widest text-[#6F8075]">
+              <span className="px-3 pb-1 font-mono text-[10px] font-semibold uppercase tracking-widest text-side-mute">
                 {group}
               </span>
               {visibleNav.filter((item) => item.group === group).map((item) => {
@@ -157,21 +157,21 @@ export function AppSidebar() {
                       "flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors",
                       active
                         ? "bg-white/10 font-medium text-white"
-                        : "text-[#B9C4BC] hover:bg-white/5 hover:text-white",
+                        : "text-side-mute hover:bg-white/5 hover:text-white",
                     )}
                   >
                     <Icon size={17} strokeWidth={1.8} className="shrink-0" />
                     <span className="flex-1 truncate">{item.label}</span>
-                    {"badge" in item && item.badge && (
+                    {badges[item.href] && (
                       <span
+                        aria-label={badges[item.href].label}
+                        title={badges[item.href].label}
                         className={cn(
                           "grid h-5 min-w-5 shrink-0 place-items-center rounded-full px-1.5 text-[11px] font-semibold",
-                          "badgeMuted" in item && item.badgeMuted
-                            ? "bg-white/10 text-[#C7D2C9]"
-                            : "bg-[#D9A441] text-[#2B2008]",
+                          badges[item.href].tone === "info" ? "bg-white/10 text-side-ink" : "bg-gold text-gold-ink",
                         )}
                       >
-                        {item.badge}
+                        {badges[item.href].count > 99 ? "99+" : badges[item.href].count}
                       </span>
                     )}
                   </Link>
@@ -187,18 +187,18 @@ export function AppSidebar() {
             href="/help"
             className="flex items-center gap-2.5 rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 transition-colors hover:bg-white/10"
           >
-            <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-white/10 text-[#B9C4BC]">
+            <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-white/10 text-side-mute">
               <LifeBuoy size={16} />
             </span>
             <span className="min-w-0 flex-1">
               <b className="block text-sm font-semibold text-white">
                 Need a hand?
               </b>
-              <small className="block text-xs text-[#9EAAA2]">
+              <small className="block text-xs text-mute">
                 Visit our help centre
               </small>
             </span>
-            <ArrowUpRight size={14} className="shrink-0 text-[#9EAAA2]" />
+            <ArrowUpRight size={14} className="shrink-0 text-mute" />
           </Link>
 
           <div className="h-px bg-white/10" />
@@ -206,18 +206,18 @@ export function AppSidebar() {
           {staffUser && (
             <DropdownMenu>
               <DropdownMenuTrigger className="flex w-full items-center gap-2.5 rounded-lg px-1 py-1 text-left transition-colors hover:bg-white/5">
-                <span className="grid size-9 shrink-0 place-items-center rounded-full bg-[#D98BA0] font-display text-sm font-semibold text-white">
+                <span className="grid size-9 shrink-0 place-items-center rounded-full bg-rose font-display text-sm font-semibold text-white">
                   {staffUser.name.charAt(0)}
                 </span>
                 <span className="min-w-0 flex-1">
                   <b className="block truncate text-sm font-semibold text-white">
                     {staffUser.name}
                   </b>
-                  <small className="block truncate text-xs capitalize text-[#9EAAA2]">
+                  <small className="block truncate text-xs capitalize text-mute">
                     {staffUser.role}
                   </small>
                 </span>
-                <MoreHorizontal size={17} className="shrink-0 text-[#9EAAA2]" />
+                <MoreHorizontal size={17} className="shrink-0 text-mute" />
               </DropdownMenuTrigger>
               <DropdownMenuContent side="top" align="start">
                 <DropdownMenuItem onClick={handleLogout}>

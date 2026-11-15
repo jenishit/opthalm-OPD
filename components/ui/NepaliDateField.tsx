@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
-import { CalendarDays, Check, ChevronLeft, ChevronRight, X } from "lucide-react";
+import { CalendarDays, Check, ChevronDown, ChevronLeft, ChevronRight, X } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/shadcn/popover";
 import { Segmented } from "@/components/ui/ChartUi";
 import { cn } from "@/lib/utils";
@@ -16,7 +16,6 @@ import {
   formatBs,
   toNpDigits,
   todayIsoKathmandu,
-  type BSDate,
   type CalendarMode,
 } from "@/lib/nepali-calendar";
 import { useUiStore } from "@/lib/store/ui";
@@ -44,6 +43,15 @@ const fieldCls =
 const gridBtn =
   "grid h-9 place-items-center rounded-md text-sm tabular-nums text-foreground transition-colors hover:bg-sage-soft focus-visible:outline-2 focus-visible:outline-ring";
 
+/** AD years offered in the year picker (BS mode uses BS_MIN_YEAR…BS_MAX_YEAR). */
+const AD_MIN_YEAR = 1900;
+const AD_MAX_YEAR = 2100;
+const YEARS_PER_PAGE = 12;
+
+type Panel = "days" | "months" | "years";
+
+const AD_MONTHS_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
 const WS_NP = ["आ", "सो", "मं", "बु", "बि", "शु", "श"];
 const WS_EN = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
 
@@ -63,6 +71,13 @@ export function NepaliDateField({
   const mode: CalendarMode = defaultMode ?? storeMode;
   // View year/month the popover shows; re-seeded whenever it opens.
   const [view, setView] = useState(() => seedView(value ?? "", mode));
+  // Which grid the popover shows: days → (click title) → months → (click title) → years.
+  const [panel, setPanel] = useState<Panel>("days");
+  const [yearPage, setYearPage] = useState(0);
+
+  const yearMin = mode === "BS" ? BS_MIN_YEAR : AD_MIN_YEAR;
+  const yearMax = mode === "BS" ? BS_MAX_YEAR : AD_MAX_YEAR;
+  const pageStartFor = (year: number) => yearMin + Math.floor((year - yearMin) / YEARS_PER_PAGE) * YEARS_PER_PAGE;
 
   const iso = value || "";
   const bs = useMemo(() => (iso ? adToBs(iso) : null), [iso]);
@@ -70,21 +85,54 @@ export function NepaliDateField({
 
   const openPanel = () => {
     if (disabled) return;
-    setView(seedView(iso, mode));
+    const v = seedView(iso, mode);
+    setView(v);
+    setPanel("days");
+    setYearPage(pageStartFor(v.year));
     setOpen(true);
   };
 
   const switchMode = (next: string) => {
     const m = next as CalendarMode;
     setStoreMode(m);
-    setView(seedView(iso, m));
+    const v = seedView(iso, m);
+    setView(v);
+    setPanel("days");
+    setYearPage((m === "BS" ? BS_MIN_YEAR : AD_MIN_YEAR) + Math.floor((v.year - (m === "BS" ? BS_MIN_YEAR : AD_MIN_YEAR)) / YEARS_PER_PAGE) * YEARS_PER_PAGE);
+  };
+
+  /** Header title click: days → months → years. */
+  const drillUp = () => {
+    if (panel === "days") setPanel("months");
+    else if (panel === "months") {
+      setYearPage(pageStartFor(view.year));
+      setPanel("years");
+    }
+  };
+
+  /** Previous / next within the current panel (month, year, or a page of years). */
+  const step = (dir: -1 | 1) => {
+    if (panel === "days") return setYearMonth(dir);
+    if (panel === "months") {
+      return setView((v) => ({ ...v, year: Math.min(yearMax, Math.max(yearMin, v.year + dir)) }));
+    }
+    setYearPage((p) => Math.min(pageStartFor(yearMax), Math.max(yearMin, p + dir * YEARS_PER_PAGE)));
+  };
+
+  const pickMonth = (m: number) => {
+    setView((v) => ({ ...v, month: m }));
+    setPanel("days");
+  };
+  const pickYear = (y: number) => {
+    setView((v) => ({ ...v, year: y }));
+    setPanel("months");
   };
 
   const setYearMonth = (delta: number) => {
     setView((v) => {
       if (mode === "BS") {
         let y = v.year + (v.month + delta - 1 < 0 ? -1 : v.month + delta > 12 ? 1 : 0);
-        let m = ((v.month + delta - 1 + 12) % 12) + 1;
+        const m = ((v.month + delta - 1 + 12) % 12) + 1;
         y = Math.min(BS_MAX_YEAR, Math.max(BS_MIN_YEAR, y));
         return { year: y, month: m };
       }
@@ -132,8 +180,14 @@ export function NepaliDateField({
     return today === `${view.year}-${String(view.month).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
   };
 
+  const lastYearOnPage = Math.min(yearPage + YEARS_PER_PAGE - 1, yearMax);
+  const fmtYear = (y: number) => (mode === "BS" ? toNpDigits(y) : String(y));
   const headerLabel =
-    mode === "BS"
+    panel === "months"
+      ? fmtYear(view.year)
+      : panel === "years"
+        ? `${fmtYear(yearPage)} – ${fmtYear(lastYearOnPage)}`
+        : mode === "BS"
       ? `${BS_MONTHS_NP[view.month - 1]} ${toNpDigits(view.year)}`
       : new Intl.DateTimeFormat("en-US", { month: "long", year: "numeric", timeZone: "UTC" }).format(
           new Date(Date.UTC(view.year, view.month - 1, 1))
@@ -159,7 +213,12 @@ export function NepaliDateField({
       <Popover
         open={open}
         onOpenChange={(next) => {
-          if (next && !disabled) setView(seedView(iso, mode));
+          if (next && !disabled) {
+            const v = seedView(iso, mode);
+            setView(v);
+            setPanel("days");
+            setYearPage(pageStartFor(v.year));
+          }
           setOpen(next);
         }}
       >
@@ -178,24 +237,37 @@ export function NepaliDateField({
             <div className="flex items-center gap-0.5">
               <button
                 type="button"
-                onClick={() => setYearMonth(-1)}
-                aria-label="Previous month"
+                onClick={() => step(-1)}
+                aria-label={panel === "days" ? "Previous month" : panel === "months" ? "Previous year" : "Previous years"}
                 className="grid size-8 place-items-center rounded-md text-muted-foreground transition-colors hover:bg-sage-soft hover:text-ink"
               >
                 <ChevronLeft className="size-4" />
               </button>
               <button
                 type="button"
-                onClick={() => setYearMonth(1)}
-                aria-label="Next month"
+                onClick={() => step(1)}
+                aria-label={panel === "days" ? "Next month" : panel === "months" ? "Next year" : "Next years"}
                 className="grid size-8 place-items-center rounded-md text-muted-foreground transition-colors hover:bg-sage-soft hover:text-ink"
               >
                 <ChevronRight className="size-4" />
               </button>
             </div>
-            <p className="text-sm font-semibold text-foreground" aria-live="polite">
-              {headerLabel}
-            </p>
+            {panel === "years" ? (
+              <p className="text-sm font-semibold text-foreground" aria-live="polite">
+                {headerLabel}
+              </p>
+            ) : (
+              <button
+                type="button"
+                onClick={drillUp}
+                aria-live="polite"
+                aria-label={panel === "days" ? `${headerLabel} — choose month` : `${headerLabel} — choose year`}
+                className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-sm font-semibold text-foreground transition-colors hover:bg-sage-soft"
+              >
+                {headerLabel}
+                <ChevronDown className="size-3.5 text-muted-foreground" aria-hidden />
+              </button>
+            )}
             <div className="flex items-center">
               {iso ? (
                 <button
@@ -224,6 +296,58 @@ export function NepaliDateField({
             </div>
           </div>
 
+          {panel === "months" && (
+            <div className="grid grid-cols-3 gap-1.5 py-2.5" role="group" aria-label="Choose month">
+              {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => {
+                const selected = bs != null && iso !== "" && (mode === "BS" ? bs.year === view.year && bs.month === m : iso.startsWith(`${view.year}-${String(m).padStart(2, "0")}`));
+                const current = m === view.month;
+                return (
+                  <button
+                    key={m}
+                    type="button"
+                    aria-pressed={selected}
+                    onClick={() => pickMonth(m)}
+                    title={mode === "BS" ? BS_MONTHS_EN[m - 1] : undefined}
+                    className={cn(
+                      "grid h-11 place-items-center rounded-md text-sm text-foreground transition-colors hover:bg-sage-soft focus-visible:outline-2 focus-visible:outline-ring",
+                      current && !selected && "ring-1 ring-inset ring-strong",
+                      selected && "bg-primary text-primary-foreground hover:bg-primary-hover",
+                    )}
+                  >
+                    {mode === "BS" ? BS_MONTHS_NP[m - 1] : AD_MONTHS_SHORT[m - 1]}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
+          {panel === "years" && (
+            <div className="grid grid-cols-3 gap-1.5 py-2.5" role="group" aria-label="Choose year">
+              {Array.from({ length: YEARS_PER_PAGE }, (_, i) => yearPage + i)
+                .filter((y) => y <= yearMax)
+                .map((y) => {
+                  const selected = bs != null && iso !== "" && (mode === "BS" ? bs.year === y : iso.startsWith(`${y}-`));
+                  const current = y === view.year;
+                  return (
+                    <button
+                      key={y}
+                      type="button"
+                      aria-pressed={selected}
+                      onClick={() => pickYear(y)}
+                      className={cn(
+                        "grid h-11 place-items-center rounded-md text-sm tabular-nums text-foreground transition-colors hover:bg-sage-soft focus-visible:outline-2 focus-visible:outline-ring",
+                        current && !selected && "ring-1 ring-inset ring-strong",
+                        selected && "bg-primary text-primary-foreground hover:bg-primary-hover",
+                      )}
+                    >
+                      {fmtYear(y)}
+                    </button>
+                  );
+                })}
+            </div>
+          )}
+
+          {panel === "days" && (
           <div className="py-2.5">
             <div className="mb-1 grid grid-cols-7">
               {(mode === "BS" ? WS_NP : WS_EN).map((w) => (
@@ -271,6 +395,7 @@ export function NepaliDateField({
               })}
             </div>
           </div>
+          )}
 
           <div className="flex items-center justify-between gap-2 pt-2.5">
             <Segmented

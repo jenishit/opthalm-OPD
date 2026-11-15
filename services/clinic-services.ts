@@ -1,4 +1,6 @@
 import { apiFetch } from "./http";
+import { clinicIdFromToken } from "@/lib/auth/clinic-id";
+import { useAuthStore } from "@/stores/authStore";
 import type {
   ClinicAuditLogEntry,
   ClinicIntegration,
@@ -21,17 +23,14 @@ import type {
 
 // ── Clinic profile ────────────────────────────────────────────────────────────
 
-/** GET /admin/clinic — the admin's own clinic settings. */
+/**
+ * The admin's own clinic. The backend only exposes GET /admin/clinic/:id, so the
+ * id comes from the session's access token.
+ */
 export function getClinic(): Promise<ClinicResponse> {
-  return apiFetch<ClinicResponse>("/admin/clinic");
-}
-
-/** POST /admin/clinic */
-export function createClinic(body: ClinicRequest): Promise<ClinicResponse> {
-  return apiFetch<ClinicResponse>("/admin/clinic", {
-    method: "POST",
-    body: JSON.stringify(body),
-  });
+  const id = clinicIdFromToken(useAuthStore.getState().accessToken);
+  if (!id) return Promise.reject(new Error("Couldn't tell which clinic you belong to. Sign out and sign in again."));
+  return apiFetch<ClinicResponse>(`/admin/clinic/${id}`);
 }
 
 /** GET /admin/clinic/:id */
@@ -41,6 +40,7 @@ export function getClinicById(id: string): Promise<ClinicResponse> {
 
 /** PATCH /admin/clinic/:id */
 export function updateClinic(id: string, body: ClinicRequest): Promise<void> {
+  if (!id) return Promise.reject(new Error("Couldn't tell which clinic to update. Reload the page and try again."));
   return apiFetch<void>(`/admin/clinic/${id}`, {
     method: "PATCH",
     body: JSON.stringify(body),
@@ -67,6 +67,7 @@ export async function patchOwnClinic(partial: Partial<ClinicRequest>): Promise<C
     timezone: current.timezone,
     require_consent_before_exam: current.require_consent_before_exam,
     low_stock_notifications: current.low_stock_notifications,
+    logo_url: current.logo_url,
     ...partial,
   };
   await updateClinic(current.id, body);
@@ -115,6 +116,16 @@ export function updatePaymentConfig(
     method: "PUT",
     body: JSON.stringify(body),
   });
+}
+
+/**
+ * POST /admin/clinic/logo — multipart upload (PNG/JPEG); returns the public URL to store as logo_url.
+ * NOTE: the backend doesn't have this endpoint yet (it mirrors the QR-code upload).
+ */
+export function uploadClinicLogo(file: File): Promise<{ logo_url: string }> {
+  const formData = new FormData();
+  formData.append("file", file);
+  return apiFetch<{ logo_url: string }>("/admin/clinic/logo", { method: "POST", body: formData });
 }
 
 /** POST /admin/clinic/payment-config/qr-code — multipart upload; returns the public URL to store as qr_code_url. */

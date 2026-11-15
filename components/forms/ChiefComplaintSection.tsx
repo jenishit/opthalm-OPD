@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { useFormContext } from "react-hook-form";
+import { useFormContext, useWatch } from "react-hook-form";
 import type { IntakeExamFormData } from "@/schemas/shared-schema";
 import { CatalogCombobox } from "./CatalogCombobox";
 
@@ -10,10 +10,9 @@ const fieldClass =
 const labelClass = "block text-sm font-medium text-foreground mb-1.5";
 
 export function ChiefComplaintSection() {
-  const { register, formState: { errors }, watch, setValue } = useFormContext<IntakeExamFormData>();
+  const { register, formState: { errors }, control, setValue } = useFormContext<IntakeExamFormData>();
 
-  const usesSpectacles = watch("history.uses_spectacles");
-  const conditionIds = watch("history.condition_ids") || [];
+  const conditionIds = useWatch({ control, name: "history.condition_ids" }) ?? [];
 
   return (
     <div className="space-y-8">

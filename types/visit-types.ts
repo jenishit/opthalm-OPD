@@ -26,6 +26,9 @@ export interface VisitItem {
   examine_by: EntityRef;
   status: PatientVisitStatus;
   visit_date: string;
+  scheduled_at?: string;
+  ends_at?: string;
+  duration_minutes?: number;
   chief_complaint: string;
   created_by: EntityRef;
   updated_by: EntityRef;
@@ -48,7 +51,9 @@ export interface VisitCreate {
   patient_id: string;
   examine_by: string;
   status: PatientVisitStatus;
-  visit_date: string;
+  visit_date?: string;
+  scheduled_at?: string;
+  duration_minutes?: number;
   chief_complaint: string;
   created_by: string;
   updated_by: string;
@@ -61,7 +66,11 @@ export interface VisitUpsertRequest {
   patient_id: string;
   examine_by: string;
   status: PatientVisitStatus;
-  visit_date: string;
+  /** Date-only fallback for older backends; `scheduled_at` is what sets the appointment time. */
+  visit_date?: string;
+  /** RFC3339 with offset. Omit for a walk-in (starts now). */
+  scheduled_at?: string;
+  duration_minutes?: number;
   chief_complaint: string;
 }
 

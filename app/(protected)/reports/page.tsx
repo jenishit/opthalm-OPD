@@ -32,16 +32,16 @@ function StatCard({
   text: string;
 }) {
   return (
-    <div className="min-w-0 rounded-[11px] border border-[#e9e6dc] bg-[#fffefa] p-[17px_18px_15px] shadow-[0_5px_20px_rgba(42,52,41,0.035),0_1px_2px_rgba(42,52,41,0.04)]">
-      <div className="flex items-center justify-between gap-2.5 text-[11px] text-[#727a70]">
+    <div className="min-w-0 rounded-[11px] border border-line bg-card p-[17px_18px_15px] shadow-sm">
+      <div className="flex items-center justify-between gap-2.5 text-[11px] text-mute">
         <span>{label}</span>
         <span className={"grid size-[34px] shrink-0 place-items-center rounded-[9px] " + bg + " " + text}>
           <Icon size={16} />
         </span>
       </div>
-      <div className="my-3 font-['Manrope',sans-serif] text-[27px] font-semibold tracking-[-1px] text-[#293a30]">{value}</div>
-      <div className="flex flex-wrap items-center gap-[7px] text-[10px] text-[#9a9e95]">
-        <span className="inline-flex items-center gap-px font-bold text-[#3b805e]">
+      <div className="my-3 font-sans text-[27px] font-semibold tracking-[-1px] text-ink">{value}</div>
+      <div className="flex flex-wrap items-center gap-[7px] text-[10px] text-mute">
+        <span className="inline-flex items-center gap-px font-bold text-ok-ink">
           <ArrowUpRight size={13} />
           {change}
         </span>
@@ -83,54 +83,50 @@ export default function ReportsPage() {
       ];
 
   return (
-    <div className="font-['DM_Sans',sans-serif] text-[13px] text-[#23342c]">
-      <link
-        rel="stylesheet"
-        href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&family=Playfair+Display:wght@500;600;700&display=swap"
-      />
+    <div className="font-sans text-[13px] text-ink">
 
       <div className="mb-6 flex flex-wrap items-end justify-between gap-[18px]">
         <div>
-          <div className="mb-[7px] text-[9px] font-bold tracking-[1.5px] text-[#8d927f]">INSIGHTS & PERFORMANCE</div>
-          <h1 className="m-0 font-['Playfair_Display',serif] text-[29px] font-semibold tracking-[-0.5px] text-[#26392e]">
+          <div className="mb-[7px] text-[9px] font-bold tracking-[1.5px] text-mute">INSIGHTS & PERFORMANCE</div>
+          <h1 className="m-0 font-display text-[29px] font-semibold tracking-[-0.5px] text-ink">
             Reports & analytics
           </h1>
-          <p className="m-0 mt-[7px] text-[12px] text-[#82877e]">
+          <p className="m-0 mt-[7px] text-[12px] text-mute">
             Understand clinical activity, optical sales, inventory health, and practice performance.
           </p>
         </div>
         <Button
           onClick={() => toast.info("Report export prepared")}
-          className="min-h-9 gap-2 rounded-[7px] border border-[#e2dfd5] bg-[#fffefa] px-3.5 text-[11px] font-semibold text-[#48564a] hover:border-[#cbd5c8] hover:bg-[#f3f4ec]"
+          className="min-h-9 gap-2 rounded-[7px] border border-line bg-card px-3.5 text-[11px] font-semibold text-ink hover:border-strong hover:bg-app"
         >
           <Download size={14} />
           Export report
         </Button>
       </div>
 
-      <div className="mb-[18px] flex flex-wrap items-center gap-3 rounded-[11px] border border-[#e9e6dc] bg-[#fffefa] px-4 py-3 shadow-[0_5px_20px_rgba(42,52,41,0.035),0_1px_2px_rgba(42,52,41,0.04)]">
-        <span className="flex items-center gap-[7px] text-[10px] text-[#6d796d]">
+      <div className="mb-[18px] flex flex-wrap items-center gap-3 rounded-[11px] border border-line bg-card px-4 py-3 shadow-sm">
+        <span className="flex items-center gap-[7px] text-[10px] text-mute">
           <CalendarDays size={16} /> Reporting period
         </span>
-        <select className="rounded-md border border-[#e5e2d8] bg-[#fffefa] px-2.5 py-[7px] text-[10px] text-[#536252]">
+        <select className="rounded-md border border-line bg-card px-2.5 py-[7px] text-[10px] text-ink">
           <option>Last 30 days</option>
           <option>This week</option>
           <option>This quarter</option>
           <option>This year</option>
         </select>
-        <span className="ml-auto text-[9px] text-[#a0a399]">Last updated just now</span>
+        <span className="ml-auto text-[9px] text-mute">Last updated just now</span>
       </div>
 
       <div className="mb-4 grid grid-cols-2 gap-[14px] md:grid-cols-4">
-        <StatCard label="Total revenue" value="$64,820" change="12.8%" foot="vs. previous period" icon={Wallet} bg="bg-[#e9f0e8]" text="text-[#214c3a]" />
+        <StatCard label="Total revenue" value="$64,820" change="12.8%" foot="vs. previous period" icon={Wallet} bg="bg-sage-soft" text="text-sage" />
         <StatCard
           label="Completed visits"
           value="386"
           change="9.4%"
           foot="vs. previous period"
           icon={HeartPulse}
-          bg="bg-[#e8f0f2]"
-          text="text-[#557d8b]"
+          bg="bg-t-new-soft"
+          text="text-t-new"
         />
         <StatCard
           label="Optical conversion"
@@ -138,8 +134,8 @@ export default function ReportsPage() {
           change="4.2%"
           foot="of examined patients"
           icon={TrendingUp}
-          bg="bg-[#f7efdf]"
-          text="text-[#a47a35]"
+          bg="bg-warn-soft"
+          text="text-warn-ink"
         />
         <StatCard
           label="Avg. transaction"
@@ -147,8 +143,8 @@ export default function ReportsPage() {
           change="6.1%"
           foot="vs. previous period"
           icon={CreditCard}
-          bg="bg-[#f0edf6]"
-          text="text-[#8477a3]"
+          bg="bg-t-surg-soft"
+          text="text-t-surg"
         />
       </div>
 

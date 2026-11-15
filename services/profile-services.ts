@@ -7,8 +7,8 @@ export function getMyProfile(): Promise<ProfileResponse> {
 }
 
 /** GET /profile/profile-details */
-export function getProfileDetails(): Promise<ProfileResponse> {
-  return apiFetch<ProfileResponse>("/profile/profile-details");
+export function getProfileDetails(): Promise<ProfileResponse[]> {
+  return apiFetch<ProfileResponse[]>("/profile/profile-details");
 }
 
 /** GET /profile/search?query&limit */

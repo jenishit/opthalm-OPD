@@ -81,6 +81,18 @@
   --color-c5: var(--c-chart-5);
   --color-c6: var(--c-chart-6);
 
+  /* Theme-independent brand surfaces (same in light and dark) */
+  --color-hero: var(--c-hero);
+  --color-hero-ink: var(--c-hero-ink);
+  --color-hero-mute: var(--c-hero-mute);
+  --color-hero-accent: var(--c-hero-accent);
+  --color-side: var(--c-side);
+  --color-side-ink: var(--c-side-ink);
+  --color-side-mute: var(--c-side-mute);
+  --color-gold: var(--c-gold);
+  --color-gold-ink: var(--c-gold-ink);
+  --color-rose: var(--c-rose);
+
   /* Devanagari glyphs (BS dates) fall back to Noto Sans Devanagari per-glyph */
   --font-sans: var(--font-source-sans), var(--font-noto-dev);
   --font-display: var(--font-lora), var(--font-noto-dev);
@@ -107,6 +119,20 @@
    ========================================================================== */
 :root {
   --radius: 0.375rem;
+
+  /* Brand surfaces — intentionally identical in light and dark */
+  --c-hero: #0B2560;
+  --c-hero-ink: #F3EFE6;
+  --c-hero-mute: #C3CCD2;
+  --c-hero-accent: #2DD4BF;
+  --c-side: #182721;
+  --c-side-ink: #E7ECE4;
+  --c-side-mute: #B9C4BC;
+  --c-gold: #D9A441;
+  --c-gold-ink: #2B2008;
+  --c-rose: #D98BA0;
+  /* Dark ink for text drawn on fixed-lightness pastel avatars */
+  --c-on-pastel: #2C3531;
 
   --c-app: #F8F6F0;
   --c-card: #FFFFFF;
@@ -478,6 +504,41 @@ h3 {
   font-weight: 600;
 }
 
+/* ==========================================================================
+   Printed documents are always light — even when the app is in dark mode.
+   Re-declares the palette (and the --color-* aliases the drawings read) for
+   anything inside .paper-light.
+   ========================================================================== */
+.paper-light {
+  color-scheme: light;
+  --c-card: #FFFFFF;
+  --c-ink: #2C3531;
+  --c-mute: #626B65;
+  --c-strong: #CFC8B8;
+  --c-sage: #2D5A27;
+  --c-sage-soft: #E6EEE0;
+  --c-clay: #C86D51;
+  --c-clay-soft: #F6E3DB;
+  --c-bad: #B3382C;
+  --c-warn: #B98A12;
+  --c-warn-soft: #F6EBC8;
+  --c-t-surg: #7A4FB0;
+  --c-onacc: #FFFFFF;
+  --color-card: var(--c-card);
+  --color-ink: var(--c-ink);
+  --color-mute: var(--c-mute);
+  --color-strong: var(--c-strong);
+  --color-sage: var(--c-sage);
+  --color-sage-soft: var(--c-sage-soft);
+  --color-clay: var(--c-clay);
+  --color-clay-soft: var(--c-clay-soft);
+  --color-bad: var(--c-bad);
+  --color-warn: var(--c-warn);
+  --color-warn-soft: var(--c-warn-soft);
+  --color-t-surg: var(--c-t-surg);
+  --color-onacc: var(--c-onacc);
+}
+
 .print-only {
   display: none;
 }
@@ -490,14 +551,21 @@ h3 {
     background: #fff !important;
     padding: 0 !important;
   }
+  /* App chrome only. A blanket `header` rule used to hide every printed document's
+     letterhead (invoice, Z-report, examination record) — documents are <article>s
+     and the portal bar hides itself with print:hidden. */
   .app-shell,
   .toast-host,
-  aside,
-  header {
+  aside {
     display: none !important;
   }
   .print-only {
     display: block !important;
+  }
+  /* Toasts are screen-only — never part of a printout. */
+  [data-sonner-toaster],
+  [data-sonner-toast] {
+    display: none !important;
   }
   .paper {
     box-shadow: none !important;

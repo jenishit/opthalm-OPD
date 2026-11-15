@@ -17,7 +17,6 @@ export function ExamChart({
   return (
     <div className="flex flex-col gap-5">
       <RefractionChart ex={ex} set={set} />
-      <IopChart ex={ex} set={set} />
       <div>
         <div className="font-display font-bold text-lg mb-3">Slit Lamp</div>
         <div className="grid sm:grid-cols-2 gap-5">

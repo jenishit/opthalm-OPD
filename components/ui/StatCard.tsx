@@ -3,9 +3,9 @@ import { cn } from "@/lib/utils";
 
 const KIND_STYLES = {
   green: "bg-sage-soft text-sage",
-  blue: "bg-[#e8f0f2] text-[#557d8b]",
-  amber: "bg-[#f7efdf] text-[#a47a35]",
-  violet: "bg-[#f0edf6] text-[#8477a3]",
+  blue: "bg-t-new-soft text-t-new",
+  amber: "bg-warn-soft text-warn-ink",
+  violet: "bg-t-surg-soft text-t-surg",
 } as const;
 
 export default function StatCard({

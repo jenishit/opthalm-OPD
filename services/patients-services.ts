@@ -1,8 +1,9 @@
-import { apiFetch, ApiError } from "./http";
+import { apiFetch, apiFetchPaged, ApiError } from "./http";
 import type { Patient, PatientFormData } from "@/schemas/patient-schema";
 import type {
   CreatePatientRequest,
   Patient as PatientRecord,
+  PatientStats,
   UpdatePatientRequest,
 } from "@/types/patient-types";
 
@@ -86,8 +87,12 @@ export function toUpdateRequest(form: Partial<PatientFormData>): Partial<CreateP
 // Private to this file — everything else in the app talks to the UI-facing
 // functions below, which convert to/from schemas/patient-schema.ts's Patient.
 
-function listPatientRecords(): Promise<PatientRecord[]> {
-  return apiFetch<PatientRecord[]>("/patient");
+/** GET /patient is paginated (newest first; default 50, max 100) with the clinic total in X-Total-Count. */
+export const PATIENT_PAGE_MAX = 100;
+
+function listPatientRecords(limit: number, offset: number): Promise<{ data: PatientRecord[]; total: number | null }> {
+  const params = new URLSearchParams({ limit: String(limit), offset: String(offset) });
+  return apiFetchPaged<PatientRecord[]>(`/patient?${params.toString()}`);
 }
 
 function searchPatientRecords(query: string, limit = 50): Promise<PatientRecord[]> {
@@ -128,9 +133,21 @@ export function deletePatient(id: string): Promise<void> {
 
 // ── UI-facing patient API ────────────────────────────────────────────────────
 
+/** One server page of patients, newest first, plus the clinic's total patient count. */
+export async function getPatientsPage(limit: number, offset: number): Promise<{ items: Patient[]; total: number }> {
+  const { data, total } = await listPatientRecords(Math.min(limit, PATIENT_PAGE_MAX), offset);
+  const records = data ?? [];
+  // An older backend sends no total: fall back to what we can prove (this page + the offset).
+  return { items: records.map(toUiPatient), total: total ?? offset + records.length };
+}
+
+/**
+ * Patients for pickers: matches a search, or — with no search — the newest
+ * page (up to 100). It is NOT the whole clinic; use getPatientsPage to browse.
+ */
 export async function getPatients(search?: string): Promise<Patient[]> {
-  const records = search ? await searchPatientRecords(search) : await listPatientRecords();
-  return records.map(toUiPatient);
+  if (search) return (await searchPatientRecords(search)).map(toUiPatient);
+  return (await getPatientsPage(PATIENT_PAGE_MAX, 0)).items;
 }
 
 export async function getPatient(id: string): Promise<Patient | null> {
@@ -162,4 +179,8 @@ export async function updatePatient(id: string, data: Partial<PatientFormData>):
 export async function checkPhoneUnique(phone: string, excludeId?: string): Promise<boolean> {
   const matches = await searchPatientRecords(phone, 5);
   return !matches.some((p) => p.phone === phone && p.patient_id !== excludeId);
+}
+/** GET /patient/stats — one cheap call instead of loading every patient to count them. */
+export function getPatientStats(): Promise<PatientStats> {
+  return apiFetch<PatientStats>("/patient/stats");
 }

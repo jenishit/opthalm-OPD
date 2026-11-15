@@ -64,15 +64,15 @@ export function IntegrationsTab() {
     <>
       <div className="flex items-center justify-between gap-3 pb-[14px]">
         <div>
-          <h3 className="m-0 font-['Playfair_Display',serif] text-base font-semibold text-[#2a3b30]">Integrations</h3>
-          <p className="m-0 mt-[5px] text-[10px] text-[#96998f]">Connect ClearView to the tools you already use.</p>
+          <h3 className="m-0 font-display text-base font-semibold text-ink">Integrations</h3>
+          <p className="m-0 mt-[5px] text-[10px] text-mute">Connect ClearView to the tools you already use.</p>
         </div>
-        <span className="grid size-[34px] shrink-0 place-items-center rounded-[9px] bg-[#f0edf6] text-[#8477a3]">
+        <span className="grid size-[34px] shrink-0 place-items-center rounded-[9px] bg-t-surg-soft text-t-surg">
           <Plug size={18} />
         </span>
       </div>
       {loading ? (
-        <div className="flex items-center justify-center gap-2 py-16 text-[11px] text-[#92988c]">
+        <div className="flex items-center justify-center gap-2 py-16 text-[11px] text-mute">
           <Loader2 size={15} className="animate-spin" /> Loading integrations…
         </div>
       ) : (
@@ -82,14 +82,14 @@ export function IntegrationsTab() {
             const Icon = info.icon;
             const busy = pending === i.provider;
             return (
-              <div key={i.provider} className="flex items-center justify-between gap-3 border-t border-[#efede6] py-3.5 first:border-t-0">
+              <div key={i.provider} className="flex items-center justify-between gap-3 border-t border-line py-3.5 first:border-t-0">
                 <div className="flex items-center gap-2.5">
-                  <span className="grid size-[34px] shrink-0 place-items-center rounded-[9px] bg-[#e9f0e8] text-[#214c3a]">
+                  <span className="grid size-[34px] shrink-0 place-items-center rounded-[9px] bg-sage-soft text-sage">
                     <Icon size={16} />
                   </span>
                   <div>
-                    <b className="text-[11px] text-[#23342c]">{info.name}</b>
-                    <p className="mt-[5px] text-[10px] text-[#92988c]">{info.desc}</p>
+                    <b className="text-[11px] text-ink">{info.name}</b>
+                    <p className="mt-[5px] text-[10px] text-mute">{info.desc}</p>
                   </div>
                 </div>
                 <Button
@@ -98,8 +98,8 @@ export function IntegrationsTab() {
                   className={
                     "min-h-[30px] gap-1.5 rounded-[7px] px-2.5 text-[11px] font-semibold disabled:opacity-60 " +
                     (i.connected
-                      ? "border border-[#e2dfd5] bg-[#fffefa] text-[#48564a] hover:border-[#cbd5c8] hover:bg-[#f3f4ec]"
-                      : "border border-[#214c3a] bg-[#214c3a] text-white hover:border-[#173d2c] hover:bg-[#173d2c]")
+                      ? "border border-line bg-card text-ink hover:border-strong hover:bg-app"
+                      : "border border-sage bg-sage text-primary-foreground hover:border-sagehover hover:bg-sagehover")
                   }
                 >
                   {busy && <Loader2 size={12} className="animate-spin" />}
@@ -110,9 +110,9 @@ export function IntegrationsTab() {
           })}
         </div>
       )}
-      <p className="mt-4 text-[10px] leading-[1.6] text-[#92988c]">
+      <p className="mt-4 text-[10px] leading-[1.6] text-mute">
         Looking for something else?{" "}
-        <button onClick={() => toast.info("Integration request form opened")} className="font-semibold text-[#2e644b] hover:text-[#142e22]">
+        <button onClick={() => toast.info("Integration request form opened")} className="font-semibold text-sage hover:text-sage">
           Request an integration
         </button>
         .
