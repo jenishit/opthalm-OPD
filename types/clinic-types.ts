@@ -20,6 +20,8 @@ export interface ClinicRequest {
   timezone?: string;
   require_consent_before_exam?: boolean;
   low_stock_notifications?: boolean;
+  /** Set by the post-signup wizard once the clinic profile and admin name are stored. */
+  setup_completed?: boolean;
   /** Public https URL of the clinic logo (shown on invoices and reports). */
   logo_url?: string;
 }

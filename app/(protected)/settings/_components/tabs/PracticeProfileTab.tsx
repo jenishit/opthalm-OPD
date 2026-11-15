@@ -8,9 +8,10 @@ import { Eye, Globe, Loader2, Upload } from "lucide-react";
 import { Button } from "@/components/shadcn/button";
 import { NativeSelect } from "@/components/forms";
 import { practiceProfileSchema, type PracticeProfileForm } from "@/schemas/clinic-settings-schema";
-import { getClinic, getClinicSubscription, updateClinic, uploadClinicLogo } from "@/services/clinic-services";
+import { getClinic, getClinicSubscription, updateOwnClinic, uploadClinicLogo } from "@/services/clinic-services";
 import { useAsync } from "@/lib/hooks/use-async";
 import { ApiError } from "@/services/http";
+import { invalidateSellerCache } from "@/lib/pos/seller";
 import type { ClinicResponse } from "@/types/clinic-types";
 import { SaveRow } from "../SaveRow";
 import { SettingsField, SettingsLoading, ToggleField, settingsInput, useSettingsForm } from "../settings-form";
@@ -51,18 +52,20 @@ const toForm = (c: ClinicResponse): PracticeProfileForm => ({
 const orUndef = (v: string) => v || undefined;
 
 export function PracticeProfileTab() {
-  const clinicId = useRef("");
+  // The logo link as last read from the server. A signed upload URL must never be re-sent as a plain link
+  // (that would replace the uploaded file with a link that expires), so it is only sent when the user changed it.
+  const loadedLogo = useRef("");
   const { form, loading, lastSaved, onSave, saving } = useSettingsForm<PracticeProfileForm>({
     resolver: zodResolver(practiceProfileSchema) as Resolver<PracticeProfileForm>,
     defaults: EMPTY,
     noun: "practice settings",
     load: async () => {
       const clinic = await getClinic();
-      clinicId.current = clinic.id;
+      loadedLogo.current = clinic.logo_url ?? "";
       return toForm(clinic);
     },
     save: async (v) => {
-      await updateClinic(clinicId.current, {
+      await updateOwnClinic({
         clinic_name: v.clinic_name,
         registration_no: v.registration_no,
         tagline: orUndef(v.tagline),
@@ -75,8 +78,10 @@ export function PracticeProfileTab() {
         timezone: v.timezone,
         require_consent_before_exam: v.require_consent_before_exam,
         low_stock_notifications: v.low_stock_notifications,
-        logo_url: orUndef(v.logo_url),
+        // Omitted = keep the current logo; "" = remove it.
+        logo_url: v.logo_url === loadedLogo.current ? undefined : v.logo_url,
       });
+      void invalidateSellerCache(); // letterheads pick up the new details on next print
     },
   });
   const { control } = form;
@@ -95,14 +100,20 @@ export function PracticeProfileTab() {
     if (file.size > 2 * 1024 * 1024) return void toast.error("The image must be under 2 MB.");
     setUploading(true);
     try {
+      // The upload is saved to the clinic by the server; show the new (signed, short-lived) link without marking it as an edit.
       const { logo_url } = await uploadClinicLogo(file);
-      form.setValue("logo_url", logo_url, { shouldDirty: true, shouldValidate: true });
-      toast.success("Logo uploaded — press Save to keep it.");
+      loadedLogo.current = logo_url;
+      form.setValue("logo_url", logo_url, { shouldDirty: false });
+      setLogoFailed(null);
+      void invalidateSellerCache();
+      toast.success("Logo uploaded.");
     } catch (error) {
       toast.error(
         error instanceof ApiError && error.status === 404
           ? "Image upload isn't available on the server yet. Paste an image link instead."
-          : error instanceof Error ? error.message : "Couldn't upload the logo",
+          : error instanceof ApiError && error.status === 402
+            ? "Your subscription isn't active, so images can't be uploaded."
+            : error instanceof Error ? error.message : "Couldn't upload the logo",
       );
     } finally {
       setUploading(false);

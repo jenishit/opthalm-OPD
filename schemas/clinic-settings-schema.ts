@@ -21,7 +21,7 @@ export const practiceProfileSchema = z.object({
     .string()
     .trim()
     .max(500, "That link is too long")
-    .refine((v) => v === "" || /^https:\/\/\S+$/i.test(v), "Use a full https:// link to the image"),
+    .refine((v) => v === "" || /^https?:\/\/\S+$/i.test(v) || /^\/(?!\/)\S*$/.test(v), "Use an https:// link, or a path like /uploads/logo.png"),
 });
 export type PracticeProfileForm = z.infer<typeof practiceProfileSchema>;
 

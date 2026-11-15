@@ -4,6 +4,7 @@ import { ANAT, COND } from "@/types/eye-types";
 import { SLIT, FMARKS } from "./data";
 import { FINDINGS } from "./exam-defaults";
 import { snellenVA } from "./Snellen";
+import { LetterheadLogo } from "@/components/ui/LetterheadLogo";
 import { AnatomyEye } from "./AnatomyEye";
 import { FundusDiagram } from "./FundusDiagram";
 import { SlitDiagram } from "./SlitDiagram";
@@ -67,10 +68,13 @@ export function ExamReportPaper({
   return (
     <article aria-label={`Examination record for ${p.name}`} className="paper-light mx-auto w-full max-w-[210mm] bg-white p-6 text-[11px] leading-snug text-black [print-color-adjust:exact] print:max-w-none print:p-0">
       <header className="flex items-start justify-between gap-6 border-b-2 border-black pb-2">
-        <div>
-          <h1 className="text-base font-bold uppercase">{clinic?.name ?? "Eye clinic"}</h1>
-          {clinic?.address && <p>{clinic.address}</p>}
-          <p>{[clinic?.phone && `Tel: ${clinic.phone}`, clinic?.email].filter(Boolean).join(" · ")}</p>
+        <div className="flex items-start gap-3">
+          <LetterheadLogo logo={clinic?.logo} className="h-12" />
+          <div>
+            <h1 className="text-base font-bold uppercase">{clinic?.name ?? "Eye clinic"}</h1>
+            {clinic?.address && <p>{clinic.address}</p>}
+            <p>{[clinic?.phone && `Tel: ${clinic.phone}`, clinic?.email].filter(Boolean).join(" · ")}</p>
+          </div>
         </div>
         <div className="text-right">
           <p className="text-sm font-bold uppercase tracking-wide">Ophthalmic Examination Record</p>

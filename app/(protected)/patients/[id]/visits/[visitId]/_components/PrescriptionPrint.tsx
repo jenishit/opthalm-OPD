@@ -1,5 +1,6 @@
 "use client";
 
+import { LetterheadLogo } from "@/components/ui/LetterheadLogo";
 import { formatAgeShort } from "@/lib/age";
 import React, { forwardRef } from "react";
 import type { Prescription } from "@/schemas/prescription-schema";
@@ -38,7 +39,7 @@ export const PrescriptionPrint = forwardRef<HTMLDivElement, PrescriptionPrintPro
         {/* Clinic Header */}
         <div className="flex justify-between items-center border-b-2 border-black pb-6 mb-6">
           <div className="flex items-center gap-3">
-            <Activity className="h-10 w-10 text-black" />
+            {clinic?.logo ? <LetterheadLogo logo={clinic.logo} className="h-16" /> : <Activity className="h-10 w-10 text-black" />}
             <div>
               <h1 className="text-2xl font-bold text-black tracking-tight">{clinic?.name ?? "Eye clinic"}</h1>
               {clinic?.tagline && <p className="text-sm text-neutral-700">{clinic.tagline}</p>}

@@ -1,6 +1,7 @@
 import { adToBs, formatBs } from "@/lib/nepali-calendar";
 import { amountInWords } from "@/lib/money-words";
 import type { SellerInfo } from "@/lib/pos/seller";
+import { LetterheadLogo } from "@/components/ui/LetterheadLogo";
 import type { Invoice } from "@/types/billing-types";
 
 const money = (n: number) => n.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -57,7 +58,9 @@ export function InvoicePaper({
       )}
 
       <header className="flex items-start justify-between gap-6 border-b-2 border-neutral-900 pb-3">
-        <div>
+        <div className="flex items-start gap-3">
+          <LetterheadLogo logo={seller?.logo} />
+          <div>
           <h1 className="text-lg font-bold uppercase">{seller?.name ?? "Clinic name not available"}</h1>
           {seller?.address && <p>{seller.address}</p>}
           <p>{[seller?.phone && `Tel: ${seller.phone}`, seller?.email].filter(Boolean).join(" · ")}</p>
@@ -66,6 +69,7 @@ export function InvoicePaper({
             {seller?.vatNo ? ` · VAT Reg. No: ${seller.vatNo}` : ""}
           </p>
           {seller?.registrationNo && <p>Reg. No: {seller.registrationNo}</p>}
+          </div>
         </div>
         <div className="text-right">
           <p className="text-base font-bold uppercase tracking-wide">{isVat ? "Tax Invoice" : "Invoice"}</p>

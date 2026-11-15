@@ -19,12 +19,8 @@ export interface LoginResponse {
 }
 
 export interface SignupRequest {
-  clinic_name: string;
-  registration_no: string;
-  admin_first_name: string;
-  admin_last_name: string;
-  admin_email: string;
-  admin_password: string;
+  email: string;
+  password: string;
 }
 
 export interface RequestPasswordResetRequest {

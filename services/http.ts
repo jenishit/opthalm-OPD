@@ -1,3 +1,4 @@
+import { PENDING_MESSAGE, isWriteAllowedWhilePending, useAccountStore } from "@/lib/account-status";
 import { signOut } from "next-auth/react";
 import { useAuthStore } from "@/stores/authStore";
 import type { ApiEnvelope, ApiErrorBody } from "@/types/http-types";
@@ -32,6 +33,14 @@ export class SessionExpiredError extends ApiError {
   constructor(messages: string[]) {
     super(401, messages);
     this.name = "SessionExpiredError";
+  }
+}
+
+/** A change was blocked because the clinic is still awaiting activation (read-only). */
+export class PendingAccountError extends ApiError {
+  constructor() {
+    super(403, [PENDING_MESSAGE]);
+    this.name = "PendingAccountError";
   }
 }
 
@@ -115,6 +124,11 @@ export async function refreshAccessToken(): Promise<boolean> {
 
 async function request<T>(path: string, init: RequestInit = {}, retried = false): Promise<{ data: T; headers: Headers }> {
   const token = useAuthStore.getState().accessToken;
+  // A clinic awaiting activation is read-only apart from its own setup.
+  const method = (init.method ?? "GET").toUpperCase();
+  if (method !== "GET" && method !== "HEAD" && useAccountStore.getState().state === "pending" && !isWriteAllowedWhilePending(path)) {
+    throw new PendingAccountError();
+  }
   const headers = new Headers(init.headers);
   headers.set("Accept", "application/json");
   // Leave FormData bodies alone — the browser sets the multipart boundary

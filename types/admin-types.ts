@@ -28,7 +28,8 @@ export interface User {
   updatedAt: string;
 }
 
-export type SubscriptionStatus = "trialing" | "active" | "past_due" | "cancelled";
+/** "pending" = a newly signed-up clinic awaiting activation by the platform operator (read-only until then). */
+export type SubscriptionStatus = "pending" | "trialing" | "active" | "past_due" | "cancelled";
 
 export interface UpsertSubscriptionRequest {
   plan_name?: string;

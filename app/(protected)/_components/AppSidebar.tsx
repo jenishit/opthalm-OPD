@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 import { signOut } from "next-auth/react";
 import {
   X,
@@ -16,8 +17,9 @@ import {
   Truck,
   ChartNoAxesCombined,
   ShieldCheck,
+  Gauge,
+  Building2,
   Settings,
-  ChevronDown,
   LifeBuoy,
   ArrowUpRight,
   MoreHorizontal,
@@ -28,6 +30,8 @@ import { useAuthStore } from "@/stores/authStore";
 import { canAccess } from "@/lib/permissions";
 import { useNavBadges } from "@/lib/hooks/use-nav-badges";
 import { logoutStaffSession } from "@/services/auth-services";
+import { getClinic } from "@/services/clinic-services";
+import type { Clinic } from "@/types/clinic-types";
 import { cn } from "@/lib/utils";
 import { OpthalmOKLogo } from "@/app/(auth)/_components/OpthalmOKLogo";
 import {
@@ -75,9 +79,19 @@ const NAV = [
   },
   { group: "Manage", href: "/teams", label: "Team & Roles", icon: ShieldCheck },
   { group: "Manage", href: "/settings", label: "Settings", icon: Settings },
+  { group: "Platform", href: "/platform", label: "Overview", icon: Gauge },
+  { group: "Platform", href: "/platform/clinics", label: "Clinics", icon: Building2 },
+  { group: "Platform", href: "/platform/users", label: "Accounts", icon: Users },
 ] as const;
 
-const GROUPS = ["Workspace", "Care", "Optical", "Manage"] as const;
+const GROUPS = ["Workspace", "Care", "Optical", "Manage", "Platform"] as const;
+
+/** A nav item is active on its own page and any nested page below it. */
+function isActivePath(pathname: string, href: string): boolean {
+  // The platform overview is only itself; /platform/clinics is a sibling page.
+  if (href === "/platform") return pathname === "/platform";
+  return pathname === href || pathname.startsWith(`${href}/`);
+}
 
 export function AppSidebar() {
   const pathname = usePathname();
@@ -87,6 +101,23 @@ export function AppSidebar() {
   const accessToken = useAuthStore((s) => s.accessToken);
   const badges = useNavBadges(staffUser?.role, Boolean(accessToken));
   const visibleNav = staffUser ? NAV.filter((item) => canAccess(staffUser.role, item.href)) : NAV;
+  // A freshly signed-up admin has no name until the setup wizard saves it, so
+  // show the email instead of a blank avatar/name in the meantime.
+  const displayName = staffUser?.name?.trim() || staffUser?.email?.trim() || "Staff";
+
+  const [clinic, setClinic] = useState<Clinic | null>(null);
+  useEffect(() => {
+    if (!accessToken) return;
+    let cancelled = false;
+    getClinic()
+      .then((c) => !cancelled && setClinic(c))
+      .catch(() => !cancelled && setClinic(null)); // not available (e.g. non-admin) → hide the card
+    return () => {
+      cancelled = true;
+    };
+  }, [accessToken]);
+  const clinicName = clinic?.clinic_name?.trim();
+  const clinicSub = clinic?.tagline?.trim() || clinic?.address?.trim();
 
   const handleLogout = async () => {
     await logoutStaffSession();
@@ -122,21 +153,23 @@ export function AppSidebar() {
           <OpthalmOKLogo variant="dark" width={60} />
         </div>
 
-        {/* Practice switcher */}
-        <div className="flex items-center gap-2.5 rounded-xl border border-white/10 bg-white/5 px-3 py-2.5">
-          <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-gold font-display text-sm font-semibold text-gold-ink">
-            C
-          </span>
-          <span className="min-w-0 flex-1">
-            <b className="block truncate text-sm font-semibold text-white">
-              ClearView Clinic
-            </b>
-            <small className="block truncate text-xs text-mute">
-              Melbourne · Main practice
-            </small>
-          </span>
-          <ChevronDown size={15} className="shrink-0 text-mute" />
-        </div>
+        {/* Clinic card — only when the backend returns a clinic for this user */}
+        {clinicName && (
+          <div className="flex items-center gap-2.5 rounded-xl border border-white/10 bg-white/5 px-3 py-2.5">
+            {clinic?.logo_url ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={clinic.logo_url} alt="" className="size-9 shrink-0 rounded-lg bg-white object-contain" />
+            ) : (
+              <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-gold font-display text-sm font-semibold text-gold-ink">
+                {clinicName.charAt(0).toUpperCase()}
+              </span>
+            )}
+            <span className="min-w-0 flex-1">
+              <b className="block truncate text-sm font-semibold text-white">{clinicName}</b>
+              {clinicSub && <small className="block truncate text-xs text-mute">{clinicSub}</small>}
+            </span>
+          </div>
+        )}
 
         {/* Nav */}
         <nav className="flex flex-1 flex-col gap-4">
@@ -146,7 +179,7 @@ export function AppSidebar() {
                 {group}
               </span>
               {visibleNav.filter((item) => item.group === group).map((item) => {
-                const active = pathname === item.href;
+                const active = isActivePath(pathname, item.href);
                 const Icon = item.icon;
                 return (
                   <Link
@@ -207,11 +240,11 @@ export function AppSidebar() {
             <DropdownMenu>
               <DropdownMenuTrigger className="flex w-full items-center gap-2.5 rounded-lg px-1 py-1 text-left transition-colors hover:bg-white/5">
                 <span className="grid size-9 shrink-0 place-items-center rounded-full bg-rose font-display text-sm font-semibold text-white">
-                  {staffUser.name.charAt(0)}
+                  {displayName.charAt(0).toUpperCase()}
                 </span>
                 <span className="min-w-0 flex-1">
                   <b className="block truncate text-sm font-semibold text-white">
-                    {staffUser.name}
+                    {displayName}
                   </b>
                   <small className="block truncate text-xs capitalize text-mute">
                     {staffUser.role}

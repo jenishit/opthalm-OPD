@@ -30,8 +30,9 @@ const CLINICAL = ["/dashboard", "/patients", "/appointments", "/examinations", "
  * preferences are not access-gated).
  */
 const ROLE_ROUTES: Record<StaffRole, string[]> = {
-  superadmin: ALL_ROUTES,
-  admin: ALL_ROUTES,
+  // The platform console (activating new clinics) belongs to the operator alone.
+  superadmin: [...ALL_ROUTES, "/platform"],
+  admin: [...ALL_ROUTES, "/setup"],
   doctor: CLINICAL,
   optometrist: CLINICAL,
   billing: ["/dashboard", "/patients", "/prescriptions", "/pos", "/customer-orders", "/teams", "/settings"],
@@ -48,18 +49,28 @@ const READ_ONLY_ROUTES: Partial<Record<StaffRole, string[]>> = {
 /** Every top-level path that belongs to the staff console (any role). */
 const STAFF_ROUTES = new Set(Object.values(ROLE_ROUTES).flat());
 
+/**
+ * First path segment of a href, so route checks work for nested pages too:
+ * "/platform/clinics/abc" → "/platform". Role sets are keyed by segment.
+ */
+function topSegment(href: string): string {
+  const path = href.split(/[?#]/)[0];
+  const first = path.split("/")[1] ?? "";
+  return first ? `/${first}` : "/";
+}
+
 export function isStaffRoute(href: string): boolean {
-  return STAFF_ROUTES.has(href);
+  return STAFF_ROUTES.has(topSegment(href));
 }
 
 export function canAccess(role: StaffRole | undefined, href: string): boolean {
   if (!role) return false;
-  return ROLE_ROUTES[role]?.includes(href) ?? false;
+  return ROLE_ROUTES[role]?.includes(topSegment(href)) ?? false;
 }
 
 export function isReadOnly(role: StaffRole | undefined, href: string): boolean {
   if (!role) return false;
-  return READ_ONLY_ROUTES[role]?.includes(href) ?? false;
+  return READ_ONLY_ROUTES[role]?.includes(topSegment(href)) ?? false;
 }
 
 export const ROLE_LABEL: Record<StaffRole, string> = {

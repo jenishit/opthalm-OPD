@@ -11,6 +11,7 @@ import type { ClinicSubscription } from "@/types/clinic-types";
 const STATUS_STYLE: Record<string, string> = {
   active: "bg-sage-soft text-sage",
   trialing: "bg-t-new-soft text-t-new",
+  pending: "bg-warn-soft text-warn-ink",
   past_due: "bg-warn-soft text-warn-ink",
   cancelled: "bg-bad-soft text-bad-ink",
 };
@@ -18,6 +19,7 @@ const STATUS_STYLE: Record<string, string> = {
 const STATUS_LABEL: Record<string, string> = {
   active: "Active",
   trialing: "Trialing",
+  pending: "Pending activation",
   past_due: "Past due",
   cancelled: "Cancelled",
 };

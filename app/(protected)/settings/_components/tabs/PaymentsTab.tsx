@@ -8,6 +8,7 @@ import { Banknote, CreditCard, Landmark, Loader2, QrCode, Upload } from "lucide-
 import { Button } from "@/components/shadcn/button";
 import { NativeSelect } from "@/components/forms";
 import { paymentConfigSchema, type PaymentConfigForm } from "@/schemas/clinic-settings-schema";
+import { invalidateSellerCache } from "@/lib/pos/seller";
 import { getPaymentConfig, updatePaymentConfig, uploadPaymentQrCode } from "@/services/clinic-services";
 import { ApiError } from "@/services/http";
 import type { ClinicPaymentConfig } from "@/types/clinic-types";
@@ -122,7 +123,11 @@ export function PaymentsTab() {
     defaults: EMPTY,
     noun: "payment settings",
     load: async () => toForm(await getPaymentConfig()),
-    save: async (v) => toForm(await updatePaymentConfig(toRequest(v))),
+    save: async (v) => {
+      const saved = toForm(await updatePaymentConfig(toRequest(v)));
+      void invalidateSellerCache(); // PAN / VAT on invoices come from this
+      return saved;
+    },
   });
   const { control } = form;
   const bankOn = useWatch({ control, name: "bank_transfer_enabled" });

@@ -176,12 +176,12 @@ export function LoginForm() {
       </div>
 
       <p className="mt-8 text-center text-[0.9rem] text-ink">
-        New to OpthalmOK?{" "}
+        Setting up a new clinic?{" "}
         <Link
-          href="/request-access"
+          href="/signup"
           className="font-semibold text-sage hover:underline"
         >
-          Request access
+          Create an account
         </Link>
       </p>
     </div>

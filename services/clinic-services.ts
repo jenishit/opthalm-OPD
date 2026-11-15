@@ -1,6 +1,4 @@
 import { apiFetch } from "./http";
-import { clinicIdFromToken } from "@/lib/auth/clinic-id";
-import { useAuthStore } from "@/stores/authStore";
 import type {
   ClinicAuditLogEntry,
   ClinicIntegration,
@@ -23,14 +21,9 @@ import type {
 
 // ── Clinic profile ────────────────────────────────────────────────────────────
 
-/**
- * The admin's own clinic. The backend only exposes GET /admin/clinic/:id, so the
- * id comes from the session's access token.
- */
+/** GET /admin/clinic — the admin's own clinic. */
 export function getClinic(): Promise<ClinicResponse> {
-  const id = clinicIdFromToken(useAuthStore.getState().accessToken);
-  if (!id) return Promise.reject(new Error("Couldn't tell which clinic you belong to. Sign out and sign in again."));
-  return apiFetch<ClinicResponse>(`/admin/clinic/${id}`);
+  return apiFetch<ClinicResponse>("/admin/clinic");
 }
 
 /** GET /admin/clinic/:id */
@@ -38,13 +31,12 @@ export function getClinicById(id: string): Promise<ClinicResponse> {
   return apiFetch<ClinicResponse>(`/admin/clinic/${id}`);
 }
 
-/** PATCH /admin/clinic/:id */
-export function updateClinic(id: string, body: ClinicRequest): Promise<void> {
-  if (!id) return Promise.reject(new Error("Couldn't tell which clinic to update. Reload the page and try again."));
-  return apiFetch<void>(`/admin/clinic/${id}`, {
-    method: "PATCH",
-    body: JSON.stringify(body),
-  });
+/**
+ * PATCH /admin/clinic — updates the caller's own clinic. Leave `logo_url` out to keep the current
+ * logo ("" removes it); sending a link replaces an uploaded file.
+ */
+export function updateOwnClinic(body: ClinicRequest): Promise<void> {
+  return apiFetch<void>("/admin/clinic", { method: "PATCH", body: JSON.stringify(body) });
 }
 
 /**
@@ -67,10 +59,9 @@ export async function patchOwnClinic(partial: Partial<ClinicRequest>): Promise<C
     timezone: current.timezone,
     require_consent_before_exam: current.require_consent_before_exam,
     low_stock_notifications: current.low_stock_notifications,
-    logo_url: current.logo_url,
     ...partial,
   };
-  await updateClinic(current.id, body);
+  await updateOwnClinic(body);
   return { ...current, ...body };
 }
 

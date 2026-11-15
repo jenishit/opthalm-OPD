@@ -1,3 +1,4 @@
+import { useAccountStore } from "@/lib/account-status";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import type { Staff } from "@/schemas/shared-schema";
@@ -42,8 +43,10 @@ export const useAuthStore = create<AuthState>()(
         set({ accessToken, refreshToken }),
 
       loginStaff: (staff) => set({ staffUser: staff }),
-      logoutStaff: () =>
-        set({ staffUser: null, accessToken: null, refreshToken: null }),
+      logoutStaff: () => {
+        useAccountStore.getState().setState("unknown");
+        set({ staffUser: null, accessToken: null, refreshToken: null });
+      },
 
       loginPortalPatient: (patient, method, token) =>
         set({

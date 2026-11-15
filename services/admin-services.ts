@@ -8,6 +8,7 @@ import type {
   SubscriptionStatus,
   UpsertSubscriptionRequest,
 } from "@/types/admin-types";
+import type { ClinicResponse } from "@/types/clinic-types";
 
 export function createRole(body: CreateRoleRequest): Promise<Role> {
   return apiFetch<Role>("/role/create", {
@@ -21,6 +22,11 @@ export function createUser(body: CreateUserRequest): Promise<User> {
     method: "POST",
     body: JSON.stringify(body),
   });
+}
+
+/** GET /platform/clinics — every clinic (superadmin only). */
+export function listPlatformClinics(): Promise<ClinicResponse[]> {
+  return apiFetch<ClinicResponse[] | null>("/platform/clinics").then((r) => r ?? []);
 }
 
 /** GET /platform/subscriptions/:clinicId */
